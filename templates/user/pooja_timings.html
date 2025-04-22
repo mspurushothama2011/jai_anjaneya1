@@ -1,0 +1,397 @@
+{% extends "user/base.html" %}
+
+{% block title %}Temple Pooja Timings - Sri Veeranjaneya Swamy Temple{% endblock %}
+
+{% block content %}
+<div class="pooja-timings-container">
+    <div class="pooja-header">
+        <h1 class="pooja-title">Temple Pooja Timings</h1>
+        <p class="pooja-subtitle">Daily schedule of poojas and rituals at Shri Veeranjaneya Swamy Temple</p>
+    </div>
+    
+    <div class="time-display-container">
+        <h3 class="time-display-title">Current Time</h3>
+        <div class="time-display" id="currentTime">
+            <span id="hours">--</span>
+            <span class="time-separator">:</span>
+            <span id="minutes">--</span>
+            <span class="time-separator">:</span>
+            <span id="seconds">--</span>
+            <span id="period" class="period">--</span>
+        </div>
+        <p class="time-zone">All times are in IST (Indian Standard Time)</p>
+    </div>
+    
+    <div class="filter-container">
+        <div class="search-box">
+            <input type="text" id="poojaSearch" placeholder="Search for pooja...">
+        </div>
+        <div class="day-filter">
+            <select id="dayFilter">
+                <option value="weekday">Weekdays</option>
+                <option value="weekend">Weekends</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="status-indicators">
+        <div class="status-indicator ongoing">
+            <span class="status-dot"></span> Ongoing
+        </div>
+        <div class="status-indicator upcoming">
+            <span class="status-dot"></span> Upcoming
+        </div>
+        <div class="status-indicator completed">
+            <span class="status-dot"></span> Completed
+        </div>
+    </div>
+    
+    <div class="pooja-schedule-container">
+        <h2 class="schedule-title">Daily Pooja Schedule</h2>
+        <table class="pooja-schedule-table" id="poojaTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Pooja Name</th>
+                    <th>Description</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-time="05:30" class="pooja-row">
+                    <td>5:30 AM</td>
+                    <td>Temple Opening</td>
+                    <td>Opening of temple doors and initial prayers</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge completed">Completed</span></td>
+                </tr>
+                <tr data-time="06:00" class="pooja-row">
+                    <td>6:00 AM</td>
+                    <td>Suprabhatam & Morning Aarti</td>
+                    <td>Wake up ritual and morning prayers with devotional songs</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge completed">Completed</span></td>
+                </tr>
+                <tr data-time="08:00" class="pooja-row">
+                    <td>8:00 AM</td>
+                    <td>Abhishekam</td>
+                    <td>Sacred bathing ritual of the deity with holy water, milk, and other offerings</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge completed">Completed</span></td>
+                </tr>
+                <tr data-time="12:00" class="pooja-row">
+                    <td>12:00 PM</td>
+                    <td>Madhyahna Pooja</td>
+                    <td>Afternoon prayers and food offerings to the deity</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge completed">Completed</span></td>
+                </tr>
+                <tr data-time="18:00" class="pooja-row">
+                    <td>6:00 PM</td>
+                    <td>Sandhya Aarti</td>
+                    <td>Evening prayer ceremony with lamps and devotional songs</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge upcoming">Upcoming</span></td>
+                </tr>
+                <tr data-time="20:00" class="pooja-row">
+                    <td>8:00 PM</td>
+                    <td>Shayana Aarti</td>
+                    <td>Final prayers and ritual before the deity retires</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge upcoming">Upcoming</span></td>
+                </tr>
+                <tr data-time="20:30" class="pooja-row">
+                    <td>8:30 PM</td>
+                    <td>Temple Closing</td>
+                    <td>Closing of temple doors</td>
+                    <td><span class="days-badge">All Days</span></td>
+                    <td><span class="status-badge upcoming">Upcoming</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .pooja-timings-container {
+        max-width: 1200px;
+        margin: 30px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .pooja-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .pooja-title {
+        color: #241468;
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+    
+    .pooja-subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    .time-display-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 25px;
+        text-align: center;
+        max-width: 500px;
+        margin: 0 auto 30px;
+    }
+    
+    .time-display-title {
+        color: #007bff;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    
+    .time-display {
+        font-size: 42px;
+        font-weight: 700;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .time-separator {
+        margin: 0 5px;
+    }
+    
+    .period {
+        font-size: 20px;
+        margin-left: 15px;
+        align-self: flex-end;
+        margin-bottom: 10px;
+    }
+    
+    .time-zone {
+        color: #777;
+        font-size: 14px;
+        margin-top: 15px;
+    }
+    
+    .filter-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    
+    .search-box input {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 300px;
+        font-size: 14px;
+    }
+    
+    .day-filter select {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 150px;
+    }
+    
+    .status-indicators {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 25px;
+        justify-content: center;
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .ongoing .status-dot {
+        background-color: #28a745;
+    }
+    
+    .upcoming .status-dot {
+        background-color: #ffc107;
+    }
+    
+    .completed .status-dot {
+        background-color: #6c757d;
+    }
+    
+    .schedule-title {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 4px 4px 0 0;
+        margin: 0;
+        font-size: 18px;
+    }
+    
+    .pooja-schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        background-color: white;
+    }
+    
+    .pooja-schedule-table th, 
+    .pooja-schedule-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .pooja-schedule-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #444;
+    }
+    
+    .days-badge {
+        background-color: #e9ecef;
+        color: #333;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        display: inline-block;
+    }
+    
+    .status-badge {
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        display: inline-block;
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    .status-badge.completed {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .status-badge.ongoing {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-badge.upcoming {
+        background-color: #ffc107;
+        color: #333;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .search-box input,
+        .day-filter select {
+            width: 100%;
+        }
+        
+        .pooja-schedule-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<script>
+    // Update the clock
+    function updateClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        const period = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // If 0, set to 12
+        
+        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('minutes').textContent = minutes;
+        document.getElementById('seconds').textContent = seconds;
+        document.getElementById('period').textContent = period;
+        
+        // Update pooja status based on current time
+        updatePoojaStatus();
+    }
+    
+    // Update pooja status based on current time
+    function updatePoojaStatus() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTimeValue = currentHour * 60 + currentMinute;
+        
+        const rows = document.querySelectorAll('.pooja-row');
+        rows.forEach(row => {
+            const timeStr = row.getAttribute('data-time');
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const rowTimeValue = hours * 60 + minutes;
+            
+            const statusCell = row.querySelector('.status-badge');
+            
+            if (currentTimeValue < rowTimeValue) {
+                statusCell.className = 'status-badge upcoming';
+                statusCell.textContent = 'Upcoming';
+            } else if (currentTimeValue >= rowTimeValue && currentTimeValue < rowTimeValue + 60) {
+                statusCell.className = 'status-badge ongoing';
+                statusCell.textContent = 'Ongoing';
+            } else {
+                statusCell.className = 'status-badge completed';
+                statusCell.textContent = 'Completed';
+            }
+        });
+    }
+    
+    // Search functionality
+    document.getElementById('poojaSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.pooja-row');
+        
+        rows.forEach(row => {
+            const poojaName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const description = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            
+            if (poojaName.includes(searchTerm) || description.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    // Day filter functionality
+    document.getElementById('dayFilter').addEventListener('change', function() {
+        // In a real implementation, you would filter based on the actual days
+        // For now, this is just a placeholder
+        const filter = this.value;
+        console.log(`Filter by: ${filter}`);
+        
+        // In this demo, we're not actually filtering since all items show "All Days"
+        // In a real implementation, you would check each row's day value
+    });
+    
+    // Initialize the clock and update every second
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+{% endblock %}

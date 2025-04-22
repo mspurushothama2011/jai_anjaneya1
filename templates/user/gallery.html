@@ -1,0 +1,205 @@
+{% extends "user/base.html" %}
+
+{% block title %}Gallery - Sri Veeranjaneya Swamy Temple{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+    <div class="gallery-header">
+        <h1 class="gallery-title">Temple Gallery</h1>
+        <p class="gallery-description">Explore the beauty and divinity of Sri Veeranjaneya Swamy Temple through our collection of sacred moments.</p>
+    </div>
+    
+    <div class="gallery-grid">
+        {% if gallery_images %}
+            {% for image in gallery_images %}
+                <div class="gallery-item" data-image="{{ url_for('static', filename=image) }}">
+                    <img src="{{ url_for('static', filename=image) }}" alt="Temple Gallery Image" class="gallery-image">
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-images">
+                <p>No images available in the gallery at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox">
+    <span class="close-lightbox">&times;</span>
+    <img id="lightbox-image" class="lightbox-content">
+</div>
+
+<style>
+    .gallery-container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .gallery-title {
+        color: #241468;
+        font-size: 32px;
+        margin-bottom: 10px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .gallery-title:after {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 3px;
+        background-color: #FF6B00;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .gallery-description {
+        color: #666;
+        max-width: 800px;
+        margin: 20px auto 0;
+        line-height: 1.6;
+    }
+    
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .gallery-item {
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        height: 250px;
+    }
+    
+    .gallery-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .gallery-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .gallery-item:hover .gallery-image {
+        transform: scale(1.05);
+    }
+    
+    .no-images {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 50px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #666;
+    }
+    
+    /* Lightbox */
+    .lightbox {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        padding: 40px;
+    }
+    
+    .lightbox-content {
+        display: block;
+        max-width: 90%;
+        max-height: 90%;
+        margin: auto;
+        object-fit: contain;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 3px solid #fff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .close-lightbox {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10000;
+    }
+    
+    @media (max-width: 768px) {
+        .gallery-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .gallery-item {
+            height: 150px;
+        }
+        
+        .lightbox {
+            padding: 10px;
+        }
+    }
+</style>
+
+<script>
+    // Initialize lightbox functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.gallery-item');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-image');
+        const closeLightbox = document.querySelector('.close-lightbox');
+        
+        // Open lightbox when clicking an image
+        items.forEach(item => {
+            item.addEventListener('click', function() {
+                const imgSrc = this.getAttribute('data-image');
+                lightboxImg.src = imgSrc;
+                lightbox.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+        
+        // Close lightbox when clicking the X
+        closeLightbox.addEventListener('click', function() {
+            lightbox.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        });
+        
+        // Close lightbox when clicking outside the image
+        lightbox.addEventListener('click', function(e) {
+            if (e.target !== lightboxImg) {
+                lightbox.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }
+        });
+        
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.style.display === 'block') {
+                lightbox.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }
+        });
+    });
+</script>
+{% endblock %}

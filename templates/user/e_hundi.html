@@ -1,0 +1,762 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<section class="e-hundi-section">
+    <div class="container">
+        <div class="hundi-intro text-center">
+            <h1 class="section-title">E-Hundi: Digital Offerings</h1>
+            <p class="hundi-description">Make your spiritual offerings digitally through our E-Hundi service. Your contributions help maintain temple activities, support community services, and preserve our sacred traditions.</p>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-code-section">
+            <h3 class="mb-4">Scan to Make Your Offering</h3>
+            <div class="qr-code-container">
+                <div class="qr-code-pattern"></div>
+                <img src="/static/images/e_hundi.png" alt="QR Code for Offerings" class="qr-code">
+            </div>
+            <p class="mt-4">Use any UPI app to scan and make your offering</p>
+            <div class="mt-3">
+                <button class="btn btn-outline-primary me-2" onclick="copyUpiId()"><i class="fas fa-copy me-1"></i> Copy UPI ID</button>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="step-container">
+            <h3 class="section-title">How to Make an E-Hundi Offering</h3>
+            <div class="steps-wrapper">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4 class="step-title">Scan the QR Code</h4>
+                        <p class="step-description">Use any UPI app like Google Pay, PhonePe, or BHIM to scan the QR code.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4 class="step-title">Copy the UPI Id</h4>
+                        <p class="step-description">Use any UPI app like Google Pay, PhonePe, or BHIM and paste the UPI Id in the UPI section.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4 class="step-title">Complete Your Offering</h4>
+                        <p class="step-description">Confirm the payment to complete your spiritual offering.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial -->
+        <div class="testimonial-container">
+            <h3 class="section-title">Devotee Experiences</h3>
+            <div class="testimonial-slider">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">The E-Hundi service made it so convenient for me to continue my monthly offerings even when I couldn't visit the temple physically. The digital receipt and pooja confirmation gave me peace of mind.</p>
+                    <p class="testimonial-author">- Ramesh Kumar, Devotee</p>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">I appreciate how easy it is to make offerings for special occasions through E-Hundi. I was able to sponsor the Diwali celebrations even though I was traveling abroad. The temple staff sent me photos of the ceremonies.</p>
+                    <p class="testimonial-author">- Lakshmi Narayan, Overseas Devotee</p>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">As a senior citizen, I found the E-Hundi system surprisingly simple to use. My grandson helped me set it up once, and now I can make my weekly offerings without leaving home, especially helpful during the monsoon season.</p>
+                    <p class="testimonial-author">- Sita Devi, Elder Devotee</p>
+                </div>
+            </div>
+            <div class="testimonial-nav">
+                <span class="testimonial-dot active" data-slide="0"></span>
+                <span class="testimonial-dot" data-slide="1"></span>
+                <span class="testimonial-dot" data-slide="2"></span>
+            </div>
+        </div>
+
+        <!-- FAQs -->
+        <div class="faq-container">
+            <h3 class="section-title">Frequently Asked Questions</h3>
+            <div class="accordion" id="ehundiFaq">
+                <div class="faq-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="ehundi-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            How will my offering be used? <i class="fas fa-chevron-down faq-icon"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#ehundiFaq">
+                        <div class="ehundi-faq-body">
+                            <p>Your offerings support various temple activities including daily poojas, maintenance of the temple, community services, and special festivals. We maintain complete transparency about fund utilization through our quarterly reports available at the temple notice board and on our website.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="ehundi-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Will I receive a receipt for my offering? <i class="fas fa-chevron-down faq-icon"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#ehundiFaq">
+                        <div class="ehundi-faq-body">
+                            <p>Yes, a digital receipt will be sent to your email address if provided in the transaction details. If you need a physical receipt, please contact our temple office with your transaction details and we will send it to your registered address. For E-Hundi offerings, there will be no receipt</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="ehundi-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Can I make an offering for a specific festival or event? <i class="fas fa-chevron-down faq-icon"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#ehundiFaq">
+                        <div class="ehundi-faq-body">
+                            <p>Absolutely! For major festivals like Diwali, Navratri, and temple anniversaries, we create dedicated offering options that appear 15 days before the event. You can also sponsor specific rituals by selecting the appropriate option from our Seva portal.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="ehundi-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            Is my personal information kept secure? <i class="fas fa-chevron-down faq-icon"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#ehundiFaq">
+                        <div class="ehundi-faq-body">
+                            <p>We take data privacy very seriously. All personal information shared during offerings is encrypted and stored securely. We do not share your information with any third parties. Your details are only used for sending receipts and, if you opt in, for sending temple newsletters and event notifications.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="ehundi-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                            Can I set up recurring offerings? <i class="fas fa-chevron-down faq-icon"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#ehundiFaq">
+                        <div class="ehundi-faq-body">
+                            <p>NO, you cannot set up monthly or annual recurring offerings through our E-Hundi service. </p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Bootstrap CSS if not already included in base.html -->
+{% if not bootstrap_included %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endif %}
+
+<style>
+    /* Enhanced E-Hundi Variables */
+    :root {
+        --ehundi-bg: #FFF8F0;
+        --sacred-orange: #FF7F00;
+        --deep-saffron: #F9A602;
+        --sacred-gold: #D4AF37;
+        --kumkum-red: #9D2235;
+        --deep-maroon: #800020;
+        --text-dark: #333333;
+        --text-medium: #555555;
+        --text-light: #777777;
+        --border-radius-md: 8px;
+        --border-radius-lg: 12px;
+        --soft-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        --hover-transform: translateY(-5px);
+    }
+
+    /* Background with subtle mandala pattern */
+    .e-hundi-section {
+        padding: 3rem 0;
+        background-color: var(--ehundi-bg);
+        position: relative;
+        z-index: 1;
+    }
+
+    .hundi-intro {
+        position: relative;
+        margin-bottom: 4rem;
+        animation: ehundi-fadeIn 1.2s ease-out;
+    }
+
+    @keyframes ehundi-fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+        color: var(--kumkum-red);
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background-color: var(--sacred-orange);
+    }
+
+    .hundi-description {
+        max-width: 800px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-medium);
+    }
+
+    /* QR Code Section */
+    .qr-code-section {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--card-shadow);
+        padding: 3rem;
+        margin-bottom: 4rem;
+        text-align: center;
+        position: relative;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        transition: transform 0.3s ease;
+    }
+
+    .qr-code-section:hover {
+        transform: var(--hover-transform);
+    }
+
+    .qr-code-container {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
+    }
+
+    .qr-code-pattern {
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        right: -15px;
+        bottom: -15px;
+        background: linear-gradient(135deg, var(--sacred-orange), var(--deep-saffron));
+        border-radius: 15px;
+        z-index: 0;
+    }
+
+    .qr-code {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        z-index: 1;
+        box-shadow: var(--soft-shadow);
+    }
+
+    .btn-outline-primary {
+        color: var(--sacred-orange);
+        border-color: var(--sacred-orange);
+        transition: all 0.3s ease;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 500;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--sacred-orange);
+        color: white;
+        border-color: var(--sacred-orange);
+    }
+
+    /* Step Section */
+    .step-container {
+        margin-bottom: 4rem;
+    }
+
+    .steps-wrapper {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        justify-content: center;
+    }
+
+    .step-card {
+        background: white;
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--soft-shadow);
+        padding: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .step-card:hover {
+        transform: var(--hover-transform);
+        box-shadow: var(--card-shadow);
+    }
+
+    .step-number {
+        background: linear-gradient(135deg, var(--sacred-orange), var(--deep-saffron));
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .step-content {
+        flex-grow: 1;
+    }
+
+    .step-title {
+        color: var(--deep-maroon);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .step-description {
+        color: var(--text-medium);
+        line-height: 1.6;
+    }
+
+    /* Testimonial Section */
+    .testimonial-container {
+        margin-bottom: 4rem;
+    }
+
+    .testimonial-slider {
+        position: relative;
+        overflow: hidden;
+        max-width: 800px;
+        margin: 0 auto;
+        height: 250px;
+    }
+
+    .testimonial-card {
+        background: white;
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--soft-shadow);
+        padding: 2rem;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: all 0.5s ease;
+        transform: translateX(100%);
+    }
+
+    .testimonial-card.active {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .testimonial-text {
+        color: var(--text-medium);
+        font-style: italic;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .testimonial-author {
+        color: var(--deep-maroon);
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .testimonial-nav {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 2rem;
+    }
+
+    .testimonial-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #ccc;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .testimonial-dot.active {
+        background-color: var(--sacred-orange);
+    }
+
+    /* FAQ Section */
+    .faq-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .faq-item {
+        margin-bottom: 0.8rem;
+    }
+
+    .ehundi-faq-button {
+        background-color: white;
+        border: none;
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--soft-shadow);
+        padding: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        text-align: left;
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--text-dark);
+        transition: all 0.3s ease;
+    }
+
+    .ehundi-faq-button:hover, 
+    .ehundi-faq-button:focus {
+        background-color: #FFF2E6;
+    }
+
+    .ehundi-faq-button:not(.collapsed) {
+        background-color: var(--sacred-orange);
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 127, 0, 0.2);
+    }
+
+    .faq-icon {
+        transition: transform 0.3s ease;
+        font-size: 0.8rem;
+        margin-left: 8px;
+    }
+
+    .ehundi-faq-button:not(.collapsed) .faq-icon {
+        transform: rotate(180deg);
+        color: white;
+    }
+
+    .ehundi-faq-body {
+        padding: 1rem;
+        background-color: white;
+        border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        font-size: 0.9rem;
+    }
+
+    .ehundi-faq-body p {
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+
+    .me-2 {
+        margin-right: 0.5rem;
+    }
+
+    .me-1 {
+        margin-right: 0.25rem;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+        .step-card {
+            padding: 1.5rem;
+        }
+
+        .testimonial-slider {
+            height: 300px;
+        }
+
+        .qr-code-container {
+            width: 200px;
+            height: 200px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .e-hundi-section {
+            padding: 2rem 0;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+        }
+
+        .hundi-description {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .qr-code-section {
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .qr-code-container {
+            width: 180px;
+            height: 180px;
+        }
+
+        .step-container {
+            margin-bottom: 3rem;
+        }
+
+        .steps-wrapper {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .testimonial-slider {
+            height: 350px;
+        }
+
+        .testimonial-card {
+            padding: 1.5rem;
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+        }
+
+        .ehundi-faq-button {
+            padding: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .ehundi-faq-body {
+            padding: 0.9rem;
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .section-title {
+            font-size: 1.5rem;
+        }
+
+        .section-title::after {
+            width: 60px;
+        }
+
+        .qr-code-section {
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .qr-code-container {
+            width: 150px;
+            height: 150px;
+        }
+
+        .step-card {
+            padding: 1.2rem;
+            gap: 15px;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+        }
+
+        .step-description {
+            font-size: 0.9rem;
+        }
+
+        .testimonial-slider {
+            height: 400px;
+        }
+
+        .testimonial-text {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .testimonial-author {
+            font-size: 0.9rem;
+        }
+
+        .ehundi-faq-button {
+            padding: 0.7rem;
+            font-size: 0.85rem;
+        }
+
+        .ehundi-faq-body {
+            padding: 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-outline-primary {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+    }
+
+    /* Additional CSS for custom accordion functionality */
+    .accordion-collapse {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+    
+    .accordion-collapse.show {
+        max-height: 500px; /* Adjust based on content size */
+    }
+</style>
+
+<!-- Bootstrap JS and Custom JS for E-Hundi Features -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Bootstrap JS is loaded
+        if (typeof bootstrap === 'undefined') {
+            // Custom accordion implementation if Bootstrap is not available
+            const faqButtons = document.querySelectorAll('.ehundi-faq-button');
+            
+            faqButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Get the target collapse element
+                    const targetId = this.getAttribute('data-bs-target').replace('#', '');
+                    const targetCollapse = document.getElementById(targetId);
+                    
+                    // Toggle collapsed class on button
+                    this.classList.toggle('collapsed');
+                    
+                    // Toggle the collapse
+                    if (targetCollapse.style.maxHeight) {
+                        targetCollapse.style.maxHeight = null;
+                        targetCollapse.classList.remove('show');
+                        this.setAttribute('aria-expanded', 'false');
+                    } else {
+                        // Close all other open accordions
+                        document.querySelectorAll('.accordion-collapse.show').forEach(item => {
+                            if (item.id !== targetId) {
+                                item.style.maxHeight = null;
+                                item.classList.remove('show');
+                                const button = document.querySelector(`[data-bs-target="#${item.id}"]`);
+                                button.classList.add('collapsed');
+                                button.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                        
+                        // Open the clicked accordion
+                        targetCollapse.style.maxHeight = targetCollapse.scrollHeight + "px";
+                        targetCollapse.classList.add('show');
+                        this.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+        }
+        
+        // Testimonial Slider Functionality
+        const testimonials = document.querySelectorAll('.testimonial-card');
+        const dots = document.querySelectorAll('.testimonial-dot');
+        let activeIndex = 0;
+
+        // Initialize first testimonial as active
+        testimonials[0].classList.add('active');
+
+        // Handle dot clicks
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                setActiveTestimonial(index);
+            });
+        });
+
+        function setActiveTestimonial(index) {
+            // Hide all testimonials
+            testimonials.forEach(testimonial => {
+                testimonial.classList.remove('active');
+            });
+            
+            // Set all dots as inactive
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+            
+            // Show the selected testimonial
+            testimonials[index].classList.add('active');
+            dots[index].classList.add('active');
+            activeIndex = index;
+        }
+
+        // Auto rotate testimonials
+        function autoRotateTestimonials() {
+            const nextIndex = (activeIndex + 1) % testimonials.length;
+            setActiveTestimonial(nextIndex);
+        }
+
+        // Start auto rotation
+        let autoRotateInterval = setInterval(autoRotateTestimonials, 5000);
+
+        // Pause auto rotation when hovering over testimonials
+        const testimonialContainer = document.querySelector('.testimonial-container');
+        testimonialContainer.addEventListener('mouseenter', () => {
+            clearInterval(autoRotateInterval);
+        });
+
+        testimonialContainer.addEventListener('mouseleave', () => {
+            autoRotateInterval = setInterval(autoRotateTestimonials, 5000);
+        });
+
+        // UPI ID Copy Functionality
+        window.copyUpiId = function() {
+            const upiId = "templeofferings@okaxis"; // Example UPI ID
+            navigator.clipboard.writeText(upiId).then(() => {
+                // Show success notification
+                const button = document.querySelector('.btn-outline-primary');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+                button.style.backgroundColor = '#4CAF50';
+                button.style.borderColor = '#4CAF50';
+                button.style.color = 'white';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                    button.style.borderColor = '';
+                    button.style.color = '';
+                }, 2000);
+            });
+        };
+    });
+</script>
+{% endblock %}
+

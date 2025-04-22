@@ -1,0 +1,285 @@
+{% extends "user/base.html" %}
+{% block content %}
+<style>
+    /* Hero section */
+    .hero-section {
+        position: relative;
+        width: 100vw;
+        height: 600px;
+        overflow: hidden;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+        left: 0;
+        right: 0;
+    }
+    
+    .hero-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .hero-content {
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 40px;
+        border-radius: 10px;
+        max-width: 700px;
+        text-align: center;
+        animation: fadeUp 1.5s ease-out;
+        transform: translateY(0);
+    }
+    
+    @keyframes fadeUp {
+        0% {
+            opacity: 0;
+            transform: translateY(60px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .hero-content h1 {
+        color: white;
+        font-size: 42px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .hero-content p {
+        color: #f1f1f1;
+        font-size: 18px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .temple-history-btn {
+        background-color: #dab545;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .temple-history-btn:hover {
+        background-color: #c69c2f;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Full-width container reset */
+    .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* Reset for base template constraints */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Google Reviews Styling */
+    .google-reviews-section {
+        padding: 60px 0;
+        background-color: #fff;
+    }
+
+    .google-reviews-section h2 {
+        text-align: center;
+        color: #333;
+        font-size: 32px;
+        margin-bottom: 40px;
+        font-weight: 500;
+    }
+
+    .google-reviews-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .review-item {
+        padding: 24px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .review-item:last-child {
+        border-bottom: none;
+    }
+
+    .review-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+    }
+
+    .reviewer-info h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .star-rating {
+        color: #FBC02D;
+        font-size: 18px;
+        margin-top: 4px;
+    }
+
+    .review-text {
+        color: #555;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 8px;
+    }
+
+    .review-date {
+        color: #999;
+        font-size: 13px;
+    }
+
+    .reviews-footer {
+        text-align: center;
+        padding: 24px 0 0;
+        border-top: 1px solid #eee;
+        margin-top: 20px;
+    }
+
+    .rating-summary {
+        color: #666;
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+
+    .rating-summary .star {
+        color: #FBC02D;
+        margin-right: 4px;
+    }
+
+    .view-all-btn {
+        display: inline-block;
+        padding: 10px 24px;
+        color: #1a73e8;
+        text-decoration: none;
+        border: 1px solid #1a73e8;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .view-all-btn:hover {
+        background-color: #1a73e8;
+        color: white;
+    }
+
+    .view-all-btn i {
+        margin-right: 8px;
+    }
+</style>
+
+<!-- Hero Section with Single Image -->
+<section class="hero-section">
+    <img src="/static/images/s1.jpg" alt="Temple Decoration" class="hero-image">
+    <div class="hero-overlay">
+        <div class="hero-content">
+            <h1>Welcome to Sri Veeranjaneya Swamy Temple</h1>
+            <p>A sacred place for spiritual rejuvenation and divine connection</p>
+            <a href="/temple_history" class="btn temple-history-btn">Temple History</a>
+        </div>
+    </div>
+</section>
+
+<!-- Google Reviews Section -->
+<section class="google-reviews-section">
+    <h2>Our Google Reviews</h2>
+    <div class="google-reviews-container">
+        <!-- Review 1 -->
+        <div class="review-item">
+            <div class="review-header">
+                <div class="reviewer-avatar" style="background-color: #4285f4;">J</div>
+                <div class="reviewer-info">
+                    <h3>Jyothi Prasad</h3>
+                    <div class="star-rating">
+                        ★★★★★
+                    </div>
+                </div>
+            </div>
+            <p class="review-text">"A beautiful sculptured Anjaneya temple with a huge sculpture of Hanuman in stone. This is the centre of attraction where all visitors try to capture not only in their hearts but on their phones too. There is lot of space devoted where the devotees can sit and meditate."</p>
+            <div class="review-date">8 months ago</div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="review-item">
+            <div class="review-header">
+                <div class="reviewer-avatar" style="background-color: #34a853;">R</div>
+                <div class="reviewer-info">
+                    <h3>Ravi Kant</h3>
+                    <div class="star-rating">
+                        ★★★★★
+                    </div>
+                </div>
+            </div>
+            <p class="review-text">"Very peaceful place. Parking a four wheeler maybe challenging as it is inside a street from main road. A very tall Hanuman ji statue is main attraction which can be seen from the road itself. Other the main anjaneya temple, there are also smaller temples within the complex."</p>
+            <div class="review-date">2 years ago</div>
+        </div>
+
+        <!-- Review 3 -->
+        <div class="review-item">
+            <div class="review-header">
+                <div class="reviewer-avatar" style="background-color: #fbbc05;">R</div>
+                <div class="reviewer-info">
+                    <h3>Rohan Palkar</h3>
+                    <div class="star-rating">
+                        ★★★★★
+                    </div>
+                </div>
+            </div>
+            <p class="review-text">"Beautiful temple. Its surrounded by market and its by a road still you will peaceful when you go inside. Must visit!"</p>
+            <div class="review-date">a year ago</div>
+        </div>
+
+        <div class="reviews-footer">
+            <div class="rating-summary">
+                <span class="star">★</span>4.8/5 from 886 reviews
+            </div>
+            <a href="https://maps.app.goo.gl/MPNpMYPE4DnYSnCX9" target="_blank" class="view-all-btn">
+                <i class="fas fa-external-link-alt"></i>View All Google Reviews
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

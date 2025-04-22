@@ -1,0 +1,448 @@
+{% extends "user/base.html" %}
+
+{% block title %}Contact Us - Sri Veeranjaneya Swamy Temple{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="contact-hero">
+    <div class="contact-hero-content">
+        <h1 class="contact-title">Contact Us</h1>
+        <p class="contact-subtitle">We welcome devotees and visitors to reach out with questions, feedback, or to learn more about our temple services and activities</p>
+    </div>
+</section>
+
+<div class="contact-content">
+    <div class="container">
+        <div class="row">
+            <!-- Contact Information -->
+            <div class="col-lg-7 mb-5">
+                <div class="contact-section h-100">
+                    <h3>Temple Information</h3>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="icon-container me-4">
+                            <i class="fas fa-map-marker-alt fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5>Location</h5>
+                            <p>S No, 35, 3rd Main Rd, Cauveri Colony, GM Palya<br>C V Raman Nagar, Bengaluru, Karnataka 560075</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="icon-container me-4">
+                            <i class="fas fa-phone-alt fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5>Phone</h5>
+                            <p>Temple Office: +91 96864 47485</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="icon-container me-4">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5>Email</h5>
+                            <p>For Any Queries: svecgmp@gmail.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="icon-container me-4">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5>Temple Hours</h5>
+                            <p>Monday to Friday: 6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM<br>
+                            Saturday: 6:00 AM - 12:00 PM, 5:30 PM - 9:00 PM<br>
+                            Sunday: 6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map -->
+            <div class="col-lg-5 mb-5">
+                <div class="contact-section h-100">
+                    <h3>Find Us</h3>
+                    <div class="map-container">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.8294137524945!2d77.6624562!3d12.9747994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae115760b98c35%3A0xa6abb538f2eb302c!2sShri%20Veeranjaneya%20Swamy%20Temple!5e0!3m2!1sen!2sin!4v1682345267221!5m2!1sen!2sin" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0; border-radius: 0.5rem;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="faq-section">
+                    <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+                    <p class="text-center text-muted mb-4">Click on a question to view its answer</p>
+                    
+                    <div class="faq-list">
+                        <!-- Question 1 -->
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleAnswer('answer1')">
+                                <span>What are the temple visiting hours?</span>
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                            </div>
+                            <div class="faq-answer" id="answer1">
+                                <p>Our temple is open Monday to Friday from 6:00 AM to 11:30 AM and 5:30 PM to 8:30 PM. On Saturdays, we're open from 6:00 AM to 12:00 PM and 5:30 PM to 9:00 PM. On Sundays, temple hours are 6:00 AM to 11:30 AM and 5:30 PM to 8:30 PM. Special festival timings may vary and will be announced on our events page.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Question 2 -->
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleAnswer('answer2')">
+                                <span>How can I book a special pooja?</span>
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                            </div>
+                            <div class="faq-answer" id="answer2">
+                                <p>You can book special poojas through our online Seva booking system. Simply navigate to the Sevas page, select the desired service, and follow the instructions. Alternatively, you can visit the temple office during open hours.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Question 3 -->
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleAnswer('answer3')">
+                                <span>Is parking available at the temple?</span>
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                            </div>
+                            <div class="faq-answer" id="answer3">
+                                <p>Yes, we have a dedicated parking area that can accommodate up to 100 vehicles. During major festivals, additional parking arrangements are made nearby with shuttle services to the temple.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Question 4 -->
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleAnswer('answer4')">
+                                <span>Can I make donations online?</span>
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                            </div>
+                            <div class="faq-answer" id="answer4">
+                                <p>Yes, we accept online donations through our Donations page. You can contribute to various temple initiatives, programs, and development funds. All online donations are secure and tax-deductible.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Question 5 -->
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleAnswer('answer5')">
+                                <span>How can I volunteer at the temple?</span>
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                            </div>
+                            <div class="faq-answer" id="answer5">
+                                <p>We welcome volunteers for various activities including festival preparations, community services, and educational programs. Please contact the temple office at 096864 47485 or email us at volunteers@templemanagement.com for more information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Contact Page Styling */
+    .contact-hero {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                    url("{{ url_for('static', filename='images/temple_present.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 6rem 0;
+        text-align: center;
+        position: relative;
+    }
+    
+    .contact-hero::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        background: linear-gradient(to top, #f8f9fa, transparent);
+    }
+    
+    .contact-hero-content {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        padding: 2rem;
+        border-radius: 1rem;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .contact-title {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    
+    .contact-subtitle {
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+        letter-spacing: 0.5px;
+    }
+    
+    .contact-content {
+        background-color: #f8f9fa;
+        padding: 4rem 0;
+        min-height: calc(100vh - 300px);
+    }
+    
+    .contact-section {
+        background: linear-gradient(135deg, #fff, #f8f5f0);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-bottom: 3rem;
+        border-left: 5px solid #FF7F00;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .contact-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+    
+    .contact-section h3 {
+        color: #FF7F00;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .contact-section h3::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -8px;
+        width: 50px;
+        height: 3px;
+        background: #D4AF37;
+    }
+    
+    .icon-container {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FF7F00, #ff9a33);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 5px 15px rgba(255, 127, 0, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .d-flex:hover .icon-container {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .d-flex h5 {
+        color: #333333;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-flex p {
+        color: #666;
+        line-height: 1.6;
+    }
+    
+    /* FAQ Section Styling */
+    .faq-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+    
+    .faq-section h3 {
+        color: #FF7F00;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .faq-section h3::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -8px;
+        width: 50px;
+        height: 3px;
+        background: #D4AF37;
+    }
+    
+    /* Custom FAQ Dropdown Styling */
+    .faq-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .faq-item {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+    }
+    
+    .faq-question {
+        background-color: white;
+        color: #333;
+        padding: 1.2rem;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        border-left: 4px solid #FF7F00;
+    }
+    
+    .faq-question:hover {
+        background-color: #fff8f0;
+    }
+    
+    .faq-question.active {
+        background-color: rgba(255, 127, 0, 0.1);
+        color: #FF7F00;
+    }
+    
+    .dropdown-icon {
+        color: #FF7F00;
+        transition: transform 0.3s ease;
+    }
+    
+    .faq-question.active .dropdown-icon {
+        transform: rotate(180deg);
+    }
+    
+    .faq-answer {
+        background-color: #f9f9f9;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.5s ease;
+    }
+    
+    .faq-answer p {
+        margin: 0;
+        padding: 1.5rem;
+        color: #555;
+        line-height: 1.6;
+    }
+    
+    .faq-answer.show {
+        max-height: 500px;
+    }
+    
+    /* Map styling with important to override any other styles */
+    .map-container {
+        width: 100%;
+        height: 300px !important;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .map-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        border: none;
+    }
+    
+    @media (max-width: 768px) {
+        .contact-title {
+            font-size: 2.5rem;
+        }
+        
+        .contact-subtitle {
+            font-size: 1rem;
+        }
+        
+        .icon-container {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .contact-section, .faq-section {
+            padding: 1.5rem;
+        }
+        
+        .faq-question {
+            padding: 1rem;
+        }
+        
+        /* Much smaller map on mobile */
+        .map-container {
+            height: 180px !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Even smaller map on very small screens */
+        .map-container {
+            height: 150px !important;
+        }
+    }
+</style>
+
+<script>
+    // Function to toggle answer visibility
+    function toggleAnswer(id) {
+        const answer = document.getElementById(id);
+        const question = answer.previousElementSibling;
+        
+        // Close all other answers
+        const allAnswers = document.querySelectorAll('.faq-answer');
+        const allQuestions = document.querySelectorAll('.faq-question');
+        
+        allAnswers.forEach(item => {
+            if (item.id !== id) {
+                item.classList.remove('show');
+            }
+        });
+        
+        allQuestions.forEach(item => {
+            if (item !== question) {
+                item.classList.remove('active');
+            }
+        });
+        
+        // Toggle current answer
+        answer.classList.toggle('show');
+        question.classList.toggle('active');
+    }
+    
+    // Remove the automatic opening of first question
+    // No auto-opening on page load, all FAQs will start closed
+</script>
+{% endblock %} 

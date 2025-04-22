@@ -1,0 +1,148 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="main-title">Temple Management System</h1>
+    <h2 class="subtitle">Administration Dashboard</h2>
+
+    <div class="stats-container">
+        <!-- Events Card -->
+        <div class="stat-card">
+            <div class="icon-container" style="background-color: #4CAF50;">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-category">Events</span>
+                <span class="stat-number">{{ events_count }}</span>
+                <span class="stat-details">Total Events</span>
+                <span class="stat-details">{{ upcoming_events_count }} Upcoming</span>
+            </div>
+        </div>
+
+        <!-- Sevas Card -->
+        <div class="stat-card">
+            <div class="icon-container" style="background-color: #2196F3;">
+                <i class="fas fa-praying-hands"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-category">Sevas</span>
+                <span class="stat-number">{{ seva_bookings_count }}</span>
+                <span class="stat-details">Total Bookings</span>
+                <span class="stat-details">{{ seva_types_count }} Types</span>
+            </div>
+        </div>
+
+        <!-- Donations Card -->
+        <div class="stat-card">
+            <div class="icon-container" style="background-color: #FF9800;">
+                <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-category">Donations</span>
+                <span class="stat-number">{{ donations_count }}</span>
+                <span class="stat-details">Total Donations</span>
+                <span class="stat-details">₹{{ donation_amount }}</span>
+            </div>
+        </div>
+
+        <!-- Users Card -->
+        <div class="stat-card">
+            <div class="icon-container" style="background-color: #9C27B0;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-category">Users</span>
+                <span class="stat-number">{{ users_count }}</span>
+                <span class="stat-details">Total Users</span>
+                <span class="stat-details">{{ verified_users_count }} Verified</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+
+    .main-title {
+        color: #333;
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: #666;
+        text-align: center;
+        font-size: 20px;
+        font-weight: normal;
+        margin-bottom: 40px;
+    }
+
+    .stats-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .icon-container {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .icon-container i {
+        color: white;
+        font-size: 28px;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-category {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .stat-number {
+        font-size: 36px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .stat-details {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.4;
+    }
+</style>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

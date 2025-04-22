@@ -1,0 +1,380 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="card-title mb-0 text-center">Confirm Seva Booking</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Seva details section -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-pray me-2"></i>Seva Details</h6>
+                        <div class="bg-light p-3 rounded">
+                            <table class="table table-bordered table-sm mb-0">
+                                <tr>
+                                    <td width="35%" class="fw-normal">Seva Name</td>
+                                    <td>{{ seva.seva_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Type</td>
+                                    <td>{{ seva.seva_type|default('Pooja') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Price</td>
+                                    <td>₹{{ seva.seva_price }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Description</td>
+                                    <td>{% if seva.seva_description %}{{ seva.seva_description }}{% else %}No description available{% endif %}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- User details section -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-user me-2"></i>Your Details</h6>
+                        <div class="bg-light p-3 rounded">
+                            <table class="table table-bordered table-sm mb-0">
+                                <tr>
+                                    <td width="35%" class="fw-normal">Name</td>
+                                    <td>{{ user.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Email</td>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Phone</td>
+                                    <td>{{ user.phone }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Date selection -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-calendar-alt me-2"></i>Select Date</h6>
+                        <div class="bg-light p-3 rounded">
+                            <input type="date" id="sevaDate" class="form-control" min="{{ current_date }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div id="loadingSpinner" style="display: none;" class="text-center mb-4 p-3 bg-light rounded">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing your request...</p>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger py-3 px-4 mb-4" style="display: none;"></div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('user_seva.seva_list_view') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Sevas
+                        </a>
+                        <button class="btn btn-primary px-4" id="proceedToPayment">
+                            Confirm Booking <i class="fas fa-check ms-2"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="razorpay-container" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.getElementById("proceedToPayment").addEventListener("click", async function() {
+        const sevaDate = document.getElementById("sevaDate").value;
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        const errorMessage = document.getElementById("errorMessage");
+        const proceedButton = document.getElementById("proceedToPayment");
+
+        if (!sevaDate) {
+            showError("Please select a date for the seva.");
+            return;
+        }
+
+        // Show loading spinner and disable button
+        loadingSpinner.style.display = "block";
+        errorMessage.style.display = "none";
+        proceedButton.disabled = true;
+
+        try {
+            const payload = {
+                seva_id: "{{ seva._id }}",
+                seva_name: "{{ seva.seva_name }}",
+                amount: "{{ seva.seva_price }}",
+                seva_date: sevaDate
+            };
+
+            console.log("Sending Data:", payload); // Debug log
+
+            // First store seva details in session
+            const sessionResponse = await fetch("{{ url_for('user_seva.store_seva_details') }}", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const sessionData = await sessionResponse.json();
+            if (!sessionResponse.ok) {
+                throw new Error(sessionData.error || "Failed to store seva details");
+            }
+
+            // Then create Razorpay order
+            const orderResponse = await fetch("{{ url_for('user_seva.seva_payment') }}", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const orderData = await orderResponse.json();
+            if (!orderResponse.ok) {
+                throw new Error(orderData.error || "Failed to create payment order");
+            }
+
+            console.log("Order Data:", orderData); // Debug log
+
+            // Initialize Razorpay checkout
+            const options = {
+                key: "{{ config.RAZORPAY_KEY_ID }}",
+                amount: "{{ seva.seva_price }}" * 100, // Amount in paise
+                currency: "INR",
+                name: "Shri Veeranjaneya Swamy ",
+                description: "Seva Booking Payment",
+                order_id: orderData.id,
+                handler: function(response) {
+                    verifyPayment(response);
+                },
+                prefill: {
+                    name: "{{ user.name }}",
+                    email: "{{ user.email }}",
+                    contact: "{{ user.phone }}"
+                },
+                theme: {
+                    color: "#3399cc"
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+        } catch (error) {
+            console.error("Error:", error);
+            showError(error.message || "An error occurred. Please try again.");
+            loadingSpinner.style.display = "none";
+            proceedButton.disabled = false;
+        }
+    });
+
+    function verifyPayment(response) {
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        loadingSpinner.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Verifying payment...</p>
+        `;
+        
+        console.log("Payment Response:", response); // Log the payment response
+        console.log("Verification URL:", '{{ url_for("user_seva.verify_seva_payment") }}'); // Log the verification URL
+        
+        const verificationData = {
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature
+        };
+        
+        console.log("Verification Data:", verificationData); // Log the verification data
+
+        // Verify payment with backend with timeout and retry
+        const verifyWithRetry = (attempt = 1) => {
+            console.log(`Verification attempt ${attempt}`);
+            
+            fetch('{{ url_for("user_seva.verify_seva_payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(verificationData),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log("Verification Response Status:", response.status); // Log response status
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Verification Response Data:", data); // Log the response data
+                if (data.success) {
+                    // Payment successful, redirect to confirmation page
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error(data.error || "Payment verification failed");
+                }
+            })
+            .catch(error => {
+                console.error('Verification Error:', error); // Log the detailed error
+                
+                // Retry if we haven't exceeded max attempts
+                if (attempt < 3) {
+                    console.log(`Retrying verification (${attempt + 1}/3)...`);
+                    setTimeout(() => verifyWithRetry(attempt + 1), 2000); // Wait 2 seconds before retry
+                } else {
+                    showError("An error occurred during payment verification. Please contact support with your payment ID: " + 
+                        response.razorpay_payment_id);
+                }
+            });
+        };
+        
+        // Start verification with retry
+        verifyWithRetry();
+    }
+
+    function showError(message) {
+        const errorMessage = document.getElementById("errorMessage");
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("proceedToPayment").disabled = false;
+    }
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .card-header {
+        border-radius: 0 !important;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    
+    .table {
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+    
+    .table-sm td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+    }
+    
+    .table-bordered td {
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    h6 {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+    }
+    
+    .fw-normal {
+        font-weight: normal !important;
+        color: black;
+    }
+    
+    hr {
+        opacity: 0.1;
+        border-width: 1px;
+    }
+    
+    .bg-light {
+        background-color: rgba(0,0,0,0.02) !important;
+    }
+    
+    .rounded {
+        border-radius: 8px !important;
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+    }
+    
+    .btn {
+        border-radius: 5px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+    }
+    
+    .btn-primary:hover {
+        background-color: #F9A602;
+        border-color: #F9A602;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(63, 106, 216, 0.3);
+    }
+    
+    .btn-outline-secondary {
+        color: #F9A602;
+        border-color: #F9A602;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #F9A602;
+        color: white;
+    }
+    
+    .form-control {
+        padding: 0.6rem 1rem;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .text-primary {
+        color: #FF7F00 !important;
+    }
+    
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .table-sm td {
+            padding: 0.5rem 0.75rem;
+        }
+    }
+</style>
+{% endblock %}

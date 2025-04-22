@@ -1,0 +1,532 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="sevas-hero">
+    <div class="sevas-hero-content">
+        <h1 class="sevas-title">Temple Sevas</h1>
+        <p class="sevas-subtitle">Participate in divine services and receive blessings through our various seva offerings.</p>
+    </div>
+</div>
+
+<div class="sevas-content">
+    <div class="container">
+        <!-- Filter Section -->
+        <div class="filter-container">
+            <div class="filter-label">
+                <i class="fas fa-filter"></i> Filter by Seva Type:
+            </div>
+            <select id="sevaFilter" class="filter-select">
+                <option value="">All Sevas</option>
+                {% for seva_type in seva_types %}
+                    <option value="{{ seva_type }}">{{ seva_type }}</option>
+                {% endfor %}
+            </select>
+            <div class="seva-count">
+                <span id="sevaCounter">{{ sevas|length }}</span> Sevas Available
+            </div>
+        </div>
+
+        <!-- Sevas Grid -->
+        <div class="section-heading">
+            <h2 class="seva-section-title">Available Sevas</h2>
+        </div>
+
+        <div class="sevas-grid" id="sevaList">
+            {% for seva in sevas %}
+            <div class="seva-card seva-item" data-type="{{ seva.seva_type }}">
+                <span class="seva-type-badge">{{ seva.seva_type }}</span>
+                
+                <div class="seva-icon-wrapper">
+                    <div class="seva-icon-pattern"></div>
+                    <div class="seva-icon">
+                        <i class="fas fa-om"></i>
+                    </div>
+                </div>
+
+                <div class="seva-content">
+                    <h3 class="seva-name">{{ seva.seva_name }}</h3>
+                    <div class="seva-price">
+                        <span class="currency">₹</span>
+                        <span class="amount">{{ seva.seva_price }}</span>
+                        <div class="seva-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="seva-tooltip">Seva offering amount</span>
+                        </div>
+                    </div>
+                    <p class="seva-description">{{ seva.seva_description }}</p>
+                    
+                    <div class="seva-benefits">
+                        {% if seva.includes_prasadam %}
+                            <span class="seva-benefit-tag">
+                                <i class="fas fa-leaf"></i> Prasadam
+                            </span>
+                        {% endif %}
+                        {% if seva.includes_photos %}
+                            <span class="seva-benefit-tag">
+                                <i class="fas fa-camera"></i> Photos
+                            </span>
+                        {% endif %}
+                        {% if seva.includes_certificate %}
+                            <span class="seva-benefit-tag">
+                                <i class="fas fa-certificate"></i> Certificate
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if session.get('user_id') %}
+                        <a href="{{ url_for('user_seva.seva_booking', seva_id=seva._id) }}" class="book-seva-btn">
+                            <i class="fas fa-calendar-check"></i> Book This Seva
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('user.login') }}" class="book-seva-btn">
+                            <i class="fas fa-sign-in-alt"></i> Login to Book
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not sevas %}
+        <div class="no-sevas">
+            <i class="fas fa-prayer-hands"></i>
+            <h3>No Sevas Available</h3>
+            <p>Currently there are no sevas available. Please check back later or contact the temple administration for more information.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('sevaFilter').addEventListener('change', function() {
+    const selectedType = this.value;
+    const sevaItems = document.querySelectorAll('.seva-item');
+    let visibleCount = 0;
+    
+    sevaItems.forEach(item => {
+        if (!selectedType || item.dataset.type === selectedType) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Update the counter
+    document.getElementById('sevaCounter').textContent = visibleCount;
+});
+
+// Add animation delay to cards
+document.querySelectorAll('.seva-card').forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+});
+</script>
+
+<style>
+/* Base variables */
+:root {
+    --primary-orange: #FF7F00;
+    --primary-orange-rgb: 255, 127, 0;
+    --deep-saffron: #FF9033;
+    --orange-gradient-start: #FF7F00;
+    --orange-gradient-end: #FF9033;
+    --text-dark: #333;
+    --border-light: #e0e0e0;
+    --bg-cream: #fff9f5;
+}
+
+/* Sevas Page Styling */
+
+.sevas-hero::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(to top, var(--bg-cream), transparent);
+}
+
+.sevas-hero-content {
+    background: #FF7F00;
+    backdrop-filter: blur(5px);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sevas-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+.sevas-subtitle {
+    font-size: 1.2rem;
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    font-weight: 400;
+}
+
+.sevas-content {
+    background-color: var(--bg-cream);
+    padding: 2rem 0;
+    min-height: calc(100vh - 300px);
+}
+
+.filter-container {
+    background: linear-gradient(135deg, #fff, #f8f5f0);
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border-left: 5px solid var(--deep-saffron);
+}
+
+.filter-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.filter-label i {
+    color: var(--deep-saffron);
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.filter-select {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-light);
+    border-radius: 0.75rem;
+    outline: none;
+    flex-grow: 1;
+    max-width: 250px;
+    color: var(--text-dark);
+    background-color: white;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.filter-select:focus, .filter-select:hover {
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 3px rgba(var(--primary-orange-rgb), 0.15);
+}
+
+.seva-count {
+    margin-left: auto;
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg, var(--orange-gradient-start), var(--orange-gradient-end));
+    color: white;
+    border-radius: 2rem;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(var(--primary-orange-rgb), 0.3);
+}
+
+/* Sevas Grid */
+.sevas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.seva-card {
+    background-color: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    transition: all 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transform-origin: center bottom;
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.seva-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.seva-type-badge {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    padding: 0.3rem 0.8rem;
+    background-color: white;
+    color: black;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 2rem;
+    z-index: 1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.seva-icon-wrapper {
+    position: relative;
+    height: 100px;
+    background: linear-gradient(135deg, #FF7F00, #FF9033);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.seva-icon-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.5;
+}
+
+.seva-icon {
+    width: 60px;
+    height: 60px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.seva-icon i {
+    font-size: 1.8rem;
+    color: #FF7F00;
+}
+
+.seva-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 0.75rem;
+}
+
+.seva-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.seva-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #FF7F00;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.seva-description {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.seva-benefits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.seva-benefit-tag {
+    background-color: rgba(255, 127, 0, 0.08);
+    color: #FF7F00;
+    padding: 0.3rem 0.6rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.seva-benefit-tag i {
+    font-size: 0.8rem;
+}
+
+.book-seva-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 10px rgba(37, 117, 252, 0.3);
+    margin-top: auto;
+    text-decoration: none;
+}
+
+.book-seva-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(106, 17, 203, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.book-seva-btn i {
+    font-size: 1rem;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section Heading */
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(255, 127, 0, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.seva-section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    position: relative;
+    padding-left: 0.75rem;
+}
+
+.seva-section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 4px;
+    background: linear-gradient(to bottom, #FF7F00, #FF9033);
+    border-radius: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sevas-title {
+        font-size: 2rem;
+    }
+    
+    .sevas-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .seva-count {
+        margin-left: 0;
+        text-align: center;
+    }
+    
+    .filter-select {
+        max-width: 100%;
+    }
+    
+    .sevas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        padding: 0 0.75rem;
+    }
+    
+    .seva-content {
+        padding: 1.25rem;
+    }
+}
+
+.seva-info {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    margin-left: 5px;
+    cursor: help;
+}
+
+.seva-info i {
+    color: #FF7F00;
+    font-size: 0.9rem;
+}
+
+.seva-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #000;
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.seva-info:hover .seva-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
+{% endblock %} 

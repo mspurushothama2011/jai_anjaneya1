@@ -1,0 +1,403 @@
+{% extends "user/base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h2><i class="fas fa-user-plus"></i> Register</h2>
+            <p class="register-subtitle">Create your account to access temple services</p>
+        </div>
+        
+        <div id="form-messages"></div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert {% if category == 'danger' %}alert-danger{% else %}alert-success{% endif %}">
+                            <i class="{% if category == 'danger' %}fas fa-exclamation-circle{% else %}fas fa-check-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form id="registerForm" method="POST" action="{{ url_for('user.register') }}" class="register-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" name="name" id="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Phone</label>
+                    <input type="text" name="phone" id="phone" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dob"><i class="fas fa-calendar-alt"></i> Date of Birth</label>
+                    <input type="date" name="dob" id="dob" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="address"><i class="fas fa-home"></i> Address</label>
+                <textarea name="address" id="address" rows="3" class="form-control" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <input type="password" name="password" id="password" class="form-control" required>
+                <div class="password-requirements">
+                    <p class="req-heading">Password must contain:</p>
+                    <ul>
+                        <li id="length" class="invalid"><i class="fas fa-times-circle"></i> At least 8 characters</li>
+                        <li id="uppercase" class="invalid"><i class="fas fa-times-circle"></i> At least 1 uppercase letter</li>
+                        <li id="lowercase" class="invalid"><i class="fas fa-times-circle"></i> At least 1 lowercase letter</li>
+                        <li id="number" class="invalid"><i class="fas fa-times-circle"></i> At least 1 number</li>
+                        <li id="symbol" class="invalid"><i class="fas fa-times-circle"></i> At least 1 special character</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-register">Register <i class="fas fa-arrow-right"></i></button>
+            
+            <div class="login-prompt">
+                <span>Already have an account?</span>
+                <a href="{{ url_for('user.login') }}" class="login-link"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px);
+        padding: 20px;
+    }
+    
+    .register-card {
+        background-color: #fff;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    
+    .register-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    
+    .register-header h2 {
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+    
+    .register-header h2 i {
+        margin-right: 10px;
+        color: #a83232;
+    }
+    
+    .register-subtitle {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .flash-messages {
+        margin-bottom: 20px;
+    }
+    
+        .alert {
+        padding: 12px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+            margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .alert i {
+        margin-right: 10px;
+        font-size: 16px;
+    }
+    
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        border-left: 4px solid #dc3545;
+        }
+    
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        border-left: 4px solid #28a745;
+    }
+    
+    .register-form {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+        flex: 1;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #495057;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .form-group label i {
+        margin-right: 8px;
+        color: #6c757d;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 15px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #d6a648;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(214, 166, 72, 0.25);
+    }
+    
+    .btn-register {
+        background-color: #a83232;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .btn-register:hover {
+        background-color: #872929;
+    }
+    
+    .login-prompt {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 14px;
+        color: #6c757d;
+        justify-content: center;
+    }
+    
+    .login-link {
+        color: #c07c1f;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .login-link:hover {
+        color: #9e6618;
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .register-card {
+            padding: 20px;
+        }
+        
+        .register-header h2 {
+            font-size: 24px;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+        }
+    }
+    
+    .password-requirements {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        border-left: 3px solid #ced4da;
+        font-size: 13px;
+    }
+    
+    .req-heading {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #495057;
+    }
+    
+    .password-requirements ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .password-requirements li {
+        margin-bottom: 3px;
+        color: #6c757d;
+    }
+    
+    .password-requirements li i {
+        margin-right: 5px;
+    }
+    
+    .invalid i {
+        color: #dc3545;
+    }
+    
+    .valid i {
+        color: #28a745;
+    }
+    
+    .valid {
+        color: #28a745;
+    }
+</style>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const messageDiv = document.getElementById('form-messages');
+            
+            // Check if all fields are filled
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const dob = document.getElementById('dob').value;
+            const address = document.getElementById('address').value;
+            const password = document.getElementById('password').value;
+            
+            if (!name || !email || !phone || !dob || !address || !password) {
+                e.preventDefault();
+            messageDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Please fill all fields</div>';
+            return;
+        }
+        
+        // Check password requirements
+        const lengthValid = password.length >= 8;
+        const uppercaseValid = /[A-Z]/.test(password);
+        const lowercaseValid = /[a-z]/.test(password);
+        const numberValid = /[0-9]/.test(password);
+        const symbolValid = /[^A-Za-z0-9]/.test(password);
+        
+        if (!(lengthValid && uppercaseValid && lowercaseValid && numberValid && symbolValid)) {
+            e.preventDefault();
+            messageDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Password does not meet all requirements</div>';
+                return;
+            }
+            
+            // Show loading message
+        messageDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-circle-notch fa-spin"></i> Processing registration...</div>';
+    });
+    
+    // Password validation in real-time
+    document.getElementById('password').addEventListener('keyup', function() {
+        const password = this.value;
+        
+        // Check length
+        const lengthRequirement = document.getElementById('length');
+        if (password.length >= 8) {
+            lengthRequirement.classList.remove('invalid');
+            lengthRequirement.classList.add('valid');
+            lengthRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 8 characters';
+        } else {
+            lengthRequirement.classList.remove('valid');
+            lengthRequirement.classList.add('invalid');
+            lengthRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 8 characters';
+        }
+        
+        // Check uppercase
+        const uppercaseRequirement = document.getElementById('uppercase');
+        if (/[A-Z]/.test(password)) {
+            uppercaseRequirement.classList.remove('invalid');
+            uppercaseRequirement.classList.add('valid');
+            uppercaseRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 uppercase letter';
+        } else {
+            uppercaseRequirement.classList.remove('valid');
+            uppercaseRequirement.classList.add('invalid');
+            uppercaseRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 uppercase letter';
+        }
+        
+        // Check lowercase
+        const lowercaseRequirement = document.getElementById('lowercase');
+        if (/[a-z]/.test(password)) {
+            lowercaseRequirement.classList.remove('invalid');
+            lowercaseRequirement.classList.add('valid');
+            lowercaseRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 lowercase letter';
+        } else {
+            lowercaseRequirement.classList.remove('valid');
+            lowercaseRequirement.classList.add('invalid');
+            lowercaseRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 lowercase letter';
+        }
+        
+        // Check number
+        const numberRequirement = document.getElementById('number');
+        if (/[0-9]/.test(password)) {
+            numberRequirement.classList.remove('invalid');
+            numberRequirement.classList.add('valid');
+            numberRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 number';
+        } else {
+            numberRequirement.classList.remove('valid');
+            numberRequirement.classList.add('invalid');
+            numberRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 number';
+        }
+        
+        // Check symbol
+        const symbolRequirement = document.getElementById('symbol');
+        if (/[^A-Za-z0-9]/.test(password)) {
+            symbolRequirement.classList.remove('invalid');
+            symbolRequirement.classList.add('valid');
+            symbolRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 special character';
+        } else {
+            symbolRequirement.classList.remove('valid');
+            symbolRequirement.classList.add('invalid');
+            symbolRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 special character';
+        }
+        });
+    </script>
+{% endblock %}

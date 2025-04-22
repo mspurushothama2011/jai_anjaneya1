@@ -1,0 +1,87 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Card -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body d-flex align-items-center p-4">
+            <div class="profile-avatar me-4">
+                <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" class="rounded-circle" width="80" height="80">
+            </div>
+            <div class="profile-info">
+                <h2 class="mb-1">Welcome back, {{ user.name }}!</h2>
+                <p class="text-muted mb-3">{{ user.email }}</p>
+                <div class="d-flex">
+                    <a href="{{ url_for('user.profile') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-user-edit me-1"></i> Edit Profile
+                    </a>
+                    <a href="{{ url_for('user.history') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-history me-1"></i> View Full History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="display-4 fw-bold text-primary">{{ user_stats.total_sevas|default(2) }}</h2>
+                    <p class="card-text text-muted">Total Sevas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="display-4 fw-bold text-primary">{{ user_stats.total_donations|default(1) }}</h2>
+                    <p class="card-text text-muted">Total Donations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="display-4 fw-bold text-primary">₹{{ user_stats.amount_contributed|default('100.0') }}</h2>
+                    <p class="card-text text-muted">Amount Contributed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .profile-avatar img {
+        border: 3px solid #FF7F00;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .shadow-sm {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+    
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .btn-outline-primary {
+        color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .text-primary {
+        color: #007bff !important;
+    }
+</style>
+{% endblock %}

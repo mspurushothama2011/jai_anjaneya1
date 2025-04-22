@@ -1,0 +1,625 @@
+<!-- templates/user/donation_booking.html -->
+{% extends "user/base.html" %}
+
+{% block title %}{{ donation.name }} Donation{% endblock %}
+
+{% block content %}
+<div class="donation-hero">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="donation-title">Make a Donation</h2>
+                    <p class="donation-subtitle">Your generosity helps sustain our temple and its services</p>
+                </div>
+                
+                <div class="card donation-card">
+                    <div class="card-header donation-header">
+                        <div class="donation-type-badge">{{ donation.name }}</div>
+                        <h3 class="mb-0">Support Our Temple</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="donation-description mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="donation-icon-wrapper">
+                                    <i class="fas fa-hands-helping"></i>
+                                </div>
+                                <h5 class="mb-0 ms-3">About This Donation</h5>
+                            </div>
+                            <p>{{ donation.description }}</p>
+                        </div>
+
+                        <form id="donationForm">
+                            <input type="hidden" id="donationId" value="{{ donation._id }}">
+                            <input type="hidden" id="donationName" value="{{ donation.name }}">
+
+                            <div class="donation-amount-section">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="donation-icon-wrapper">
+                                        <i class="fas fa-rupee-sign"></i>
+                                    </div>
+                                    <h5 class="mb-0 ms-3">Select Amount</h5>
+                                </div>
+                                
+                                <div class="amount-selection-container">
+                                    <div class="donation-amount-options">
+                                        <div class="amount-option-card" data-amount="100">
+                                            <div class="amount-value">₹100</div>
+                                        </div>
+                                        <div class="amount-option-card" data-amount="500">
+                                            <div class="amount-value">₹500</div>
+                                        </div>
+                                        <div class="amount-option-card" data-amount="1000">
+                                            <div class="amount-value">₹1000</div>
+                                        </div>
+                                        <div class="amount-option-card" data-amount="5000">
+                                            <div class="amount-value">₹5000</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="custom-amount-container mt-4">
+                                        <div class="custom-amount-label">Enter Custom Amount:</div>
+                                        <div class="custom-amount-wrapper">
+                                            <span class="currency-symbol">₹</span>
+                                            <input type="number" id="amount" class="custom-amount-input" min="100" placeholder="Minimum ₹100" required>
+                                        </div>
+                                        <div class="form-text">Minimum donation amount is ₹100</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="divider my-4"></div>
+                            
+                            <div class="donor-info-section">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="donation-icon-wrapper">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <h5 class="mb-0 ms-3">Donor Information</h5>
+                                </div>
+                                
+                                <div class="donor-fields bg-light p-3 rounded">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="donor-info-item">
+                                                <span class="donor-label">Name</span>
+                                                <span class="donor-value">{{ user.name }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <div class="donor-info-item">
+                                                <span class="donor-label">Email</span>
+                                                <span class="donor-value">{{ user.email }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden fields to store values for JavaScript -->
+                                    <input type="hidden" id="donorName" value="{{ user.name }}">
+                                    <input type="hidden" id="donorEmail" value="{{ user.email }}">
+                                    <div class="form-text text-center">Donation will be made using your account details</div>
+                                </div>
+                            </div>
+                            
+                            <div class="donation-submit mt-4">
+                                <button type="button" id="donateBtn" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-heart me-2"></i>Proceed to Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="donation-benefits mt-4 text-center">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="benefit-text">Tax Receipt Provided</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div class="benefit-text">Secure Payment</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-pray"></i>
+                                </div>
+                                <div class="benefit-text">Divine Blessings</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay integration script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Amount option cards functionality
+    const amountCards = document.querySelectorAll('.amount-option-card');
+    const amountInput = document.getElementById('amount');
+    
+    // Select amount when card is clicked
+    amountCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            amountCards.forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            
+            // Set amount value
+            const amount = this.getAttribute('data-amount');
+            amountInput.value = amount;
+        });
+    });
+    
+    // Clear selection when custom amount is entered
+    amountInput.addEventListener('focus', function() {
+        amountCards.forEach(c => c.classList.remove('selected'));
+    });
+    
+    // Initialize Razorpay button
+    const donateBtn = document.getElementById('donateBtn');
+    
+    donateBtn.addEventListener('click', function() {
+        console.log("Donate button clicked"); // Debug log
+        
+        const donationForm = document.getElementById('donationForm');
+        const donationId = document.getElementById('donationId').value;
+        const donationName = document.getElementById('donationName').value;
+        const amount = document.getElementById('amount').value;
+        const donorName = document.getElementById('donorName').value;
+        const donorEmail = document.getElementById('donorEmail').value;
+        
+        console.log("Form data:", { 
+            donationId, 
+            donationName, 
+            amount, 
+            donorName, 
+            donorEmail 
+        }); // Debug log
+        
+        // Basic validation
+        if (!amount || parseInt(amount) < 100) {
+            alert('Please enter a valid amount (minimum ₹100)');
+            return;
+        }
+        
+        // First, store donation details in session
+        const donationDetails = {
+            donation_id: donationId,
+            donation_name: donationName,
+            amount: amount
+            // No need to send donor details - they'll be retrieved from session
+        };
+        
+        console.log("Sending to backend:", donationDetails); // Debug log
+        
+        fetch('/donation/store-donation-details', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(donationDetails)
+        })
+        .then(response => {
+            console.log("Response status:", response.status); // Debug log
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Handle unauthorized (not logged in)
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '/user/login?next=' + window.location.pathname;
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json().then(data => Promise.reject(data.error || 'An error occurred'));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Response data:", data); // Debug log
+            
+            if (data.status === 'success') {
+                // Create Razorpay order
+                createOrder(donationDetails);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error storing donation details:', error); // Detailed error log
+            if (error !== 'Unauthorized') {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+    
+    function createOrder(donationDetails) {
+        // Create Razorpay order
+        fetch('/donation/donation-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(donationDetails)
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Handle unauthorized (not logged in)
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '/user/login?next=' + window.location.pathname;
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json().then(data => Promise.reject(data.error || 'An error occurred'));
+            }
+            return response.json();
+        })
+        .then(order => {
+            if (order.error) {
+                alert('Error: ' + order.error);
+                return;
+            }
+            
+            // Get user details from form fields (which are filled from session)
+            const donorName = document.getElementById('donorName').value;
+            const donorEmail = document.getElementById('donorEmail').value;
+            
+            // Initialize Razorpay checkout
+            const options = {
+                key: '{{ razorpay_key_id }}', // Your Razorpay Key ID
+                amount: order.amount,
+                currency: order.currency,
+                name: 'Temple Management',
+                description: donationDetails.donation_name + ' Donation',
+                order_id: order.id,
+                handler: function (response) {
+                    // On successful payment
+                    verifyPayment(response);
+                },
+                prefill: {
+                    name: donorName,
+                    email: donorEmail
+                },
+                theme: {
+                    color: '#FF7F00'
+                }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(error => {
+            if (error !== 'Unauthorized') {
+                console.error('Error creating order:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+    
+    function verifyPayment(response) {
+        fetch('/donation/verify-donation-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(response)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => Promise.reject(data.error || 'An error occurred'));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Redirect to confirmation page
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Payment verification failed: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error verifying payment:', error);
+            alert('Payment verification failed. Please contact support with your payment ID.');
+        });
+    }
+});
+</script>
+
+<style>
+.donation-hero {
+    background-color: #f8f9fa;
+    padding: 30px 0 60px;
+}
+
+.donation-title {
+    color: #333;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.donation-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+}
+
+.donation-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.donation-header {
+    background: linear-gradient(135deg, #FF7F00, #F9A602);
+    padding: 1.5rem;
+    position: relative;
+    border-bottom: none;
+}
+
+.donation-header h3 {
+    color: white;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.donation-type-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background-color: white;
+    color: #FF7F00;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.donation-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 127, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FF7F00;
+    font-size: 1.2rem;
+}
+
+.donation-description {
+    background-color: rgba(0,0,0,0.02);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(0,0,0,0.1);
+    width: 100%;
+}
+
+.amount-selection-container {
+    background-color: rgba(255, 127, 0, 0.03);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.02);
+}
+
+.donation-amount-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.amount-option-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid #eee;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.03);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.amount-option-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 127, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.amount-option-card.selected {
+    background: linear-gradient(135deg, #FF7F00, #F9A602);
+    color: white;
+    border-color: #FF7F00;
+    box-shadow: 0 5px 20px rgba(255, 127, 0, 0.2);
+}
+
+.amount-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #444;
+    margin: 0;
+}
+
+.amount-option-card.selected .amount-value {
+    color: white;
+}
+
+.custom-amount-container {
+    background-color: white;
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+    border: 1px solid #eee;
+}
+
+.custom-amount-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.custom-amount-wrapper {
+    display: flex;
+    align-items: center;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: #f9f9f9;
+}
+
+.custom-amount-wrapper:focus-within {
+    border-color: #FF7F00;
+    box-shadow: 0 0 0 3px rgba(255, 127, 0, 0.15);
+    background: white;
+}
+
+.currency-symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #FF7F00;
+    background-color: rgba(255, 127, 0, 0.05);
+    height: 50px;
+}
+
+.custom-amount-input {
+    flex: 1;
+    border: none;
+    padding: 12px 15px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    background: transparent;
+    width: 100%;
+    outline: none;
+}
+
+/* Remove spinners for number input */
+.custom-amount-input::-webkit-outer-spin-button,
+.custom-amount-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.custom-amount-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.btn-primary {
+    background-color: #FF7F00;
+    border-color: #FF7F00;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.btn-primary:hover {
+    background-color: #F9A602;
+    border-color: #F9A602;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 127, 0, 0.2);
+}
+
+.form-control {
+    padding: 0.6rem 1rem;
+    height: auto;
+    border-radius: 6px;
+}
+
+.form-control:focus {
+    border-color: #FF7F00;
+    box-shadow: 0 0 0 0.25rem rgba(255, 127, 0, 0.25);
+}
+
+.donation-benefits {
+    color: #666;
+}
+
+.benefit-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+}
+
+.benefit-icon {
+    font-size: 1.5rem;
+    color: #FF7F00;
+    margin-bottom: 0.5rem;
+}
+
+.benefit-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .amount-selection-container {
+        padding: 1rem;
+    }
+    
+    .donation-amount-options {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    
+    .amount-option-card {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .donation-title {
+        font-size: 2rem;
+    }
+    
+    .donation-header h3 {
+        font-size: 1.3rem;
+    }
+}
+
+.donor-info-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+
+.donor-label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.donor-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+</style>
+{% endblock %}

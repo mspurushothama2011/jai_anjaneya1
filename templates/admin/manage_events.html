@@ -1,0 +1,198 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Manage Events{% endblock %}
+
+{% block content %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let today = new Date().toISOString().split("T")[0];  // Get today's date in YYYY-MM-DD format
+        document.getElementById("event-date").setAttribute("min", today);
+    });
+</script>
+<div class="events-container" style="height: calc(100vh - 100px); overflow: hidden; max-width: 1400px; margin: 0 auto; padding: 20px;">
+    <h1 style="text-align: center; margin-bottom: 20px; color: #333; font-size: 28px;">Manage Events</h1>
+    
+    <div style="display: flex; justify-content: space-between; gap: 20px; height: calc(100% - 60px); overflow: hidden;">
+        <!-- Add New Event Form -->
+        <div style="width: 35%; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); height: fit-content; overflow-y: auto;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #007bff; font-size: 22px;">Add New Event</h2>
+            <form action="{{ url_for('events.add_event') }}" method="POST">
+                <div style="margin-bottom: 15px;">
+                    <label for="title" style="display: block; margin-bottom: 6px; font-weight: bold; color: #444; font-size: 14px;">Event Title:</label>
+                    <input type="text" id="title" name="title" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="event-date" style="display: block; margin-bottom: 6px; font-weight: bold; color: #444; font-size: 14px;">Date:</label>
+                    <input type="date" id="event-date" name="date" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;">
+                    <small style="display: block; margin-top: 4px; color: #666; font-size: 12px;">mm/dd/yyyy</small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="venue" style="display: block; margin-bottom: 6px; font-weight: bold; color: #444; font-size: 14px;">Venue:</label>
+                    <input type="text" id="venue" name="venue" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="description" style="display: block; margin-bottom: 6px; font-weight: bold; color: #444; font-size: 14px;">Description:</label>
+                    <textarea id="description" name="description" rows="3" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: vertical; font-size: 14px;"></textarea>
+                </div>
+                
+                <button type="submit" style="width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; transition: background-color 0.3s;">Add Event</button>
+            </form>
+        </div>
+        
+        <!-- Events Sections -->
+        <div style="width: 70%; height: 100%; display: flex; flex-direction: column; overflow: hidden; gap: 15px;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="events-flash-message events-flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Upcoming Events Section -->
+            <div style="display: flex; flex-direction: column; height: 48%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: #444; font-size: 20px;">Upcoming Events</h2>
+                </div>
+                
+                <div style="flex: 1; overflow-y: auto; padding: 15px; background: #fff; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                    {% if upcoming_events %}
+                        <div class="events-grid">
+                            {% for event in upcoming_events %}
+                                <div class="event-card">
+                                    <div style="padding: 15px;">
+                                        <h3 style="text-align: center; margin-top: 0; margin-bottom: 15px; color: #007bff; font-size: 18px;">{{ event.title }}</h3>
+                                        
+                                        <div style="background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Date:</strong> {{ event.date.strftime('%d-%m-%Y') }}
+                                            </p>
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Venue:</strong> {{ event.venue }}
+                                            </p>
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Description:</strong> {{ event.description }}
+                                            </p>
+                                        </div>
+                                        
+                                        <form action="{{ url_for('events.delete_event', event_id=event._id) }}" method="POST" style="text-align: center;">
+                                            <button type="submit" style="background-color: #dc3545; color: white; border: none; border-radius: 8px; padding: 6px 15px; cursor: pointer; font-size: 13px; transition: background-color 0.3s;">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p style="text-align: center; padding: 25px; background: #f8f9fa; border-radius: 8px; color: #666; font-size: 15px;">No upcoming events. Add a new event to get started.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Past Events Section -->
+            <div style="display: flex; flex-direction: column; height: 48%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: #444; font-size: 20px;">Past Events (Last 30 Days)</h2>
+                    <form action="{{ url_for('events.cleanup_past_events') }}" method="POST">
+                        <button type="submit" style="background-color: #ffc107; color: #333; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background-color 0.3s;">Cleanup Past Events</button>
+                    </form>
+                </div>
+                
+                <div style="flex: 1; overflow-y: auto; padding: 15px; background: #fff; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                    {% if past_events %}
+                        <div class="events-grid">
+                            {% for event in past_events %}
+                                <div class="event-card">
+                                    <div style="padding: 15px;">
+                                        <h3 style="text-align: center; margin-top: 0; margin-bottom: 15px; color: #6c757d; font-size: 18px;">{{ event.title }}</h3>
+                                        
+                                        <div style="background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Date:</strong> {{ event.date.strftime('%d-%m-%Y') }}
+                                            </p>
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Venue:</strong> {{ event.venue }}
+                                            </p>
+                                            <p style="margin: 6px 0; font-size: 14px;">
+                                                <strong style="color: #555;">Description:</strong> {{ event.description }}
+                                            </p>
+                                        </div>
+                                        
+                                        <form action="{{ url_for('events.delete_event', event_id=event._id) }}" method="POST" style="text-align: center;">
+                                            <button type="submit" style="background-color: #dc3545; color: white; border: none; border-radius: 8px; padding: 6px 15px; cursor: pointer; font-size: 13px; transition: background-color 0.3s;">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p style="text-align: center; padding: 25px; background: #f8f9fa; border-radius: 8px; color: #666; font-size: 15px;">No past events in the last 30 days.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Override admin_base styles */
+    .events-container {
+        width: 100% !important;
+        max-width: 1400px !important;
+        margin: 0 auto !important;
+        padding: 20px !important;
+    }
+    
+    /* Events grid layout */
+    .events-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    /* Event card styling */
+    .event-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    
+    /* Flash message styles */
+    .events-flash-message {
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+    
+    .events-flash-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .events-flash-danger, .events-flash-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .events-flash-info {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+    
+    /* Add hover effects */
+    button[type="submit"]:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}

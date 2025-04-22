@@ -1,0 +1,316 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Temple History</h2>
+    
+    <div class="row mb-5">
+        <div class="col-md-8 offset-md-2">
+            <div class="card heritage-card">
+                <div class="card-body">
+                    <h3 class="card-title">Our Sacred Heritage</h3>
+                    <p class="card-text">
+                        The Sri Veeranjaneyaswamy Temple at Garukamanthanapally (G.M.Palya) traces its roots back to the 15th century. It is believed that the temple was established by the great saint Sri Vyasaraja, the pre-incarnation of Sri Raghavendra Swami, during his spiritual mission across India. Renowned for installing 732 idols of Lord Anjaneya, Sri Vyasaraja consecrated this temple to invoke Vayu (Hanuman) and to alleviate the sufferings of the world. A unique feature of the idol here is its distinct posture — the right hand raised toward the sky or the devotees (known as Abhaya Hastha), a Gadha held in the other hand, the tail coiled above the head in a crescent shape with a bell at the tip, and the presence of Sri Ram Beejakshara. It is said that with the support of around 50 lakh villagers, the idol was installed and the temple came to life.
+                    </p>
+                </div>
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='images/g1.jpg') }}" width="100px" height="200px" class="heritage-img" alt="Temple Main View" onerror="this.src='https://via.placeholder.com/800x400?text=Temple+Image'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h3 class="text-center mb-4">Timeline of Important Events</h3>
+            
+            <div class="timeline">
+                <!-- Event 1 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">1945</div>
+                    <div class="timeline-content">
+                        <h4>Jeernoddhara of the Temple and Divine Revival</h4>
+                        <p>In 1945, Mr. Giriyappa, a weaver from the village and father of Mr. Anjanappa, visited the temple while traveling for his sari business. During his rest at the temple, he had a divine dream in which Sri Veeranjaneyaswamy appeared and urged him to restore the temple, promising blessings for his family. Inspired by the vision, Mr. Giriyappa sought help from villagers in Sharabande near Banashankari, Bangalore. Using bullock carts, they transported stones, pillars, and roofing slabs needed for the renovation. On May 13, 1945, Mr. Anjanappa of Shiryada, with the support of local farmers and skilled workers, successfully renovated and rebuilt the temple.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g2.jpg') }}" class="img-fluid rounded" alt="Temple Foundation" onerror="this.src='https://via.placeholder.com/400x200?text=Historical+Image'">
+                    </div>
+                </div>
+                
+                <!-- Event 2 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">1995</div>
+                    <div class="timeline-content">
+                        <h4>Establishment of Sri Veeranjaneyaswamy Educational and Charitable Trust</h4>
+                        <p>On 11th September 1995, with the united support and devotion of the villagers, an organization named Sri Veeranjaneyaswamy Educational and Charitable Trust was established. This sacred trust was founded with the noble intention of serving the temple and the community without any discrimination or involvement in politics. Since its inception, the trust has been actively engaged in the spiritual and structural development of the temple. Every year, it conducts Hanuma Jayanti celebrations with great devotion, including the auspicious Pavamana Homa, and generously distributes free prasadam (annadhanam)—especially rice offerings—to villagers and neighboring communities, upholding the values of service and devotion.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g3.jpg') }}" class="img-fluid rounded" alt="Temple Renovation" onerror="this.src='https://via.placeholder.com/400x200?text=Renovation+Image'">
+                    </div>
+                </div>
+                
+                <!-- Event 3 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2004</div>
+                    <div class="timeline-content">
+                        <h4>Consecration of the Majestic Rajagopura</h4>
+                        <p>In April 2004, a grand 68-feet high Rajagopura was consecrated by the amrita hasta (divine hand) of Sri Sushameendra Teertha Swamiji, the revered pontiff of Sri Raghavendra Swamy Matha, Mantralaya. This divine occasion marked a significant milestone in the spiritual and architectural evolution of the temple.
+                            </p><p>On behalf of the Sri Veeranjaneyaswamy Educational and Charitable Trust, the need for constructing the Rajagopura was put forth, emphasizing its alignment with Vastu Shastra and the sacred traditions of temple architecture. As part of these changes, the old well behind the sanctum sanctorum was respectfully closed, and residents within the temple premises were instructed to vacate, allowing the temple grounds to be restructured in accordance with scriptural guidelines.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g4.jpg') }}" class="img-fluid rounded" alt="Rajagopura" onerror="this.src='https://via.placeholder.com/400x200?text=Rajagopura+Image'">
+                    </div>
+                </div>
+                
+                <!-- Event 4 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2008</div>
+                    <div class="timeline-content">
+                        <h4>Sacred Stone Selection for Ekashila Idol</h4>
+                        <p>In 2008, the Sri Veeranjaneyaswamy Educational and Charitable Trust, with support from the villagers, began the sacred search for a monolithic stone (Ekashila) to sculpt the idol of Sri Veeranjaneya Swamy. Guided by architect Sri Kashinath, and inspired by visits to temples in Tamil Nadu and Andhra Pradesh, a divine stone was identified in Koira, Devanahalli Taluk. Measuring 40 feet long, 8 feet wide, and 9 feet thick, the 240-ton rock was chosen as the sacred base for the idol.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g5.jpg') }}" class="img-fluid rounded" alt="Temple Expansion" onerror="this.src='https://via.placeholder.com/400x200?text=Expansion+Image'">
+                    </div>
+                </div>
+                
+                <!-- Event 5 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2009</div>
+                    <div class="timeline-content">
+                        <h4>Arrival of the Sacred Stone and Beginning of Idol Carving</h4>
+                        <p>On 24th December 2008, with great devotion and effort, the sacred monolithic stone was transported from Devanahalli to the temple premises, overcoming many obstacles along the way. The stone finally arrived on 26th January 2009, marking a historic moment.
+
+                            </p><p>Following this, renowned Vastu sculptor Sri Ashoka Gudigar was entrusted by the Trust and villagers to carve the divine Ekashila idol of Sri Veeranjaneya Swamy, a task he humbly accepted, promising completion within three years. As per Vastu Shastra, the existing shrines of Lord Ganesha, Sri Subramanya, and Navagrahas were relocated and beautifully reconstructed, enhancing the spiritual and architectural sanctity of the temple.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g6.jpg') }}" class="img-fluid rounded" alt="Cultural Center" onerror="this.src='https://via.placeholder.com/400x200?text=Cultural+Center'">
+                    </div>
+                </div>
+                
+                <!-- Event 6 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2017</div>
+                    <div class="timeline-content">
+                        <h4>Grand Dedication of the 30-Foot Monolithic Sri Veeranjaneya Swamy Idol and Rajagopura Kumbabhisheka</h4>
+                        <p>From 19th to 21st May 2017, the grand Kumbabhishekam of the Rajagopura and the dedication of the 30-foot monolithic Sri Veeranjaneya Swamy idol took place. Preparations were made with the active participation of the Sri Veeranjaneyaswamy Educational and Charitable Trust, village elders, and enthusiastic villagers.
+
+                            </p><p>The event saw the arrival of Sri Sri 108 Vidyaprasanna Theertha Swamiji and Sri Sri Vishwapriya Theertha Swamiji from Sri Jagadguru Madhwacharya's Mula Sansthan and Sri Adamaru Math, Udupi, who graced the occasion with their presence and blessings. The celebrations included a grand procession, puja ceremonies, and cultural programs, including folk dances like Dollu Kunita, Kansale Nritya, and Veeragase Kunita.
+                            
+                            </p><p>On 20th May 2017, donors of the idol were honored by the swamijis, and on 21st May 2017, the Prana Pratisthana Homa and Kumbabhishekam were performed with great reverence. The event culminated with the unveiling of the Ekashila idol and the Kumbabhishekam of the Rajagopura, all under the guidance of Sri Sri 108 Vidyaprasanna Theertha Swamiji. The occasion was marked by an enormous turnout of over 30,000 devotees and was telecast by Bengaluru Doordarshan.
+                            
+                            </p><p>Later, a discourse on Sri Anjaneyaswami's Sundara Kanda was delivered by H.R. Nagarajacharya, President of Haridasa Sangh, K.R.Pura. The grand celebration concluded with a food distribution program, attended by more than 18,000 devotees.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g7.jpg') }}" class="img-fluid rounded mb-2" alt="Heritage Recognition" onerror="this.src='https://via.placeholder.com/400x200?text=Heritage+Status+Image'">
+                        <img src="{{ url_for('static', filename='images/g8.jpg') }}" class="img-fluid rounded mb-2" alt="Heritage Recognition" onerror="this.src='https://via.placeholder.com/400x200?text=Heritage+Status+Image'">
+                        <img src="{{ url_for('static', filename='images/g9.jpg') }}" class="img-fluid rounded mb-2" alt="Heritage Recognition" onerror="this.src='https://via.placeholder.com/400x200?text=Heritage+Status+Image'">
+                        <img src="{{ url_for('static', filename='images/g10.jpg') }}" class="img-fluid rounded" alt="Heritage Recognition" onerror="this.src='https://via.placeholder.com/400x200?text=Heritage+Status+Image'">
+                    </div>
+                </div>
+
+                <!-- Event 7 -->
+                <div class="timeline-item">
+                    <div class="timeline-date">2017</div>
+                    <div class="timeline-content">
+                        <h4>Temple Relocation and Vimana Gopura Construction</h4>
+                        <p>In 2017, as part of the temple development and Vastu realignment, the shrines of Sri Ganesha, Sri Subramanya, Sri Nagadevatha, and Sri Navagraha were relocated and newly constructed within the temple premises. These temples were shifted to new locations following Vastu guidelines to enhance spiritual harmony. Notably, the Navagraha temple was relocated and constructed on the northern side of the Sri Maheshwaramma Temple, directly opposite the Ekashila idol.
+
+                            </p><p>Alongside these developments, Vimana Gopuras were constructed and consecrated for both the Sri Veeranjaneya Swamy Temple and the Sri Maheshwaramma Temple. These towering, ornately designed structures added majestic presence to the temples. The Kumbabhisheka ceremonies for both gopuras were performed with great devotion and grandeur during the 2017 Mahotsava celebrations, enhancing the spiritual aura and architectural magnificence of the temple complex.</p>
+                    </div>
+                    <div class="timeline-image">
+                        <img src="{{ url_for('static', filename='images/g11.png') }}" class="img-fluid rounded mb-2" alt="Heritage Recognition" onerror="this.src='https://via.placeholder.com/400x200?text=Heritage+Status+Image'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Temple Architecture Section -->
+    <div class="row mt-5">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Temple Future Developments and Enhancements</h3>
+                    <p class="card-text">
+                        As part of the temple’s ongoing development plans, several future initiatives have been envisioned to enhance its spiritual and cultural significance. A key highlight among these is the proposed silver-clad chariot, which will be used for special processions and religious occasions, adding grandeur to temple festivities. Alongside this, additional infrastructure improvements, beautification of the temple premises, and further enhancements to existing facilities are planned to enrich the experience for devotees and uphold the sanctity and heritage of the temple for future generations.
+                    </p>
+                    <p class="card-text">
+                        The temple complex includes a dedicated cooking area, a spacious hall for cultural and religious activities, facilities for daily Annadana (free meal distribution), and vibrant celebrations during festivals such as Dasara, etc.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 20px;
+    }
+    
+    .timeline::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        background-color: #f9a825;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        margin-left: -3px;
+    }
+    
+    .timeline-item {
+        padding: 10px 40px;
+        position: relative;
+        background-color: inherit;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 70px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .timeline-item::after {
+        display: none; /* Hide the original circle */
+    }
+    
+    .timeline-date {
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        background-color: #f9a825;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 1.3rem;
+        left: calc(50% - 35px);
+        top: -35px;
+        z-index: 2;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        border: 4px solid white;
+    }
+    
+    .timeline-content {
+        padding: 20px 30px;
+        background-color: white;
+        position: relative;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        width: 45%;
+        margin-right: 10%;
+        margin-top: 20px;
+    }
+    
+    .timeline-image {
+        width: 45%;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
+    .timeline-image img {
+        max-width: 100%;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Alternate the content and image sides */
+    .timeline-item:nth-child(even) .timeline-content {
+        margin-right: 0;
+        margin-left: 10%;
+        order: 2;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-image {
+        order: 1;
+    }
+    
+    @media screen and (max-width: 768px) {
+        .timeline::after {
+            left: 35px;
+        }
+        
+        .timeline-item {
+            flex-direction: column;
+        }
+        
+        .timeline-date {
+            left: 35px;
+            top: -20px;
+            width: 60px;
+            height: 60px;
+            font-size: 1.1rem;
+        }
+        
+        .timeline-content, 
+        .timeline-item:nth-child(even) .timeline-content {
+            width: 100%;
+            margin-left: 80px;
+            margin-right: 0;
+            order: 2;
+            margin-top: 50px;
+        }
+        
+        .timeline-image,
+        .timeline-item:nth-child(even) .timeline-image {
+            width: 100%;
+            margin-left: 80px;
+            padding: 10px 0;
+            order: 3;
+            margin-top: 0;
+        }
+    }
+    
+    /* Heritage card styling */
+    .heritage-card {
+        display: flex;
+        flex-direction: row;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .heritage-card .card-body {
+        width: 60%;
+        padding: 30px;
+    }
+    
+    .heritage-card .card-image {
+        width: 60%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9f9f9;
+    }
+    
+    .heritage-img {
+        width: 50%;
+        height: auto;
+        object-fit: cover;
+    }
+    
+    @media (max-width: 768px) {
+        .heritage-card {
+            flex-direction: column;
+        }
+        
+        .heritage-card .card-body,
+        .heritage-card .card-image {
+            width: 70%;
+        }
+        
+        .heritage-img {
+            max-height: auto;
+        }
+    }
+</style>
+{% endblock %}

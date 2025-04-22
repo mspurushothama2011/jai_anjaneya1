@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cache Control Headers -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}Temple System{% endblock %}</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 96%;
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        
+        /* Modern Navigation Bar */
+        .header {
+            background-color: #FF6B00;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 2rem;
+            height: 70px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: black;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #800000;
+            font-size: 28px;
+            background-color: #FFF5E0;
+            border-radius: 50%;
+            border: 2px solid #800000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: #444;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+        
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: whitesmoke;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: whitesmoke;
+        }
+        
+        .nav-link:hover:after {
+            width: 100%;
+        }
+        
+        /* Auth Buttons */
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto; /* Push to right side */
+        }
+        
+        .user-button, .admin-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 500;
+            text-decoration: none; 
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .user-button {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+        }
+        
+        .admin-button {
+            background-color: transparent;
+            color: #444;
+            border: 1px solid #ccc;
+        }
+        
+        .user-button:hover {
+            background-color: whitesmoke;
+        }
+        
+        .admin-button:hover {
+            background-color: #f5f5f5;
+            border-color: #999;
+        }
+
+    /* Profile Container */
+    .profile-container {
+        position: relative;
+        display: inline-block;
+        margin-left: auto; /* Push to right side */
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        object-fit: cover;
+        border: 2px solid #ff5722;
+        transition: transform 0.3s;
+    }
+    
+    .profile-pic:hover {
+        transform: scale(1.05);
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 45px;
+        background: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        min-width: 180px;
+        z-index: 1000;
+        overflow: hidden;
+        animation: dropdown-appear 0.3s ease forwards;
+    }
+    
+    @keyframes dropdown-appear {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        text-decoration: none;
+        color: #333;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    
+    .dropdown-menu a:hover {
+        background: #f8f9fa;
+        color: #ff5722;
+        padding-left: 20px;
+    }
+    
+    .dropdown-menu a i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+    
+    /* Legacy styles for other page elements */
+    .card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .home-button {
+        display: inline-block;
+        margin: 15px;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: white;
+        background-color: #ff5722;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    
+    .home-button:hover {
+        background-color: #e64a19;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .navbar {
+            padding: 0 1rem;
+            height: auto;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links {
+            order: 3;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px 0;
+            gap: 1rem;
+        }
+        
+        .auth-buttons, .profile-container {
+            order: 2;
+            margin-left: auto; /* Ensure alignment on mobile */
+            padding-right: 0.5rem;
+        }
+        
+        .logo {
+            font-size: 1.2rem;
+        }
+        
+        .logo-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 22px;
+        }
+    }
+
+    /* Footer Styles */
+    .site-footer {
+        background-color: #241468;
+        color: #fff;
+        padding: 60px 0 0;
+        margin-top: 60px;
+        position: relative;
+    }
+    
+    .footer-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    
+    .footer-column {
+        flex: 1;
+        min-width: 250px;
+        margin-bottom: 30px;
+        padding: 0 15px;
+    }
+    
+    .footer-logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .footer-logo-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #FFC436;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-size: 20px;
+        color: #241468;
+    }
+    
+    .footer-logo h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        max-width: 180px;
+        line-height: 1.3;
+    }
+    
+    .footer-description {
+        color: #ccc;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-top: 15px;
+    }
+    
+    .footer-column h4 {
+        color: #FFC436;
+        font-size: 18px;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    
+    .footer-column h4:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 50px;
+        height: 2px;
+        background-color: #FFC436;
+    }
+    
+    .footer-links, .temple-hours, .contact-info {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+    
+    .footer-links a {
+        color: #ddd;
+        text-decoration: none;
+        transition: color 0.3s;
+        font-size: 14px;
+        display: inline-block;
+    }
+    
+    .footer-links a:hover {
+        color: #FFC436;
+        transform: translateX(5px);
+    }
+    
+    .temple-hours li {
+        margin-bottom: 12px;
+        color: #ddd;
+        font-size: 14px;
+    }
+    
+    .temple-hours li span {
+        color: #FFC436;
+        font-weight: 500;
+        margin-right: 5px;
+    }
+    
+    .contact-info li {
+        margin-bottom: 15px;
+        color: #ddd;
+        font-size: 14px;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .contact-info li i {
+        color: #FFC436;
+        margin-right: 10px;
+        font-size: 16px;
+        margin-top: 3px;
+    }
+    
+    .social-heading {
+        margin-top: 25px;
+    }
+    
+    .social-links {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .social-link {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    text-decoration: none;
+        transition: all 0.3s;
+        font-size: 15px;
+    }
+    
+    .social-link:hover {
+        background-color: #FFC436;
+        color: #241468;
+        transform: translateY(-3px);
+    }
+    
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 0;
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .copyright {
+        color: #aaa;
+    font-size: 14px;
+    }
+    
+    .footer-bottom-links {
+        margin-top: 10px;
+    }
+    
+    .footer-bottom-links a {
+        color: #aaa;
+        text-decoration: none;
+        margin: 0 10px;
+        font-size: 13px;
+        transition: color 0.3s;
+    }
+    
+    .footer-bottom-links a:hover {
+        color: #FFC436;
+    }
+    
+    @media screen and (max-width: 992px) {
+        .footer-container {
+            flex-wrap: wrap;
+        }
+        
+        .footer-column {
+            flex: 0 0 50%;
+        }
+    }
+    
+    @media screen and (max-width: 768px) {
+        .footer-column {
+            flex: 0 0 100%;
+        }
+        
+        .site-footer {
+            padding-top: 40px;
+        }
+        
+        .footer-bottom {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    /* Dropdown Navigation Styles */
+    .dropdown-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .dropdown-toggle i {
+        font-size: 12px;
+        transition: transform 0.3s;
+    }
+    
+    .nav-dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        min-width: 180px;
+        z-index: 1000;
+        padding: 8px 0;
+        margin-top: 5px;
+    }
+    
+    .nav-dropdown-menu.show {
+        display: block;
+        animation: dropdown-appear 0.3s ease forwards;
+    }
+    
+    .dropdown-item {
+        display: block;
+        padding: 10px 16px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .dropdown-item:hover {
+        background: #f8f9fa;
+        color: #FF6B00;
+        padding-left: 20px;
+    }
+</style>
+
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        if (dropdown.style.display === "block") {
+            dropdown.style.display = "none";
+        } else {
+            dropdown.style.display = "block";
+        }
+        event.stopPropagation(); // Prevent event from bubbling up
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function(event) {
+        const dropdown = document.getElementById("profileDropdown");
+        const profilePic = document.getElementById("profilePic");
+        
+        if (dropdown && profilePic && event.target !== profilePic && !dropdown.contains(event.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+
+    // Handle session timeout after 1 hour of inactivity
+    let inactivityTimeout;
+    const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds
+    
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(handleInactiveSession, SESSION_TIMEOUT);
+    }
+    
+    function handleInactiveSession() {
+        // Clear client-side storage
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Redirect to login page with a message
+        alert('Your session has expired due to inactivity. Please log in again.');
+        window.location.href = '/user/login';
+    }
+    
+    // Reset timer on user activity
+    document.addEventListener('mousemove', resetInactivityTimer);
+    document.addEventListener('keypress', resetInactivityTimer);
+    document.addEventListener('click', resetInactivityTimer);
+    document.addEventListener('scroll', resetInactivityTimer);
+    
+    // Initialize timer when page loads
+    resetInactivityTimer();
+    
+    // Function to clear session data on logout
+    function clearSessionData() {
+        sessionStorage.clear();
+        localStorage.clear();
+    }
+
+        // Toggle dropdown menu
+        function toggleNavDropdown(event) {
+            event.preventDefault();
+            const dropdown = document.getElementById('navDropdown');
+            dropdown.classList.toggle('show');
+            
+            // Toggle chevron direction
+            const icon = event.currentTarget.querySelector('i');
+            if (dropdown.classList.contains('show')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0)';
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('navDropdown');
+            const toggleButton = document.querySelector('.dropdown-toggle');
+            
+            if (dropdown && toggleButton && 
+                !dropdown.contains(event.target) && 
+                !toggleButton.contains(event.target)) {
+                dropdown.classList.remove('show');
+                toggleButton.querySelector('i').style.transform = 'rotate(0)';
+            }
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-om"></i>
+                </div>
+                ಶ್ರೀ ವೀರಾಂಜನೇಯ ಸ್ವಾಮಿ ದೇವಸ್ಥಾನ
+            </a>
+        
+        <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/donation" class="nav-link">Donations</a>
+                <a href="/e_hundi" class="nav-link">E-Hundi</a>
+                <a href="/general-sevas" class="nav-link">Sevas</a>
+                <a href="/events" class="nav-link">Events</a>
+                <div class="dropdown-container">
+                    <a href="#" class="nav-link dropdown-toggle" onclick="toggleNavDropdown(event)">
+                        More <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <div class="nav-dropdown-menu" id="navDropdown">
+                        <a href="{{ url_for('general.gallery') }}" class="dropdown-item">Gallery</a>
+                        <a href="{{ url_for('general.pooja_timings') }}" class="dropdown-item">Pooja Timings</a>
+                        <a href="{{ url_for('general.general_temhistory') }}" class="dropdown-item">Temple History</a>
+                        <a href="{{ url_for('general.contact') }}" class="dropdown-item">Contact</a>
+                    </div>
+                </div>
+        </div>
+    
+            <div class="auth-buttons">
+            <!--<p>Session Debug: {{ session }}</p>   This helps us see what is inside the session -->
+            
+                {% if session.get('user_id') %}
+                    <div class="profile-container">
+                        <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" 
+                             alt="Profile" 
+                             class="profile-pic" 
+                             id="profilePic" 
+                             onclick="toggleDropdown()">
+                        <div class="dropdown-menu" id="profileDropdown">
+                            <a href="{{ url_for('user.dashboard') }}"><i class="fas fa-user"></i> Profile</a>
+                            <a href="{{ url_for('user.history') }}"><i class="fas fa-history"></i> History</a>
+                            <a href="{{ url_for('user.logout') }}" onclick="clearSessionData()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('user.login') }}" class="user-button">Login</a>
+                    <a href="{{ url_for('admin.login') }}" class="admin-button">Admin</a>
+                {% endif %}
+        </div>
+    </nav>
+    </header>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon"><i class="fas fa-om"></i></div>
+                    <h3>Sri Veeranjaneya Swamy Temple</h3>
+                </div>
+                <p class="footer-description">A sacred place dedicated to Lord Hanuman, offering spiritual guidance and divine blessings to devotees for over 100 years.</p>
+            </div>
+            
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/events" class="nav-link">Events</a></li>
+                <li><a href="/donation" class="nav-link">Donations</a></li>
+                <li><a href="/general-sevas" class="nav-link">Seva List</a></li>
+                <li><a href="/contact" class="nav-link">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h4>Temple Hours</h4>
+                <ul class="temple-hours">
+                    <li><span>Monday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    <li><span>Tuesday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    <li><span>Wednesday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    <li><span>Thursday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    <li><span>Friday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    <li><span>Saturday:</span> </li><li>6:00 AM - 12:00 PM, 5:30 PM - 9:00 PM</li>
+                    <li><span>Sunday:</span> </li><li>6:00 AM - 11:30 AM, 5:30 PM - 8:30 PM</li>
+                    
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h4>Contact Information</h4>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> S No, 35, 3rd Main Rd, Cauveri Colony, GM Palya, C V Raman Nagar, Bengaluru, Karnataka 560075</li>
+                    <li><i class="fas fa-phone"></i> +91 9686447485</li>
+                    <li><i class="fas fa-envelope"></i> info@veeranjaneya.org</li>
+                </ul>
+                
+                <h4 class="social-heading">Connect With Us</h4>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/veeranjaneyaswamytemplegmpalya" class="social-link" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="copyright">
+                <p>&copy; 2025 Sri Veeranjaneya Swamy Temple. All Rights Reserved.</p>
+            </div>
+            <div class="footer-bottom-links">
+                <a href="{{ url_for('general.privacy_policy') }}">Privacy Policy</a>
+                <a href="{{ url_for('general.terms_of_service') }}">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Cache Control Headers -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        
+        .container { 
+            width: 90%; 
+            max-width: 1200px; 
+            margin: auto; 
+            padding: 20px; 
+        }
+        
+        .card { 
+            border: 1px solid #ccc; 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            background: #fff; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Admin Navigation */
+        nav { 
+            background: #800000; /* Maroon color for temple theme */
+            padding: 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+            height: 70px;
+        }
+        
+        .admin-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .admin-logo i {
+            margin-right: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+        
+        nav a { 
+            color: white; 
+            text-decoration: none; 
+            margin: 0 15px; 
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        nav a:hover {
+            color: #D4AF37; /* Gold color for hover */
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #fff;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Buttons */
+        .button {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .blue { background-color: #007bff; }
+        .blue:hover { background-color: #0056b3; }
+        
+        .red { background-color: #dc3545; }
+        .red:hover { background-color: #c82333; }
+        
+        .purple { background-color: #6a0dad; }
+        .purple:hover { background-color: #5a0c9d; }
+
+        .green { background-color: #28a745; }
+        .green:hover { background-color: #218838; }
+        
+        .orange { background-color: #FF7F00; }
+        .orange:hover { background-color: #e65100; }
+
+        /* Forms */
+    .seva-form {
+        background: #fff;
+            padding: 25px;
+        border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        margin: auto;
+        font-family: Arial, sans-serif;
+            text-align: left;
+    }
+
+    .seva-form h2 {
+        text-align: center;
+        color: #333;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .seva-form h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #800000;
+    }
+
+    .seva-form label {
+        font-weight: bold;
+        display: block;
+            margin: 15px 0 5px;
+            color: #555;
+    }
+
+    .seva-form input,
+        .seva-form textarea,
+        .seva-form select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .seva-form input:focus,
+        .seva-form textarea:focus,
+        .seva-form select:focus {
+            border-color: #800000;
+            box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+            outline: none;
+    }
+
+    .seva-form textarea {
+            min-height: 100px;
+            resize: vertical;
+    }
+
+    .seva-form button {
+        width: 100%;
+            padding: 12px;
+            background-color: #800000;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+            font-weight: 600;
+        transition: 0.3s ease;
+            margin-top: 10px;
+    }
+
+    .seva-form button:hover {
+            background-color: #600000;
+        }
+        
+        /* Grid Layouts */
+        .seva-list, .event-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px;
+            background: #f8f9fa;
+    border-radius: 10px;
+}
+
+        /* Card Design */
+        .seva-list .card, .event-list .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .seva-list .card:hover, .event-list .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Card Text */
+        .seva-list .card h2, .event-list .card h2 {
+    font-size: 20px;
+    color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+}
+
+        .seva-list .card p, .event-list .card p {
+    font-size: 14px;
+    color: #555;
+            margin-bottom: 12px;
+            flex-grow: 1;
+        }
+
+        /* Action Buttons */
+        .seva-list .card form, .event-list .card form {
+            margin-top: auto;
+        }
+
+        .seva-list .card form button, .event-list .card form button {
+            background-color: #dc3545;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+            width: 100%;
+}
+
+        .seva-list .card form button:hover, .event-list .card form button:hover {
+    background-color: #c82333;
+}
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background-color: #800000;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Dashboard Stats */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #fff, #f8f5f0);
+    padding: 20px;
+    border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-left: 5px solid #800000;
+        }
+        
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #800000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+    margin-bottom: 15px;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .stat-card h3 {
+            font-size: 24px;
+            margin: 10px 0;
+            color: #333;
+        }
+        
+        .stat-card p {
+            color: #666;
+    font-size: 14px;
+            margin: 0;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .container {
+                width: 95%;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .menu-toggle {
+                display: flex;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                right: -300px;
+                flex-direction: column;
+                background-color: #800000;
+                width: 250px;
+                height: calc(100vh - 70px);
+                padding: 1.5rem;
+                gap: 1.2rem;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+                transition: right 0.3s ease;
+                align-items: flex-start;
+                z-index: 1000;
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            nav a {
+                margin: 10px 0;
+                font-size: 1.1rem;
+                display: block;
+    width: 100%;
+                text-align: left;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                padding: 15px;
+            }
+            
+            .seva-list, .event-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Make tables responsive */
+            table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+            
+            .seva-form {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                width: 100%;
+                padding: 15px 10px;
+            }
+            
+            .nav-container {
+                height: 60px;
+                padding: 0 15px;
+            }
+            
+            .admin-logo {
+                font-size: 1.1rem;
+            }
+            
+            .nav-links {
+                top: 60px;
+                width: 100%;
+            }
+            
+            .button {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+            
+            .alert {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-card .icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .stat-card h3 {
+                font-size: 20px;
+            }
+        }
+    </style>
+    {% block additional_styles %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-logo">
+                <i class="fas fa-om"></i> Admin Panel
+            </a>
+            
+            <div class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('general_admin.manage_donations') }}">Donations</a>
+                <a href="{{ url_for('sevas.seva') }}">Sevas</a>
+                <a href="{{ url_for('events.events') }}">Events</a>
+                <a href="{{ url_for('general_admin.manage_users') }}">Users</a>
+                <a href="{{ url_for('general_admin.reports') }}">Reports</a>
+                <a href="{{ url_for('admin.logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'danger' or category == 'error' %}
+                            <i class="fas fa-times-circle"></i>
+                        {% elif category == 'warning' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (menuToggle && navLinks) {
+                menuToggle.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                    document.body.classList.toggle('menu-open');
+                });
+            }
+            
+            // Session timeout checker
+            let sessionTimeout;
+            const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds
+            
+            function resetSessionTimeout() {
+                clearTimeout(sessionTimeout);
+                sessionTimeout = setTimeout(function() {
+                    alert('Your admin session is about to expire due to inactivity.');
+                    // You can add a redirect to the login page here if needed
+                }, SESSION_TIMEOUT);
+            }
+            
+            // Reset the timeout when user interacts with the page
+            document.addEventListener('mousemove', resetSessionTimeout);
+            document.addEventListener('keypress', resetSessionTimeout);
+            document.addEventListener('click', resetSessionTimeout);
+            
+            // Initialize on page load
+            resetSessionTimeout();
+            
+            // Clear session data on logout
+            const logoutLink = document.querySelector('a[href*="logout"]');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function() {
+                    // Clear local storage or other session data
+                    localStorage.removeItem('adminSession');
+                    sessionStorage.clear();
+                });
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

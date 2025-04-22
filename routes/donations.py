@@ -6,6 +6,7 @@ import hashlib
 import hmac
 from config import Config
 from routes.payment import razorpay_client
+from utils import format_datetime_ist
 
 donations_bp = Blueprint('donations', __name__)
 
@@ -276,7 +277,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": format_datetime_ist(datetime.now()),
             "status": "Paid"
         }
 
@@ -290,7 +291,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": format_datetime_ist(datetime.now()),
             "status": "Paid"
         }
 

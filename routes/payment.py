@@ -10,6 +10,7 @@ import os
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from config import Config
+from utils import format_datetime_ist
 
 # Load environment variables
 load_dotenv()
@@ -108,7 +109,7 @@ def verify_payment():
                     "seva_date": session.get("seva_date"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "booking_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "booking_date": format_datetime_ist(datetime.now()),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -126,7 +127,7 @@ def verify_payment():
                     "donor_email": session.get("donor_email"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "donation_date": format_datetime_ist(datetime.now()),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -214,7 +215,7 @@ def handle_seva_payment(order_id, payment_id):
             "seva_date": seva_date,
             "order_id": order_id,
             "payment_id": payment_id,
-            "booking_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "booking_date": format_datetime_ist(datetime.now()),
             "status": "Paid"
         }
 
@@ -263,7 +264,7 @@ def handle_donation_payment(order_id, payment_id):
             "donor_email": donor_email,
             "order_id": order_id,
             "payment_id": payment_id,
-            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": format_datetime_ist(datetime.now()),
             "status": "Paid"
         }
 

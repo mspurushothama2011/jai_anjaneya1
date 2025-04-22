@@ -6,6 +6,12 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-7 mx-auto">
+            {% if error_message %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i> {{ error_message }}
+            </div>
+            {% endif %}
+            
             {% if donation %}
             <div class="card border-0 shadow-lg">
                 <div class="card-header {% if is_canceled %}bg-danger{% else %}bg-success{% endif %} text-white py-3 text-center">

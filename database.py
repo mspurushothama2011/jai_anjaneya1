@@ -6,7 +6,12 @@ import os
 load_dotenv()
 
 # ✅ Connect to MongoDB
-client = MongoClient(os.getenv("MONGODB_URI", "mongodb+srv://mspurushothama20:egEQD9sJZtl6wFk3@cluster0.nlxfpzd.mongodb.net/"))
+client = MongoClient(
+    os.getenv("MONGODB_URI"),
+    serverSelectionTimeoutMS=5000,  # 5 seconds
+    connectTimeoutMS=10000,         # 10 seconds
+    socketTimeoutMS=45000           # 45 seconds
+)
 db = client["temple_system"]
 
 # ✅ Define collections

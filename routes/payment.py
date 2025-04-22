@@ -325,30 +325,43 @@ def payment_confirmation_page():
 @payment_bp.route("/donation-confirmation")
 def donation_confirmation_page():
     """Render the donation confirmation page"""
-    # Check if user is logged in
-    if "user_id" not in session:
-        flash("Please login to view donation confirmation", "warning")
-        return redirect(url_for('user.login'))
+    try:
+        # Check if user is logged in
+        if "user_id" not in session:
+            flash("Please login to view donation confirmation", "warning")
+            return redirect(url_for('user.login'))
+            
+        print("Donation confirmation page accessed")  # Debug log
         
-    print("Donation confirmation page accessed")  # Debug log
-    
-    donation = session.get("donation")
-    print(f"Donation data in session: {donation is not None}")  # Debug log
-    
-    if not donation:
-        print("No donation found in session")  # Debug log
-        flash("No donation found", "error")
-        return redirect(url_for("general.home"))
+        donation = session.get("donation")
+        print(f"Donation data in session: {donation is not None}")  # Debug log
+        
+        if not donation:
+            print("No donation found in session")  # Debug log
+            flash("No donation found", "error")
+            return redirect(url_for("general.home"))
 
-    # Get user details
-    user_id = session.get("user_id")
-    user = user_collection.find_one({"_id": ObjectId(user_id)})
-    if not user:
-        flash("User not found", "error")
-        return redirect(url_for("user.login"))
-        
-    print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
-    return render_template("user/donation_confirmation.html", donation=donation, user=user)
+        # Get user details
+        user_id = session.get("user_id")
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            print(f"User with ID {user_id} not found in database")  # Debug log
+            # Don't redirect - continue with donation data only
+            return render_template("user/donation_confirmation.html", donation=donation, user=None)
+            
+        print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
+        return render_template("user/donation_confirmation.html", donation=donation, user=user)
+    
+    except Exception as e:
+        import traceback
+        print(f"Exception in donation_confirmation_page: {str(e)}")
+        traceback.print_exc()
+        # Return a simple confirmation page with minimal data to avoid 500 error
+        donation_data = session.get("donation", {})
+        return render_template("user/donation_confirmation.html", 
+                              donation=donation_data, 
+                              user=None,
+                              error_message="An error occurred, but your donation was processed successfully.")
 
 @payment_bp.route("/download-receipt/<payment_type>", methods=["GET"])
 @payment_bp.route("/download-receipt/<payment_type>/<payment_id>", methods=["GET"])

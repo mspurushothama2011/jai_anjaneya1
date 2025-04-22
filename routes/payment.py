@@ -337,6 +337,17 @@ def donation_confirmation_page():
             # Instead of redirecting, show the no donation found template
             return render_template("user/donation_confirmation.html", donation=None)
 
+        # Check if donation object has user_id as ObjectId and convert to string if needed
+        if "user_id" in donation and isinstance(donation["user_id"], ObjectId):
+            donation["user_id"] = str(donation["user_id"])
+            
+        # Check if donation object has donation_id as ObjectId and convert to string if needed
+        if "donation_id" in donation and isinstance(donation["donation_id"], ObjectId):
+            donation["donation_id"] = str(donation["donation_id"])
+            
+        # Ensure is_canceled flag is set based on payment status
+        is_canceled = donation.get("status") == "Canceled" or donation.get("payment_id") == "canceled"
+
         # Optional user details - don't require login
         user = None
         if "user_id" in session:
@@ -349,7 +360,7 @@ def donation_confirmation_page():
                 # Continue without user data
         
         print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
-        return render_template("user/donation_confirmation.html", donation=donation, user=user)
+        return render_template("user/donation_confirmation.html", donation=donation, user=user, is_canceled=is_canceled)
     
     except Exception as e:
         import traceback

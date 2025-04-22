@@ -5,26 +5,39 @@ import os
 
 load_dotenv()
 
-# ✅ Connect to MongoDB
-client = MongoClient(
-    os.getenv("MONGODB_URI"),
-    serverSelectionTimeoutMS=5000,  # 5 seconds
-    connectTimeoutMS=10000,         # 10 seconds
-    socketTimeoutMS=45000           # 45 seconds
-)
-db = client["temple_system"]
+# Get MongoDB URI from environment variable - this will be set in Render
+mongodb_uri = os.getenv("MONGODB_URI") or os.getenv("MONGO_URI")
 
-# ✅ Define collections
-seva_collection = db["seva_collection"]
-seva_list = db["seva_list"]
-events_collection = db["events_collection"]
-user_collection = db["user_collection"]
-donations_list = db["donations_list"]  # Contains donation types/options
-donations_collection = db["donations_collection"]  # Contains completed donations
+if not mongodb_uri:
+    raise ValueError("No MongoDB connection string found in environment variables! Set MONGODB_URI or MONGO_URI")
 
-
-
-
+# Connect to MongoDB with improved error handling and connection parameters
+try:
+    client = MongoClient(
+        mongodb_uri,
+        serverSelectionTimeoutMS=5000,  # 5 seconds
+        connectTimeoutMS=10000,         # 10 seconds
+        socketTimeoutMS=45000,          # 45 seconds
+        retryWrites=True,               # Enable retry writes for reliability
+        w="majority"                    # Write concern for data durability
+    )
+    
+    # Test the connection
+    client.admin.command('ping')
+    print("MongoDB connection successful!")
+    
+    db = client["temple_system"]
+    
+    # Define collections
+    seva_collection = db["seva_collection"]
+    seva_list = db["seva_list"]
+    events_collection = db["events_collection"]
+    user_collection = db["user_collection"]
+    donations_list = db["donations_list"]  # Contains donation types/options
+    donations_collection = db["donations_collection"]  # Contains completed donations
+except Exception as e:
+    print(f"MongoDB connection error: {e}")
+    raise
 
 def initialize_db():
     print("Database initialized successfully!")

@@ -302,6 +302,9 @@ def verify_donation_payment():
             return jsonify({"error": "Failed to store donation"}), 500
 
         print(f"Donation saved successfully with ID: {result.inserted_id}")  # Debug log
+        
+        # Add the inserted ID to the session object
+        donation_session["_id"] = str(result.inserted_id)
 
         # Store in session for confirmation page & PDF
         session["donation"] = donation_session

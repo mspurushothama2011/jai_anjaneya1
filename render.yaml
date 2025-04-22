@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: temple-management-system
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.7
+      - key: FLASK_APP
+        value: run.py
+      - key: FLASK_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # This will be set in the Render dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false # Set manually in the Render dashboard
+      - key: RAZORPAY_KEY_SECRET
+        sync: false # Set manually in the Render dashboard 

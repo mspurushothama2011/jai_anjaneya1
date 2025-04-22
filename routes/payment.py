@@ -326,29 +326,28 @@ def payment_confirmation_page():
 def donation_confirmation_page():
     """Render the donation confirmation page"""
     try:
-        # Check if user is logged in
-        if "user_id" not in session:
-            flash("Please login to view donation confirmation", "warning")
-            return redirect(url_for('user.login'))
-            
         print("Donation confirmation page accessed")  # Debug log
         
+        # Get donation data from session
         donation = session.get("donation")
         print(f"Donation data in session: {donation is not None}")  # Debug log
         
         if not donation:
             print("No donation found in session")  # Debug log
-            flash("No donation found", "error")
-            return redirect(url_for("general.home"))
+            # Instead of redirecting, show the no donation found template
+            return render_template("user/donation_confirmation.html", donation=None)
 
-        # Get user details
-        user_id = session.get("user_id")
-        user = user_collection.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            print(f"User with ID {user_id} not found in database")  # Debug log
-            # Don't redirect - continue with donation data only
-            return render_template("user/donation_confirmation.html", donation=donation, user=None)
-            
+        # Optional user details - don't require login
+        user = None
+        if "user_id" in session:
+            try:
+                user_id = session.get("user_id")
+                user = user_collection.find_one({"_id": ObjectId(user_id)})
+                print(f"User found: {user is not None}")  # Debug log
+            except Exception as e:
+                print(f"Error retrieving user: {str(e)}")
+                # Continue without user data
+        
         print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
         return render_template("user/donation_confirmation.html", donation=donation, user=user)
     
@@ -356,8 +355,16 @@ def donation_confirmation_page():
         import traceback
         print(f"Exception in donation_confirmation_page: {str(e)}")
         traceback.print_exc()
+        
+        # Try to get any donation data we have
+        donation_data = {}
+        try:
+            donation_data = session.get("donation", {})
+            print(f"Fallback donation data: {donation_data}")
+        except:
+            print("Could not retrieve session data")
+            
         # Return a simple confirmation page with minimal data to avoid 500 error
-        donation_data = session.get("donation", {})
         return render_template("user/donation_confirmation.html", 
                               donation=donation_data, 
                               user=None,
@@ -632,16 +639,16 @@ def download_receipt(payment_type, payment_id=None):
 @payment_bp.route("/confirmation-receipt/<payment_type>", methods=["GET"])
 def confirmation_receipt(payment_type):
     """Generate and download receipt PDF from confirmation page (using session data)"""
-    # Check if user is logged in
-    if "user_id" not in session:
-        flash("Please login to download your receipt", "warning")
-        return redirect(url_for('user.login'))
-        
     try:
         print(f"Generating confirmation {payment_type} receipt from session")
         
         # Get data from session
         if payment_type == "seva":
+            # Seva still requires login
+            if "user_id" not in session:
+                flash("Please login to download your receipt", "warning")
+                return redirect(url_for('user.login'))
+                
             # Get seva booking data from session
             seva_booking = session.get("seva_booking")
             if not seva_booking:
@@ -746,7 +753,7 @@ def confirmation_receipt(payment_type):
             return response
             
         elif payment_type == "donation":
-            # Get donation data from session
+            # Get donation data from session - don't require login for donation receipts
             donation = session.get("donation")
             if not donation:
                 flash("Donation data not found in session", "error")
@@ -800,20 +807,26 @@ def confirmation_receipt(payment_type):
             
             pdf.cell(70, 8, "Donor Name:", 1)
             donor_name = donation.get("donor_name", "")
-            if not donor_name and "user_id" in donation:
+            if not donor_name and "user_id" in donation and donation["user_id"]:
                 # If donor name is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_name = user.get("name", "")
+                try:
+                    user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
+                    if user:
+                        donor_name = user.get("name", "")
+                except Exception as e:
+                    print(f"Error getting donor name: {str(e)}")
             pdf.cell(0, 8, donor_name, 1, 1)
             
             pdf.cell(70, 8, "Donor Email:", 1)
             donor_email = donation.get("donor_email", "")
-            if not donor_email and "user_id" in donation:
+            if not donor_email and "user_id" in donation and donation["user_id"]:
                 # If donor email is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_email = user.get("email", "")
+                try:
+                    user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
+                    if user:
+                        donor_email = user.get("email", "")
+                except Exception as e:
+                    print(f"Error getting donor email: {str(e)}")
             pdf.cell(0, 8, donor_email, 1, 1)
             
             # Footer
@@ -840,6 +853,8 @@ def confirmation_receipt(payment_type):
             return redirect(url_for("general.home"))
             
     except Exception as e:
-        print(f"Error generating confirmation receipt: {e}")
+        import traceback
+        print(f"Error generating confirmation receipt: {str(e)}")
+        traceback.print_exc()
         flash("An error occurred while generating the receipt", "error")
         return redirect(url_for("general.home")) 

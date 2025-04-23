@@ -10,7 +10,7 @@ import os
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from config import Config
-from utils import format_datetime_ist
+from app import get_current_time  # Import timezone-aware function
 
 # Load environment variables
 load_dotenv()
@@ -38,7 +38,7 @@ def create_order():
             return jsonify({"error": "Payment type is required"}), 400
 
         # Generate a unique receipt ID
-        receipt = f"{payment_type}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        receipt = f"{payment_type}_{get_current_time().strftime('%Y%m%d%H%M%S')}"
 
         # Create Razorpay order
         order = razorpay_client.order.create({
@@ -109,7 +109,7 @@ def verify_payment():
                     "seva_date": session.get("seva_date"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "booking_date": format_datetime_ist(datetime.now()),
+                    "booking_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -127,7 +127,7 @@ def verify_payment():
                     "donor_email": session.get("donor_email"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "donation_date": format_datetime_ist(datetime.now()),
+                    "donation_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -215,7 +215,7 @@ def handle_seva_payment(order_id, payment_id):
             "seva_date": seva_date,
             "order_id": order_id,
             "payment_id": payment_id,
-            "booking_date": format_datetime_ist(datetime.now()),
+            "booking_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "Paid"
         }
 
@@ -264,7 +264,7 @@ def handle_donation_payment(order_id, payment_id):
             "donor_email": donor_email,
             "order_id": order_id,
             "payment_id": payment_id,
-            "donation_date": format_datetime_ist(datetime.now()),
+            "donation_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "Paid"
         }
 
@@ -326,61 +326,30 @@ def payment_confirmation_page():
 @payment_bp.route("/donation-confirmation")
 def donation_confirmation_page():
     """Render the donation confirmation page"""
-    try:
-        print("Donation confirmation page accessed")  # Debug log
+    # Check if user is logged in
+    if "user_id" not in session:
+        flash("Please login to view donation confirmation", "warning")
+        return redirect(url_for('user.login'))
         
-        # Get donation data from session
-        donation = session.get("donation")
-        print(f"Donation data in session: {donation is not None}")  # Debug log
-        
-        if not donation:
-            print("No donation found in session")  # Debug log
-            # Instead of redirecting, show the no donation found template
-            return render_template("user/donation_confirmation.html", donation=None)
-
-        # Check if donation object has user_id as ObjectId and convert to string if needed
-        if "user_id" in donation and isinstance(donation["user_id"], ObjectId):
-            donation["user_id"] = str(donation["user_id"])
-            
-        # Check if donation object has donation_id as ObjectId and convert to string if needed
-        if "donation_id" in donation and isinstance(donation["donation_id"], ObjectId):
-            donation["donation_id"] = str(donation["donation_id"])
-            
-        # Ensure is_canceled flag is set based on payment status
-        is_canceled = donation.get("status") == "Canceled" or donation.get("payment_id") == "canceled"
-
-        # Optional user details - don't require login
-        user = None
-        if "user_id" in session:
-            try:
-                user_id = session.get("user_id")
-                user = user_collection.find_one({"_id": ObjectId(user_id)})
-                print(f"User found: {user is not None}")  # Debug log
-            except Exception as e:
-                print(f"Error retrieving user: {str(e)}")
-                # Continue without user data
-        
-        print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
-        return render_template("user/donation_confirmation.html", donation=donation, user=user, is_canceled=is_canceled)
+    print("Donation confirmation page accessed")  # Debug log
     
-    except Exception as e:
-        import traceback
-        print(f"Exception in donation_confirmation_page: {str(e)}")
-        traceback.print_exc()
+    donation = session.get("donation")
+    print(f"Donation data in session: {donation is not None}")  # Debug log
+    
+    if not donation:
+        print("No donation found in session")  # Debug log
+        flash("No donation found", "error")
+        return redirect(url_for("general.home"))
+
+    # Get user details
+    user_id = session.get("user_id")
+    user = user_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        flash("User not found", "error")
+        return redirect(url_for("user.login"))
         
-        # Try to get any donation data we have
-        donation_data = {}
-        try:
-            donation_data = session.get("donation", {})
-            print(f"Fallback donation data: {donation_data}")
-        except:
-            print("Could not retrieve session data")
-            
-        # Return a simple confirmation page with minimal data to avoid 500 error
-        return render_template("user/donation_confirmation.html", 
-                              donation=donation_data, 
-                              user=None,
-                              error_message="An error occurred, but your donation was processed successfully.")
+    print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
+    return render_template("user/donation_confirmation.html", donation=donation, user=user)
 
 @payment_bp.route("/download-receipt/<payment_type>", methods=["GET"])
 @payment_bp.route("/download-receipt/<payment_type>/<payment_id>", methods=["GET"])
@@ -514,7 +483,7 @@ def download_receipt(payment_type, payment_id=None):
             pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
             
             # Generate filename
-            filename = f"seva_receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+            filename = f"seva_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
             
             # Output PDF to string
             pdf_output = pdf.output(dest="S").encode("latin-1")
@@ -618,7 +587,7 @@ def download_receipt(payment_type, payment_id=None):
             pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
             
             # Generate filename
-            filename = f"donation_receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+            filename = f"donation_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
             
             # Output PDF to string
             pdf_output = pdf.output(dest="S").encode("latin-1")
@@ -651,16 +620,16 @@ def download_receipt(payment_type, payment_id=None):
 @payment_bp.route("/confirmation-receipt/<payment_type>", methods=["GET"])
 def confirmation_receipt(payment_type):
     """Generate and download receipt PDF from confirmation page (using session data)"""
+    # Check if user is logged in
+    if "user_id" not in session:
+        flash("Please login to download your receipt", "warning")
+        return redirect(url_for('user.login'))
+        
     try:
         print(f"Generating confirmation {payment_type} receipt from session")
         
         # Get data from session
         if payment_type == "seva":
-            # Seva still requires login
-            if "user_id" not in session:
-                flash("Please login to download your receipt", "warning")
-                return redirect(url_for('user.login'))
-                
             # Get seva booking data from session
             seva_booking = session.get("seva_booking")
             if not seva_booking:
@@ -750,7 +719,7 @@ def confirmation_receipt(payment_type):
             pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
             
             # Generate filename
-            filename = f"seva_receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+            filename = f"seva_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
             
             # Output PDF to string
             pdf_output = pdf.output(dest="S").encode("latin-1")
@@ -765,7 +734,7 @@ def confirmation_receipt(payment_type):
             return response
             
         elif payment_type == "donation":
-            # Get donation data from session - don't require login for donation receipts
+            # Get donation data from session
             donation = session.get("donation")
             if not donation:
                 flash("Donation data not found in session", "error")
@@ -819,26 +788,20 @@ def confirmation_receipt(payment_type):
             
             pdf.cell(70, 8, "Donor Name:", 1)
             donor_name = donation.get("donor_name", "")
-            if not donor_name and "user_id" in donation and donation["user_id"]:
+            if not donor_name and "user_id" in donation:
                 # If donor name is not stored in donation, try to get from user collection
-                try:
-                    user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                    if user:
-                        donor_name = user.get("name", "")
-                except Exception as e:
-                    print(f"Error getting donor name: {str(e)}")
+                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
+                if user:
+                    donor_name = user.get("name", "")
             pdf.cell(0, 8, donor_name, 1, 1)
             
             pdf.cell(70, 8, "Donor Email:", 1)
             donor_email = donation.get("donor_email", "")
-            if not donor_email and "user_id" in donation and donation["user_id"]:
+            if not donor_email and "user_id" in donation:
                 # If donor email is not stored in donation, try to get from user collection
-                try:
-                    user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                    if user:
-                        donor_email = user.get("email", "")
-                except Exception as e:
-                    print(f"Error getting donor email: {str(e)}")
+                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
+                if user:
+                    donor_email = user.get("email", "")
             pdf.cell(0, 8, donor_email, 1, 1)
             
             # Footer
@@ -847,7 +810,7 @@ def confirmation_receipt(payment_type):
             pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
             
             # Generate filename
-            filename = f"donation_receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+            filename = f"donation_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
             
             # Output PDF to string
             pdf_output = pdf.output(dest="S").encode("latin-1")
@@ -865,8 +828,6 @@ def confirmation_receipt(payment_type):
             return redirect(url_for("general.home"))
             
     except Exception as e:
-        import traceback
-        print(f"Error generating confirmation receipt: {str(e)}")
-        traceback.print_exc()
+        print(f"Error generating confirmation receipt: {e}")
         flash("An error occurred while generating the receipt", "error")
         return redirect(url_for("general.home")) 

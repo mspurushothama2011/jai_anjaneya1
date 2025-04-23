@@ -6,16 +6,10 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-7 mx-auto">
-            {% if error_message %}
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i> {{ error_message }}
-            </div>
-            {% endif %}
-            
             {% if donation %}
             <div class="card border-0 shadow-lg">
                 <div class="card-header {% if is_canceled %}bg-danger{% else %}bg-success{% endif %} text-white py-3 text-center">
-                    <h4 class="mb-0">{% if is_canceled %}Donation Canceled{% else %}Donation Confirmation{% endif %}</h4>
+                   <center> <h2 class="mb-0">{% if is_canceled %}Donation Canceled{% else %}Donation Confirmation{% endif %}</h2></center>
                 </div>
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
@@ -33,30 +27,12 @@
                         <h3 class="mt-3 fw-bold">Donation Successful!</h3>
                         <p class="text-muted mb-4">Your generous contribution has been received. Thank you for supporting our temple.</p>
                         {% endif %}
-                        <div class="confirmation-id p-2 bg-light rounded d-inline-block">
-                            <span class="small text-muted me-2">Reference ID:</span>
-                            <span class="fw-bold {% if is_canceled %}text-danger{% else %}text-primary{% endif %}">
-                                {% if donation.payment_id == "canceled" %}
-                                    {{ donation.order_id[:8] }}
-                                {% else %}
-                                    {{ donation.payment_id[:8] }}
-                                {% endif %}
-                            </span>
-                            {% if not is_canceled %}
-                            <button type="button" class="btn btn-sm btn-light ms-2 copy-btn" data-clipboard-text="{{ donation.payment_id }}" title="Copy full ID">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                        {% if not is_canceled %}
-                        <div class="mt-2 font-italic small text-muted">A confirmation has been sent to your email</div>
-                        {% endif %}
-                    </div>
+                    </div><br>
 
                     <hr class="my-4">
 
                     <div class="donation-details mb-4">
-                        <h6 class="mb-3 text-primary"><i class="fas fa-hand-holding-heart me-2"></i>Donation Details</h6>
+                        <h3 class="mb-3 text-primary"><i class="fas fa-hand-holding-heart me-2"></i>Donation Details</h3>
                         <div class="bg-light p-3 rounded">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -139,18 +115,18 @@
 
                     <div class="text-center mt-4 action-buttons">
                         {% if not is_canceled %}
-                        <a href="{{ url_for('payment.confirmation_receipt', payment_type='donation') }}" class="btn btn-success" target="_blank">
+                        <a href="{{ url_for('payment.confirmation_receipt', payment_type='donation') }}" class="btn btn-outline-primary" target="_blank">
                             <i class="fas fa-download me-2"></i> Download Receipt
                         </a>
                         {% else %}
-                        <a href="{{ url_for('general.donation') }}" class="btn btn-primary">
+                        <a href="{{ url_for('general.user_donations') }}" class="btn btn-primary">
                             <i class="fas fa-redo me-2"></i> Try Again
                         </a>
                         {% endif %}
-                        <a href="{{ url_for('general.donation') }}" class="btn btn-outline-primary">
+                        <a href="{{ url_for('general.user_donations') }}" class="btn btn-outline-primary">
                             <i class="fas fa-hand-holding-heart me-2"></i> Make Another Donation
                         </a>
-                        <a href="{{ url_for('general.home') }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('general.home') }}" class="btn btn-outline-primary">
                             <i class="fas fa-home me-2"></i> Return Home
                         </a>
                     </div>
@@ -168,10 +144,10 @@
                         <h3 class="mt-4 fw-bold">No Donation Found</h3>
                         <p class="text-muted my-4">We couldn't find your donation information. Please try making a donation again or contact our support team if the issue persists.</p>
                         <div class="mt-4">
-                            <a href="{{ url_for('general.donation') }}" class="btn btn-primary px-4">
+                            <a href="{{ url_for('general.user_donations') }}" class="btn btn-primary px-4">
                                 <i class="fas fa-hand-holding-heart me-2"></i> Make a Donation
                             </a>
-                            <a href="{{ url_for('general.home') }}" class="btn btn-outline-secondary ms-2">
+                            <a href="{{ url_for('general.home') }}" class="btn btn-outline-primary ms-2">
                                 <i class="fas fa-home me-2"></i> Return Home
                             </a>
                         </div>
@@ -184,7 +160,117 @@
 </div>
 
 <style>
-    /* Add failure animation CSS */
+    /* Enhanced visual styling */
+    :root {
+        --primary-color: #FF6B00;
+        --success-color: #FF6B00;
+        --danger-color: #e74a3b;
+        --warning-color: #f6c23e;
+        --light-color: #f8f9fc;
+        --dark-color:#FF6B00;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .card-header {
+        border-radius: 0 !important;
+        border-bottom: 2px solid rgba(0,0,0,0.05);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-item {
+        margin-bottom: 0.75rem;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-weight: 500;
+        color: #212529;
+    }
+    
+    .bg-light {
+        background-color: rgba(248, 249, 252, 0.7) !important;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        padding: 0.5rem 1.25rem;
+        transition: all 0.3s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-success {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .confirmation-id {
+        background: linear-gradient(to right, rgba(248, 249, 252, 0.8), rgba(248, 249, 252, 0.9));
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.025);
+    }
+    
+    .copy-btn {
+        transition: all 0.2s;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .copy-btn:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+    
+    /* Enhanced animations */
     .failure-animation {
         animation: pulse-error 2s infinite;
     }
@@ -202,18 +288,6 @@
             transform: scale(1);
             opacity: 1;
         }
-    }
-    
-    /* Keep your existing CSS */
-    .card {
-        border-radius: 10px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .card-header {
-        border-radius: 0 !important;
-        border-bottom: 2px solid rgba(0,0,0,0.1);
     }
     
     .success-animation {
@@ -235,7 +309,58 @@
         }
     }
     
-    /* Rest of your existing styles... */
+    /* Section headings */
+    h6.text-primary {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--primary-color) !important;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    h6.text-primary i {
+        background-color: rgba(78, 115, 223, 0.1);
+        color: var(--primary-color);
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    
+    /* Badge styling */
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+        border-radius: 4px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .action-buttons .btn {
+        margin: 0;
+    }
+    
+    @media (max-width: 576px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
 </style>
 
 <script>

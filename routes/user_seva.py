@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import hashlib
 import hmac
 from config import Config
+from app import get_current_time  # Import the timezone-aware function
 
 user_seva_bp = Blueprint("user_seva", __name__)
 
@@ -20,8 +21,14 @@ def seva_list_view():
 
     for seva in sevas:
         seva["_id"] = str(seva["_id"])  # Convert ObjectId to string for frontend
-
-    return render_template("user/user_seva_list.html", sevas=sevas, seva_types=seva_types)
+        
+    # Use timezone-aware current date 
+    current_date = get_current_time().strftime("%Y-%m-%d")
+        
+    return render_template("user/user_seva_list.html", 
+                          sevas=sevas, 
+                          seva_types=seva_types,
+                          current_date=current_date)
 
 # ✅ 2. Seva Booking Page
 @user_seva_bp.route("/seva-booking/<seva_id>")
@@ -47,7 +54,7 @@ def seva_booking(seva_id):
             return redirect(url_for("user_seva.seva_list_view"))
 
         # Get current date for min date in template
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        current_date = get_current_time().strftime("%Y-%m-%d")
 
         return render_template(
             "user/user_seva_booking.html",
@@ -109,7 +116,7 @@ def seva_payment():
         order = razorpay_client.order.create({
             "amount": int(amount * 100),  # Convert to paise
             "currency": "INR",
-            "receipt": f"seva_{datetime.now().strftime('%d-%m-%Y %H:%M')}",  # Shortened receipt
+            "receipt": f"seva_{get_current_time().strftime('%d-%m-%Y %H:%M')}",  # Shortened receipt
             "payment_capture": 1,
             "notes": {
                 "seva_name": seva_name,
@@ -252,7 +259,7 @@ def verify_seva_payment():
                 "seva_name": seva_name,
                 "seva_price": float(seva_price),
                 "seva_date": seva_date,
-                "booking_date": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+                "booking_date": get_current_time().strftime("%d-%m-%Y %H:%M:%S"),
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
                 "status": "Paid"
@@ -268,7 +275,7 @@ def verify_seva_payment():
                 "seva_name": seva_name,
                 "seva_price": float(seva_price),
                 "seva_date": seva_date,
-                "booking_date": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+                "booking_date": get_current_time().strftime("%d-%m-%Y %H:%M:%S"),
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
                 "status": "Paid"

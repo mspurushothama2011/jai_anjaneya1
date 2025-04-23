@@ -6,7 +6,7 @@ import hashlib
 import hmac
 from config import Config
 from routes.payment import razorpay_client
-from utils import format_datetime_ist
+from app import get_current_time  # Import the timezone-aware function
 
 donations_bp = Blueprint('donations', __name__)
 
@@ -143,7 +143,7 @@ def donation_payment():
         order = razorpay_client.order.create({
             "amount": int(amount * 100),  # Convert to paise
             "currency": "INR",
-            "receipt": f"donation_{datetime.now().strftime('%d-%m-%Y %H:%M')}",  # Short receipt
+            "receipt": f"donation_{get_current_time().strftime('%d-%m-%Y %H:%M')}",  # Short receipt
             "payment_capture": 1,
             "notes": {
                 "donation_name": donation_name,
@@ -277,7 +277,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": format_datetime_ist(datetime.now()),
+            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "Paid"
         }
 
@@ -291,7 +291,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": format_datetime_ist(datetime.now()),
+            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "Paid"
         }
 
@@ -303,9 +303,6 @@ def verify_donation_payment():
             return jsonify({"error": "Failed to store donation"}), 500
 
         print(f"Donation saved successfully with ID: {result.inserted_id}")  # Debug log
-        
-        # Add the inserted ID to the session object
-        donation_session["_id"] = str(result.inserted_id)
 
         # Store in session for confirmation page & PDF
         session["donation"] = donation_session

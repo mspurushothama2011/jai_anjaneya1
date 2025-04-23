@@ -113,7 +113,7 @@ def verify_payment():
                     "seva_date": session.get("seva_date"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "booking_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
+                    "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -131,7 +131,7 @@ def verify_payment():
                     "donor_email": session.get("donor_email"),
                     "order_id": order_id,
                     "payment_id": payment_id or "canceled",
-                    "donation_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
+                    "donation_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
                     "status": "Canceled"
                 }
                 # Store in session for confirmation page
@@ -219,7 +219,7 @@ def handle_seva_payment(order_id, payment_id):
             "seva_date": seva_date,
             "order_id": order_id,
             "payment_id": payment_id,
-            "booking_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
+            "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
             "status": "Paid"
         }
 
@@ -268,7 +268,7 @@ def handle_donation_payment(order_id, payment_id):
             "donor_email": donor_email,
             "order_id": order_id,
             "payment_id": payment_id,
-            "donation_date": get_current_time().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
             "status": "Paid"
         }
 

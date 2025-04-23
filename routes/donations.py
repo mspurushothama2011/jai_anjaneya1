@@ -283,7 +283,7 @@ def verify_donation_payment():
         current_time = get_current_time(user_timezone)
         
         # Format the time for the database
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        formatted_time = current_time.strftime("%d-%m-%Y (%H:%M:%S)")
 
         # Create donation record for database
         donation_db = {

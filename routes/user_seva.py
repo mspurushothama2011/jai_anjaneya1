@@ -248,6 +248,7 @@ def verify_seva_payment():
             return jsonify({"error": f"Error retrieving user data: {str(e)}"}), 500
 
         # Store booking in seva_collection
+        formatted_time = get_current_time().strftime("%d-%m-%Y (%H:%M:%S)")
         try:
             # Make a JSON-serializable dictionary for the session
             seva_booking_db = {
@@ -259,7 +260,7 @@ def verify_seva_payment():
                 "seva_name": seva_name,
                 "seva_price": float(seva_price),
                 "seva_date": seva_date,
-                "booking_date": get_current_time().strftime("%d-%m-%Y %H:%M:%S"),
+                "booking_date": formatted_time,
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
                 "status": "Paid"
@@ -275,7 +276,7 @@ def verify_seva_payment():
                 "seva_name": seva_name,
                 "seva_price": float(seva_price),
                 "seva_date": seva_date,
-                "booking_date": get_current_time().strftime("%d-%m-%Y %H:%M:%S"),
+                "booking_date": formatted_time,
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
                 "status": "Paid"

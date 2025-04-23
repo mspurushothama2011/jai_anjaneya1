@@ -167,49 +167,60 @@ def reports():
         for booking in bookings:
             booking['_id'] = str(booking['_id'])
             
-            # Format booking date
-            if isinstance(booking.get('booking_date'), datetime):
-                booking['formatted_date'] = booking['booking_date'].strftime('%d-%m-%Y')
-            else:
-                try:
-                    if isinstance(booking.get('booking_date'), str):
-                        booking['formatted_date'] = datetime.strptime(booking['booking_date'], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%Y')
-                    else:
-                        booking['formatted_date'] = 'N/A'
-                except:
+            # For debugging
+            print(f"Booking date value: {booking.get('booking_date')}, Type: {type(booking.get('booking_date'))}")
+            
+            # Format booking date - handle all possible formats
+            booking_date = booking.get('booking_date')
+            try:
+                if isinstance(booking_date, datetime):
+                    booking['formatted_date'] = booking_date.strftime('%d-%m-%Y %H:%M')
+                elif isinstance(booking_date, str):
+                    # Try different common date formats
+                    for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"]:
+                        try:
+                            date_obj = datetime.strptime(booking_date, fmt)
+                            booking['formatted_date'] = date_obj.strftime('%d-%m-%Y %H:%M')
+                            break
+                        except ValueError:
+                            continue
+                    else:  # If no format matched
+                        booking['formatted_date'] = booking_date  # Use as is
+                else:
                     booking['formatted_date'] = 'N/A'
+            except Exception as e:
+                print(f"Error formatting booking date: {e}")
+                booking['formatted_date'] = str(booking_date) if booking_date else 'N/A'
             
             # Process seva_date for sorting and display
-            if not booking.get('seva_date'):
-                booking['seva_date'] = 'N/A'
-                booking['seva_date_for_sort'] = datetime(1900, 1, 1)  # Default old date for sorting
-            else:
-                # Format seva_date to dd-mm-yyyy
-                try:
-                    if isinstance(booking.get('seva_date'), datetime):
-                        booking['formatted_seva_date'] = booking['seva_date'].strftime('%d-%m-%Y')
-                        booking['seva_date_for_sort'] = booking['seva_date']
-                    elif isinstance(booking.get('seva_date'), str):
-                        # Try to parse the date string and format it
+            seva_date = booking.get('seva_date')
+            try:
+                if not seva_date:
+                    booking['seva_date'] = 'N/A'
+                    booking['seva_date_for_sort'] = datetime(1900, 1, 1)  # Default old date for sorting
+                elif isinstance(seva_date, datetime):
+                    booking['formatted_seva_date'] = seva_date.strftime('%d-%m-%Y')
+                    booking['seva_date_for_sort'] = seva_date
+                elif isinstance(seva_date, str):
+                    # Try different common date formats
+                    for fmt in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%d-%m-%Y", "%d-%m-%Y %H:%M:%S"]:
                         try:
-                            date_obj = datetime.strptime(booking['seva_date'], '%Y-%m-%d')
+                            date_obj = datetime.strptime(seva_date, fmt)
                             booking['formatted_seva_date'] = date_obj.strftime('%d-%m-%Y')
                             booking['seva_date_for_sort'] = date_obj
+                            break
                         except ValueError:
-                            # If this format fails, try another common format
-                            try:
-                                date_obj = datetime.strptime(booking['seva_date'], '%Y-%m-%d %H:%M:%S')
-                                booking['formatted_seva_date'] = date_obj.strftime('%d-%m-%Y')
-                                booking['seva_date_for_sort'] = date_obj
-                            except:
-                                booking['formatted_seva_date'] = booking['seva_date']
-                                booking['seva_date_for_sort'] = datetime(1900, 1, 1)  # Default old date for parsing failure
-                    else:
-                        booking['formatted_seva_date'] = booking['seva_date']
-                        booking['seva_date_for_sort'] = datetime(1900, 1, 1)  # Default for unknown types
-                except:
-                    booking['formatted_seva_date'] = booking['seva_date']
-                    booking['seva_date_for_sort'] = datetime(1900, 1, 1)  # Default for exceptions
+                            continue
+                    else:  # If no format matched
+                        booking['formatted_seva_date'] = seva_date  # Use as is
+                        booking['seva_date_for_sort'] = datetime(1900, 1, 1)
+                else:
+                    booking['formatted_seva_date'] = str(seva_date)
+                    booking['seva_date_for_sort'] = datetime(1900, 1, 1)
+            except Exception as e:
+                print(f"Error formatting seva date: {e}")
+                booking['formatted_seva_date'] = str(seva_date) if seva_date else 'N/A'
+                booking['seva_date_for_sort'] = datetime(1900, 1, 1)
             
             # Get seva details from seva_list
             if booking.get('seva_id'):
@@ -296,17 +307,30 @@ def reports():
         for donation in donations:
             donation['_id'] = str(donation['_id'])
             
-            # Format donation date
-            if isinstance(donation.get('donation_date'), datetime):
-                donation['formatted_date'] = donation['donation_date'].strftime('%d-%m-%Y')
-            else:
-                try:
-                    if isinstance(donation.get('donation_date'), str):
-                        donation['formatted_date'] = datetime.strptime(donation['donation_date'], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%Y')
-                    else:
-                        donation['formatted_date'] = 'N/A'
-                except:
+            # For debugging
+            print(f"Donation date value: {donation.get('donation_date')}, Type: {type(donation.get('donation_date'))}")
+            
+            # Format donation date - handle all possible formats
+            donation_date = donation.get('donation_date')
+            try:
+                if isinstance(donation_date, datetime):
+                    donation['formatted_date'] = donation_date.strftime('%d-%m-%Y %H:%M')
+                elif isinstance(donation_date, str):
+                    # Try different common date formats
+                    for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"]:
+                        try:
+                            date_obj = datetime.strptime(donation_date, fmt)
+                            donation['formatted_date'] = date_obj.strftime('%d-%m-%Y %H:%M')
+                            break
+                        except ValueError:
+                            continue
+                    else:  # If no format matched
+                        donation['formatted_date'] = donation_date  # Use as is
+                else:
                     donation['formatted_date'] = 'N/A'
+            except Exception as e:
+                print(f"Error formatting donation date: {e}")
+                donation['formatted_date'] = str(donation_date) if donation_date else 'N/A'
             
             # Get donation name from donations_list
             if donation.get('donation_id'):

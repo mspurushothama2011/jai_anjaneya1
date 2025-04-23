@@ -37,8 +37,12 @@ def create_order():
         if not payment_type:
             return jsonify({"error": "Payment type is required"}), 400
 
-        # Generate a unique receipt ID
-        receipt = f"{payment_type}_{get_current_time().strftime('%Y%m%d%H%M%S')}"
+        # Use user's timezone from session if available
+        user_timezone = session.get("user_timezone", "Asia/Kolkata")
+        
+        # Generate a unique receipt ID with user's local time
+        current_time = get_current_time(user_timezone)
+        receipt = f"{payment_type}_{current_time.strftime('%Y%m%d%H%M%S')}"
 
         # Create Razorpay order
         order = razorpay_client.order.create({

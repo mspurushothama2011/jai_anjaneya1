@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import pytz
+from dateutil import tz
 
 def utc_to_ist(utc_datetime):
     """Convert UTC datetime to IST (Indian Standard Time)"""
@@ -25,12 +26,34 @@ def format_datetime_ist(utc_datetime, format_string="%Y-%m-%d %H:%M:%S"):
     return str(ist_datetime)  # Fallback for non-datetime objects
 
 # Create a timezone-aware datetime utility function
-def get_current_time():
-    # First get UTC time
-    utc_now = datetime.now(pytz.UTC)
+def get_current_time(timezone_str="Asia/Kolkata"):
+    """
+    Get current time in the specified timezone.
+    Default is Asia/Kolkata (IST) if no timezone is provided.
+    """
+    # Get current UTC time with timezone info
+    utc = datetime.now(tz.tzutc())
     
-    # Convert to IST (UTC+5:30)
-    india_tz = pytz.timezone('Asia/Kolkata')
-    ist_now = utc_now.astimezone(india_tz)
+    # Convert to target timezone
+    to_zone = tz.gettz(timezone_str)
+    if not to_zone:
+        # Fallback to IST if timezone is invalid
+        to_zone = tz.gettz("Asia/Kolkata")
     
-    return ist_now 
+    # Convert UTC to target timezone
+    local_time = utc.astimezone(to_zone)
+    
+    return local_time
+
+# Format time in a specific timezone
+def format_time_in_timezone(dt, timezone_str="Asia/Kolkata", format_str="%Y-%m-%d %H:%M:%S"):
+    """Format a datetime in the specified timezone"""
+    to_zone = tz.gettz(timezone_str)
+    if not to_zone:
+        to_zone = tz.gettz("Asia/Kolkata")
+    
+    # Convert to target timezone if it's timezone-aware
+    if dt.tzinfo:
+        dt = dt.astimezone(to_zone)
+        
+    return dt.strftime(format_str) 

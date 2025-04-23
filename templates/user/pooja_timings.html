@@ -379,17 +379,6 @@
         });
     });
     
-    // Day filter functionality
-    document.getElementById('dayFilter').addEventListener('change', function() {
-        // In a real implementation, you would filter based on the actual days
-        // For now, this is just a placeholder
-        const filter = this.value;
-        console.log(`Filter by: ${filter}`);
-        
-        // In this demo, we're not actually filtering since all items show "All Days"
-        // In a real implementation, you would check each row's day value
-    });
-    
     // Initialize the clock and update every second
     updateClock();
     setInterval(updateClock, 1000);

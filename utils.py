@@ -28,4 +28,4 @@ def format_datetime_ist(utc_datetime, format_string="%Y-%m-%d %H:%M:%S"):
 def get_current_time():
     # Set to Indian Standard Time (IST)
     india_tz = pytz.timezone('Asia/Kolkata')
-    return datetime.datetime.now(india_tz) 
+    return datetime.now(india_tz) 

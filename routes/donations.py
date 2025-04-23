@@ -139,11 +139,20 @@ def donation_payment():
         session["payment_type"] = "donation"
         session["amount"] = amount
 
+        # Get user's timezone from session
+        user_timezone = session.get("user_timezone", "Asia/Kolkata")
+        
+        # Get current time in user's timezone
+        current_time = get_current_time(user_timezone)
+        
+        # Format for receipt
+        receipt_time = current_time.strftime('%d-%m-%Y %H:%M')
+
         # Create Razorpay order
         order = razorpay_client.order.create({
             "amount": int(amount * 100),  # Convert to paise
             "currency": "INR",
-            "receipt": f"donation_{get_current_time().strftime('%d-%m-%Y %H:%M')}",  # Short receipt
+            "receipt": f"donation_{receipt_time}",  # Short receipt with correct timezone
             "payment_capture": 1,
             "notes": {
                 "donation_name": donation_name,
@@ -267,6 +276,15 @@ def verify_donation_payment():
             print(f"Signature verification error: {str(e)}")  # Debug log
             return jsonify({"error": f"Payment verification failed: {str(e)}"}), 500
 
+        # Get user's timezone from session
+        user_timezone = session.get("user_timezone", "Asia/Kolkata")
+        
+        # Get current time in user's timezone
+        current_time = get_current_time(user_timezone)
+        
+        # Format the time for the database
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
         # Create donation record for database
         donation_db = {
             "user_id": ObjectId(user_id),  # Always store authenticated user ID
@@ -277,7 +295,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": formatted_time,
             "status": "Paid"
         }
 
@@ -291,7 +309,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "donation_date": formatted_time,
             "status": "Paid"
         }
 

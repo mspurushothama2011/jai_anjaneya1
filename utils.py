@@ -26,6 +26,11 @@ def format_datetime_ist(utc_datetime, format_string="%Y-%m-%d %H:%M:%S"):
 
 # Create a timezone-aware datetime utility function
 def get_current_time():
-    # Set to Indian Standard Time (IST)
+    # First get UTC time
+    utc_now = datetime.now(pytz.UTC)
+    
+    # Convert to IST (UTC+5:30)
     india_tz = pytz.timezone('Asia/Kolkata')
-    return datetime.now(india_tz) 
+    ist_now = utc_now.astimezone(india_tz)
+    
+    return ist_now 

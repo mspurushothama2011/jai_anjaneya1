@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import hashlib
 import hmac
 from config import Config
-from app import get_current_time  # Import the timezone-aware function
+from utils import get_current_time  # Import from utils instead of app
 
 user_seva_bp = Blueprint("user_seva", __name__)
 

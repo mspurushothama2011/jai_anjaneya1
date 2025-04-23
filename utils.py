@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 
 def utc_to_ist(utc_datetime):
     """Convert UTC datetime to IST (Indian Standard Time)"""
@@ -21,4 +22,10 @@ def format_datetime_ist(utc_datetime, format_string="%Y-%m-%d %H:%M:%S"):
     ist_datetime = utc_to_ist(utc_datetime)
     if isinstance(ist_datetime, datetime):
         return ist_datetime.strftime(format_string)
-    return str(ist_datetime)  # Fallback for non-datetime objects 
+    return str(ist_datetime)  # Fallback for non-datetime objects
+
+# Create a timezone-aware datetime utility function
+def get_current_time():
+    # Set to Indian Standard Time (IST)
+    india_tz = pytz.timezone('Asia/Kolkata')
+    return datetime.datetime.now(india_tz) 

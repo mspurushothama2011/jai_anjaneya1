@@ -6,7 +6,7 @@ import hashlib
 import hmac
 from config import Config
 from routes.payment import razorpay_client
-from app import get_current_time  # Import the timezone-aware function
+from utils import get_current_time  # Import from utils instead of app
 
 donations_bp = Blueprint('donations', __name__)
 

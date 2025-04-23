@@ -14,13 +14,7 @@ from routes.user_seva import user_seva_bp  # Ensure correct import
 from database import client  # Ensure MongoDB is initialized
 import os
 import datetime
-import pytz  # Import pytz for timezone handling
-
-# Create a timezone-aware datetime utility function
-def get_current_time():
-    # Set to Indian Standard Time (IST), change to your local timezone if needed
-    india_tz = pytz.timezone('Asia/Kolkata')
-    return datetime.datetime.now(india_tz)
+from utils import get_current_time  # Import from utils
 
 app = Flask(__name__)
 

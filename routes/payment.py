@@ -10,7 +10,7 @@ import os
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from config import Config
-from app import get_current_time  # Import timezone-aware function
+from utils import get_current_time  # Import from utils instead of app
 
 # Load environment variables
 load_dotenv()

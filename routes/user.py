@@ -148,9 +148,9 @@ def login():
                 flash("Login successful!", "success")
                 return redirect(url_for("general.home"))
             else:
-                flash("Invalid email or password!", "danger")
+                flash("Incorrect password! Please try again.", "danger")
         else:
-            flash("Invalid email or password!", "danger")
+            flash("Email not found! Please check your email or register a new account.", "danger")
 
     return render_template("user/login.html")
 

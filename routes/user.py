@@ -101,20 +101,102 @@ def verify_email(token):
 
     return redirect(url_for("user.register"))
 
+# send verification email when user registers
 
 def send_verification_email(email, token):
     verification_link = url_for("user.verify_email", token=token, _external=True)
     subject = "Verify Your Email"
-    message_body = f"Click the link to verify your email: {verification_link}"
+
+    html_content = f'''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Email Verification</title>
+        <style>
+            body {{
+                background-color: #f6f6f6;
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 30px auto;
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }}
+            .header {{
+                background-color: #FF6B00;
+                color: white;
+                text-align: center;
+                padding: 20px;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 24px;
+            }}
+            .content {{
+                padding: 30px;
+                text-align: center;
+            }}
+            .content p {{
+                font-size: 16px;
+                color: #333;
+                line-height: 1.6;
+            }}
+            .verify-btn {{
+                display: inline-block;
+                padding: 12px 25px;
+                margin: 25px 0;
+                background-color: #FF6B00;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+            }}
+            .footer {{
+                font-size: 12px;
+                color: #777;
+                text-align: center;
+                padding: 20px;
+                background-color: #f1f1f1;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Verify Your Email</h1>
+            </div>
+            <div class="content">
+                <p>Dear Devotee,</p>
+                <p>Thank you for registering. To activate your account, please click the button below to verify your email address:</p>
+                <a href="{verification_link}" class="verify-btn">Verify Email</a>
+                <p>If you did not register, please ignore this email.</p>
+            </div>
+            <div class="footer">
+                &copy; Shri Veeranjaneya Swamy<br/>
+                This is an automated email, please do not reply.
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
 
     msg = Message(subject, sender=app.config["MAIL_DEFAULT_SENDER"], recipients=[email])
-    msg.body = message_body
+    msg.body = f"Click the link to verify your email: {verification_link}"  # Fallback text version
+    msg.html = html_content
 
     try:
         mail.send(msg)
         print("Verification email sent successfully!")
     except Exception as e:
         print(f"Error sending email: {e}")
+
 
 
 # ----------------------------------
@@ -220,7 +302,7 @@ def send_otp_email(email, otp):
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             }}
             .header {{
-                background-color: #a83232;
+                background-color: #FF6B00;
                 color: white;
                 padding: 20px;
                 text-align: center;
@@ -286,7 +368,7 @@ def send_otp_email(email, otp):
             </div>
             <div class="footer">
                 <p>This is an automated message, please do not reply to this email.</p>
-                <p>&copy; Temple Management System</p>
+                <p>&copy; Shri Veeranjaneya Swamy</p>
             </div>
         </div>
     </body>

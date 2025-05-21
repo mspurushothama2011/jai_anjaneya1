@@ -15,9 +15,9 @@
                     <div class="text-center mb-4">
                         <div class="{% if is_canceled %}failure-animation{% else %}success-animation{% endif %}">
                             {% if is_canceled %}
-                            <i class="fas fa-times-circle text-danger" style="font-size: 5rem;"></i>
+                            <div id="errorAnimation" style="width: 150px; height: 150px; margin: 0 auto;"></div>
                             {% else %}
-                            <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+                            <div id="successAnimation" style="width: 150px; height: 150px; margin: 0 auto;"></div>
                             {% endif %}
                         </div>
                         {% if is_canceled %}
@@ -286,20 +286,15 @@
         border: 1px dashed #FF7F00;
     }
     
-    .success-animation {
-        animation: pulse 2s infinite;
+    .success-animation, .failure-animation {
+        margin-bottom: 20px;
+        animation: bounce 0.5s ease;
     }
     
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.05);
-        }
-        100% {
-            transform: scale(1);
-        }
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+        40% {transform: translateY(-20px);}
+        60% {transform: translateY(-10px);}
     }
     
     .detail-item {
@@ -378,8 +373,29 @@
 </style>
 
 <script>
-    // Copy to clipboard functionality
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations based on which element exists
+        if (document.getElementById('successAnimation')) {
+            lottie.loadAnimation({
+                container: document.getElementById('successAnimation'),
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: "{{ url_for('static', filename='animations/success.json') }}"
+            });
+        }
+        
+        if (document.getElementById('errorAnimation')) {
+            lottie.loadAnimation({
+                container: document.getElementById('errorAnimation'),
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: "{{ url_for('static', filename='animations/error.json') }}"
+            });
+        }
+        
+        // Copy to clipboard functionality for reference ID
         const copyBtn = document.querySelector('.copy-btn');
         if (copyBtn) {
             copyBtn.addEventListener('click', function() {

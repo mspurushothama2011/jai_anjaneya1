@@ -44,7 +44,7 @@
                             <td>{{ seva.seva_name }}</td>
                             <td>{{ seva.seva_type if seva.seva_type else 'General Seva' }}</td>
                             <td>₹{{ seva.seva_price if seva.seva_price else seva.amount }}</td>
-                            <td>{{ seva.seva_date }}</td>
+                            <td>{{ seva.seva_date.split('-')[2] }}-{{ seva.seva_date.split('-')[1] }}-{{ seva.seva_date.split('-')[0] }}</td>
                             <td>{{ seva.booking_date }}</td>
                             <td>
                                 <span class="badge {% if seva.status == 'Collected' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ seva.status }}</span>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="history-item">
                             <span class="history-label">Seva Date:</span>
-                            <span class="history-value">{{ seva.seva_date }}</span>
+                            <span class="history-value">{{ seva.seva_date.split('-')[2] }}-{{ seva.seva_date.split('-')[1] }}-{{ seva.seva_date.split('-')[0] }}</span>
                         </div>
                         <div class="history-item">
                             <span class="history-label">Booking Date:</span>

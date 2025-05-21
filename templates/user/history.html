@@ -46,7 +46,9 @@
                             <td>₹{{ seva.seva_price if seva.seva_price else seva.amount }}</td>
                             <td>{{ seva.seva_date }}</td>
                             <td>{{ seva.booking_date }}</td>
-                            <td><span class="badge bg-success">{{ seva.status }}</span></td>
+                            <td>
+                                <span class="badge {% if seva.status == 'Collected' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ seva.status }}</span>
+                            </td>
                             <td>
                                 <a href="{{ url_for('payment.download_receipt', payment_type='seva', payment_id=seva._id) }}" class="btn btn-sm btn-primary">Receipt</a>
                             </td>
@@ -62,7 +64,7 @@
                 <div class="mobile-history-card">
                     <div class="history-card-header">
                         <h5>{{ seva.seva_name }}</h5>
-                        <span class="badge bg-success float-end">{{ seva.status }}</span>
+                        <span class="badge {% if seva.status == 'Collected' %}bg-success{% else %}bg-warning text-dark{% endif %} float-end">{{ seva.status }}</span>
                     </div>
                     <div class="history-card-body">
                         <div class="history-item">

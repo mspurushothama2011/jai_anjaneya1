@@ -263,7 +263,7 @@ def verify_seva_payment():
                 "booking_date": formatted_time,
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
-                "status": "Paid"
+                "status": "Not Collected"
             }
             
             # Create a session-safe version (without ObjectId)
@@ -279,7 +279,7 @@ def verify_seva_payment():
                 "booking_date": formatted_time,
                 "payment_id": razorpay_payment_id,
                 "order_id": razorpay_order_id,
-                "status": "Paid"
+                "status": "Not Collected"
             }
             
             print("Saving booking to database...")  # Debug log

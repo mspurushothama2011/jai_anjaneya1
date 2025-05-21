@@ -379,3 +379,34 @@ def reports():
         return render_template("admin/admin_reports.html", 
                               report_type='donation',
                               donations=enhanced_donations)
+
+@general_admin_bp.route("/update_seva_status", methods=["POST"])
+@admin_required
+def update_seva_status():
+    """Update the collection status of a seva booking"""
+    booking_id = request.form.get('booking_id')
+    
+    if not booking_id:
+        flash("Booking ID is required", "error")
+        return redirect(url_for('general_admin.reports', type='seva'))
+    
+    try:
+        # Convert to ObjectId
+        booking_id = ObjectId(booking_id)
+        
+        # Update the booking status to Collected
+        result = seva_collection.update_one(
+            {'_id': booking_id},
+            {'$set': {'status': 'Collected'}}
+        )
+        
+        if result.modified_count > 0:
+            flash("Seva status updated to Collected successfully", "success")
+        else:
+            flash("No booking found with the provided ID", "error")
+            
+    except Exception as e:
+        flash(f"Error updating status: {str(e)}", "error")
+    
+    # Redirect back to the reports page
+    return redirect(url_for('general_admin.reports', type='seva'))

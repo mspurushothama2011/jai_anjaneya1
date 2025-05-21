@@ -446,7 +446,13 @@ def download_receipt(payment_type, payment_id=None):
             pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("booking_date", "")), 1, 1)
             
             pdf.cell(70, 8, "Status:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("status", "")), 1, 1)
+            status_text = sanitize_for_pdf(seva_booking.get("status", ""))
+            if status_text == "Collected":
+                pdf.cell(0, 8, status_text, 1, 1)
+            elif status_text == "Not Collected":
+                pdf.cell(0, 8, f"{status_text} (Visit the temple counter to collect your seva)", 1, 1)
+            else:
+                pdf.cell(0, 8, status_text, 1, 1)
             
             # Seva-specific details
             pdf.ln(10)

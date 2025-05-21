@@ -4,6 +4,17 @@
 {% block title %}{{ donation.name }} Donation{% endblock %}
 
 {% block content %}
+<!-- Payment Processing Overlay -->
+<div id="paymentOverlay" class="payment-processing-overlay" style="display: none;">
+    <div class="overlay-content">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="mt-3 text-white">Processing Donation</h4>
+        <p class="text-white-50" id="processingStatus">Please wait while we process your donation...</p>
+    </div>
+</div>
+
 <div class="donation-hero">
     <div class="container py-4">
         <div class="row justify-content-center">
@@ -150,6 +161,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Amount option cards functionality
     const amountCards = document.querySelectorAll('.amount-option-card');
     const amountInput = document.getElementById('amount');
+    const paymentOverlay = document.getElementById('paymentOverlay');
+    const processingStatus = document.getElementById('processingStatus');
     
     // Select amount when card is clicked
     amountCards.forEach(card => {
@@ -198,6 +211,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Show payment overlay
+        processingStatus.textContent = "Preparing your donation...";
+        paymentOverlay.style.display = "flex";
+        
         // First, store donation details in session
         const donationDetails = {
             donation_id: donationId,
@@ -221,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 if (response.status === 401) {
                     // Handle unauthorized (not logged in)
+                    paymentOverlay.style.display = "none";
                     alert('Your session has expired. Please log in again.');
                     window.location.href = '/user/login?next=' + window.location.pathname;
                     return Promise.reject('Unauthorized');
@@ -234,13 +252,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.status === 'success') {
                 // Create Razorpay order
+                processingStatus.textContent = "Creating your donation order...";
                 createOrder(donationDetails);
             } else {
+                paymentOverlay.style.display = "none";
                 alert('Error: ' + data.error);
             }
         })
         .catch(error => {
             console.error('Error storing donation details:', error); // Detailed error log
+            paymentOverlay.style.display = "none";
             if (error !== 'Unauthorized') {
                 alert('An error occurred. Please try again.');
             }
@@ -260,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 if (response.status === 401) {
                     // Handle unauthorized (not logged in)
+                    paymentOverlay.style.display = "none";
                     alert('Your session has expired. Please log in again.');
                     window.location.href = '/user/login?next=' + window.location.pathname;
                     return Promise.reject('Unauthorized');
@@ -270,9 +292,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(order => {
             if (order.error) {
+                paymentOverlay.style.display = "none";
                 alert('Error: ' + order.error);
                 return;
             }
+            
+            // Hide overlay when Razorpay form opens, as it has its own UI
+            paymentOverlay.style.display = "none";
             
             // Get user details from form fields (which are filled from session)
             const donorName = document.getElementById('donorName').value;
@@ -287,8 +313,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 description: donationDetails.donation_name + ' Donation',
                 order_id: order.id,
                 handler: function (response) {
+                    // Show overlay again after Razorpay form closes
+                    processingStatus.textContent = "Donation successful! Verifying transaction...";
+                    paymentOverlay.style.display = "flex";
+                    
                     // On successful payment
                     verifyPayment(response);
+                },
+                modal: {
+                    ondismiss: function() {
+                        console.log("Payment cancelled by user");
+                        paymentOverlay.style.display = "none";
+                    }
                 },
                 prefill: {
                     name: donorName,
@@ -303,6 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             rzp.open();
         })
         .catch(error => {
+            paymentOverlay.style.display = "none";
             if (error !== 'Unauthorized') {
                 console.error('Error creating order:', error);
                 alert('An error occurred. Please try again.');
@@ -311,6 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function verifyPayment(response) {
+        processingStatus.textContent = "Verifying your donation and updating records...";
+        
         fetch('/donation/verify-donation-payment', {
             method: 'POST',
             headers: {
@@ -326,14 +365,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.success) {
+                // Update status before redirect
+                processingStatus.textContent = "Donation successful! Redirecting to confirmation page...";
                 // Redirect to confirmation page
                 window.location.href = data.redirect_url;
             } else {
+                paymentOverlay.style.display = "none";
                 alert('Payment verification failed: ' + data.error);
             }
         })
         .catch(error => {
             console.error('Error verifying payment:', error);
+            paymentOverlay.style.display = "none";
             alert('Payment verification failed. Please contact support with your payment ID.');
         });
     }
@@ -341,6 +384,27 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.payment-processing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.overlay-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+}
+
 .donation-hero {
     background-color: #f8f9fa;
     padding: 30px 0 60px;

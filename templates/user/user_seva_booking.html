@@ -1,6 +1,17 @@
 {% extends "user/base.html" %}
 
 {% block content %}
+<!-- Payment Processing Overlay -->
+<div id="paymentOverlay" class="payment-processing-overlay" style="display: none;">
+    <div class="overlay-content">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="mt-3 text-white">Processing Payment</h4>
+        <p class="text-white-50" id="processingStatus">Please wait while we process your payment...</p>
+    </div>
+</div>
+
 <div class="container py-4">
     <div class="row">
         <div class="col-lg-6 mx-auto">
@@ -101,6 +112,8 @@
         const loadingSpinner = document.getElementById("loadingSpinner");
         const errorMessage = document.getElementById("errorMessage");
         const proceedButton = document.getElementById("proceedToPayment");
+        const paymentOverlay = document.getElementById("paymentOverlay");
+        const processingStatus = document.getElementById("processingStatus");
 
         if (!sevaDate) {
             showError("Please select a date for the seva.");
@@ -123,6 +136,9 @@
             console.log("Sending Data:", payload); // Debug log
 
             // First store seva details in session
+            processingStatus.textContent = "Preparing your payment...";
+            paymentOverlay.style.display = "flex";
+            
             const sessionResponse = await fetch("{{ url_for('user_seva.store_seva_details') }}", {
                 method: "POST",
                 headers: { 
@@ -138,6 +154,7 @@
             }
 
             // Then create Razorpay order
+            processingStatus.textContent = "Creating payment order...";
             const orderResponse = await fetch("{{ url_for('user_seva.seva_payment') }}", {
                 method: "POST",
                 headers: { 
@@ -154,6 +171,9 @@
 
             console.log("Order Data:", orderData); // Debug log
 
+            // Hide overlay when Razorpay form opens, as it has its own UI
+            paymentOverlay.style.display = "none";
+
             // Initialize Razorpay checkout
             const options = {
                 key: "{{ config.RAZORPAY_KEY_ID }}",
@@ -163,7 +183,18 @@
                 description: "Seva Booking Payment",
                 order_id: orderData.id,
                 handler: function(response) {
+                    // Show overlay again after Razorpay form closes
+                    processingStatus.textContent = "Payment successful! Verifying transaction...";
+                    paymentOverlay.style.display = "flex";
                     verifyPayment(response);
+                },
+                modal: {
+                    ondismiss: function() {
+                        console.log("Payment cancelled by user");
+                        loadingSpinner.style.display = "none";
+                        proceedButton.disabled = false;
+                        paymentOverlay.style.display = "none";
+                    }
                 },
                 prefill: {
                     name: "{{ user.name }}",
@@ -183,17 +214,23 @@
             showError(error.message || "An error occurred. Please try again.");
             loadingSpinner.style.display = "none";
             proceedButton.disabled = false;
+            paymentOverlay.style.display = "none";
         }
     });
 
     function verifyPayment(response) {
         const loadingSpinner = document.getElementById("loadingSpinner");
+        const paymentOverlay = document.getElementById("paymentOverlay");
+        const processingStatus = document.getElementById("processingStatus");
+        
         loadingSpinner.innerHTML = `
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
             <p class="mt-2">Verifying payment...</p>
         `;
+        
+        processingStatus.textContent = "Verifying payment and updating your records...";
         
         console.log("Payment Response:", response); // Log the payment response
         console.log("Verification URL:", '{{ url_for("user_seva.verify_seva_payment") }}'); // Log the verification URL
@@ -209,6 +246,7 @@
         // Verify payment with backend with timeout and retry
         const verifyWithRetry = (attempt = 1) => {
             console.log(`Verification attempt ${attempt}`);
+            processingStatus.textContent = `Verifying payment... Attempt ${attempt}/3`;
             
             fetch('{{ url_for("user_seva.verify_seva_payment") }}', {
                 method: 'POST',
@@ -231,6 +269,7 @@
                 console.log("Verification Response Data:", data); // Log the response data
                 if (data.success) {
                     // Payment successful, redirect to confirmation page
+                    processingStatus.textContent = "Payment successful! Redirecting to confirmation page...";
                     window.location.href = data.redirect_url;
                 } else {
                     throw new Error(data.error || "Payment verification failed");
@@ -242,8 +281,10 @@
                 // Retry if we haven't exceeded max attempts
                 if (attempt < 3) {
                     console.log(`Retrying verification (${attempt + 1}/3)...`);
+                    processingStatus.textContent = `Verification failed. Retrying (${attempt + 1}/3)...`;
                     setTimeout(() => verifyWithRetry(attempt + 1), 2000); // Wait 2 seconds before retry
                 } else {
+                    paymentOverlay.style.display = "none";
                     showError("An error occurred during payment verification. Please contact support with your payment ID: " + 
                         response.razorpay_payment_id);
                 }
@@ -256,14 +297,38 @@
 
     function showError(message) {
         const errorMessage = document.getElementById("errorMessage");
+        const paymentOverlay = document.getElementById("paymentOverlay");
+        
         errorMessage.textContent = message;
         errorMessage.style.display = "block";
         document.getElementById("loadingSpinner").style.display = "none";
         document.getElementById("proceedToPayment").disabled = false;
+        paymentOverlay.style.display = "none";
     }
 </script>
 
 <style>
+    .payment-processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+    }
+    
+    .overlay-content {
+        text-align: center;
+        padding: 2rem;
+        max-width: 400px;
+    }
+    
     .card {
         border-radius: 10px;
         overflow: hidden;

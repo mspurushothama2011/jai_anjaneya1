@@ -136,6 +136,32 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*.env
+
+# Config files with secrets
+config.ini
+secrets.ini
+credentials.json
+*config*.json
+*secret*.json
+*credential*.json
+
+# API keys and tokens
+*apikey*
+*token*
+*.pem
+*.key
+*.cert
+*.pfx
+
+# Local configuration
+.flaskenv
+instance/*
+!instance/.gitkeep
+
+# Database files
+*.db
+*.sqlite
 
 # IDE specific files
 .idea/

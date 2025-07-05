@@ -385,6 +385,7 @@ def reports():
 def update_seva_status():
     """Update the collection status of a seva booking"""
     booking_id = request.form.get('booking_id')
+    date_filter = request.form.get('date_filter')
     
     if not booking_id:
         flash("Booking ID is required", "error")
@@ -408,5 +409,5 @@ def update_seva_status():
     except Exception as e:
         flash(f"Error updating status: {str(e)}", "error")
     
-    # Redirect back to the reports page
-    return redirect(url_for('general_admin.reports', type='seva'))
+    # Redirect back to the reports page with date filter preserved
+    return redirect(url_for('general_admin.reports', type='seva', date_filter=date_filter))

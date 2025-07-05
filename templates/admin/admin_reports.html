@@ -79,6 +79,7 @@
                                         {% if booking.status != 'Collected' %}
                                         <form action="{{ url_for('general_admin.update_seva_status') }}" method="POST" class="collection-form">
                                             <input type="hidden" name="booking_id" value="{{ booking._id }}">
+                                            <input type="hidden" name="date_filter" value="{{ request.args.get('date_filter', '') }}">
                                             <button type="submit" class="collection-button">
                                                 <i class="fas fa-check-circle"></i> Mark as Collected
                                             </button>

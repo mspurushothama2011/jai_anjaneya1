@@ -28,24 +28,13 @@
         </div>
         <div class="day-filter">
             <select id="dayFilter">
-                <option value="weekday">Weekdays</option>
-                <option value="weekend">Weekends</option>
+                <option value="sun-fri">Sunday to Friday</option>
+                <option value="sat">Saturday</option>
             </select>
         </div>
     </div>
     
-    <div class="status-indicators">
-        <div class="status-indicator ongoing">
-            <span class="status-dot"></span> Ongoing
-        </div>
-        <div class="status-indicator upcoming">
-            <span class="status-dot"></span> Upcoming
-        </div>
-        <div class="status-indicator completed">
-            <span class="status-dot"></span> Completed
-        </div>
-    </div>
-    
+    <!-- Removed status indicators -->
     <div class="pooja-schedule-container">
         <h2 class="schedule-title">Daily Pooja Schedule</h2>
         <table class="pooja-schedule-table" id="poojaTable">
@@ -55,58 +44,112 @@
                     <th>Pooja Name</th>
                     <th>Description</th>
                     <th>Days</th>
-                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <tr data-time="05:30" class="pooja-row">
-                    <td>5:30 AM</td>
+                <!-- Sunday to Friday schedule -->
+                <tr data-time="06:30" class="pooja-row" data-days="sun-fri">
+                    <td>6:30 AM</td>
                     <td>Temple Opening</td>
-                    <td>Opening of temple doors and initial prayers</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge completed">Completed</span></td>
+                    <td>Temple opens for devotees</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
                 </tr>
-                <tr data-time="06:00" class="pooja-row">
-                    <td>6:00 AM</td>
-                    <td>Suprabhatam & Morning Aarti</td>
-                    <td>Wake up ritual and morning prayers with devotional songs</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge completed">Completed</span></td>
+                <tr data-time="07:30" class="pooja-row" data-days="sun-fri">
+                    <td>7:30 AM</td>
+                    <td>Abhisheka</td>
+                    <td>Sacred ritual bath for deity</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
                 </tr>
-                <tr data-time="08:00" class="pooja-row">
-                    <td>8:00 AM</td>
-                    <td>Abhishekam</td>
-                    <td>Sacred bathing ritual of the deity with holy water, milk, and other offerings</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge completed">Completed</span></td>
+                <tr data-time="10:00" class="pooja-row" data-days="sun-fri">
+                    <td>10:00 AM</td>
+                    <td>Arathi</td>
+                    <td>Morning Arathi performed</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
                 </tr>
-                <tr data-time="12:00" class="pooja-row">
-                    <td>12:00 PM</td>
-                    <td>Madhyahna Pooja</td>
-                    <td>Afternoon prayers and food offerings to the deity</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge completed">Completed</span></td>
-                </tr>
-                <tr data-time="18:00" class="pooja-row">
-                    <td>6:00 PM</td>
-                    <td>Sandhya Aarti</td>
-                    <td>Evening prayer ceremony with lamps and devotional songs</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge upcoming">Upcoming</span></td>
-                </tr>
-                <tr data-time="20:00" class="pooja-row">
-                    <td>8:00 PM</td>
-                    <td>Shayana Aarti</td>
-                    <td>Final prayers and ritual before the deity retires</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge upcoming">Upcoming</span></td>
-                </tr>
-                <tr data-time="20:30" class="pooja-row">
-                    <td>8:30 PM</td>
+                <tr data-time="11:30" class="pooja-row" data-days="sun-fri">
+                    <td>11:30 AM</td>
                     <td>Temple Closing</td>
-                    <td>Closing of temple doors</td>
-                    <td><span class="days-badge">All Days</span></td>
-                    <td><span class="status-badge upcoming">Upcoming</span></td>
+                    <td>Temple closed for midday</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
+                </tr>
+                <tr data-time="17:30" class="pooja-row" data-days="sun-fri">
+                    <td>5:30 PM</td>
+                    <td>Temple Reopens</td>
+                    <td>Evening darshan starts</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
+                </tr>
+                <tr data-time="20:30" class="pooja-row" data-days="sun-fri">
+                    <td>8:30 PM</td>
+                    <td>Arathi & Close</td>
+                    <td>Final arathi and temple closing</td>
+                    <td><span class="days-badge">Sunday to Friday</span></td>
+                </tr>
+                <!-- Saturday schedule -->
+                <tr data-time="06:00" class="pooja-row" data-days="sat">
+                    <td>6:00 AM</td>
+                    <td>Temple Opening</td>
+                    <td>Temple opens early</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="07:30" class="pooja-row" data-days="sat">
+                    <td>7:30 AM</td>
+                    <td>Abhisheka</td>
+                    <td>Sacred bath ritual</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="09:00" class="pooja-row" data-days="sat">
+                    <td>9:00 AM</td>
+                    <td>Arathi</td>
+                    <td>Morning Arathi</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="10:00" class="pooja-row" data-days="sat">
+                    <td>10:00 AM</td>
+                    <td>Vadamala Seva</td>
+                    <td>Special offering of Vadamala to deity</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="11:30" class="pooja-row" data-days="sat">
+                    <td>11:30 AM</td>
+                    <td>Vadamala Ends</td>
+                    <td>Seva concludes</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="12:00" class="pooja-row" data-days="sat">
+                    <td>12:00 PM</td>
+                    <td>Temple Closing</td>
+                    <td>Midday closure</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="17:30" class="pooja-row" data-days="sat">
+                    <td>5:30 PM</td>
+                    <td>Temple Reopens</td>
+                    <td>Evening darshan starts</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="18:30" class="pooja-row" data-days="sat">
+                    <td>6:30 PM</td>
+                    <td>Maha Pooja</td>
+                    <td>Grand evening pooja</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="18:45" class="pooja-row" data-days="sat">
+                    <td>6:45 PM</td>
+                    <td>Prasada</td>
+                    <td>Distribution of holy offering</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="21:00" class="pooja-row" data-days="sat">
+                    <td>9:00 PM</td>
+                    <td>Final Arathi</td>
+                    <td>Last pooja of the day</td>
+                    <td><span class="days-badge">Saturday</span></td>
+                </tr>
+                <tr data-time="21:15" class="pooja-row" data-days="sat">
+                    <td>9:15 PM</td>
+                    <td>Temple Closing</td>
+                    <td>Temple closes for the day</td>
+                    <td><span class="days-badge">Saturday</span></td>
                 </tr>
             </tbody>
         </table>
@@ -200,38 +243,6 @@
         width: 150px;
     }
     
-    .status-indicators {
-        display: flex;
-        margin-bottom: 20px;
-        gap: 25px;
-        justify-content: center;
-    }
-    
-    .status-indicator {
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-    }
-    
-    .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 5px;
-    }
-    
-    .ongoing .status-dot {
-        background-color: #28a745;
-    }
-    
-    .upcoming .status-dot {
-        background-color: #ffc107;
-    }
-    
-    .completed .status-dot {
-        background-color: #6c757d;
-    }
-    
     .schedule-title {
         background-color: #007bff;
         color: white;
@@ -268,30 +279,6 @@
         border-radius: 4px;
         font-size: 12px;
         display: inline-block;
-    }
-    
-    .status-badge {
-        padding: 5px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        display: inline-block;
-        text-align: center;
-        min-width: 80px;
-    }
-    
-    .status-badge.completed {
-        background-color: #6c757d;
-        color: white;
-    }
-    
-    .status-badge.ongoing {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    .status-badge.upcoming {
-        background-color: #ffc107;
-        color: #333;
     }
     
     @media (max-width: 768px) {
@@ -331,37 +318,10 @@
         document.getElementById('period').textContent = period;
         
         // Update pooja status based on current time
-        updatePoojaStatus();
+        // updatePoojaStatus(); // Removed as per edit hint
     }
     
-    // Update pooja status based on current time
-    function updatePoojaStatus() {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentTimeValue = currentHour * 60 + currentMinute;
-        
-        const rows = document.querySelectorAll('.pooja-row');
-        rows.forEach(row => {
-            const timeStr = row.getAttribute('data-time');
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            const rowTimeValue = hours * 60 + minutes;
-            
-            const statusCell = row.querySelector('.status-badge');
-            
-            if (currentTimeValue < rowTimeValue) {
-                statusCell.className = 'status-badge upcoming';
-                statusCell.textContent = 'Upcoming';
-            } else if (currentTimeValue >= rowTimeValue && currentTimeValue < rowTimeValue + 60) {
-                statusCell.className = 'status-badge ongoing';
-                statusCell.textContent = 'Ongoing';
-            } else {
-                statusCell.className = 'status-badge completed';
-                statusCell.textContent = 'Completed';
-            }
-        });
-    }
-    
+    // Remove updatePoojaStatus and all status-badge logic
     // Search functionality
     document.getElementById('poojaSearch').addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
@@ -378,6 +338,33 @@
             }
         });
     });
+    
+    // Day filter functionality
+    document.getElementById('dayFilter').addEventListener('change', function() {
+        const selectedDay = this.value;
+        const rows = document.querySelectorAll('.pooja-row');
+        rows.forEach(row => {
+            if (row.getAttribute('data-days') === selectedDay) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    // Set default filter to 'Sunday to Friday' on page load
+    document.getElementById('dayFilter').value = 'sun-fri';
+    // Trigger the filter logic once on page load
+    (function() {
+        const selectedDay = document.getElementById('dayFilter').value;
+        const rows = document.querySelectorAll('.pooja-row');
+        rows.forEach(row => {
+            if (row.getAttribute('data-days') === selectedDay) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    })();
     
     // Initialize the clock and update every second
     updateClock();

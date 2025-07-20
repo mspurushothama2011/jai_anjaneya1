@@ -35,7 +35,7 @@
             <button type="submit" class="btn-submit">Verify Code <i class="fas fa-check-circle"></i></button>
             
             <div class="action-links">
-                <a href="{{ url_for('user.resend_otp') }}" class="resend-link"><i class="fas fa-sync-alt"></i> Resend Code</a>
+                <a href="{{ url_for('user.resend_otp') }}" class="resend-link" id="resendOtpLink" style="pointer-events: none; opacity: 0.5;"><i class="fas fa-sync-alt"></i> Resend Code <span id="timer">(90s)</span></a>
                 <a href="{{ url_for('user.login') }}" class="cancel-link"><i class="fas fa-times-circle"></i> Cancel</a>
             </div>
         </form>
@@ -247,6 +247,40 @@
                 e.preventDefault();
             }
         });
+        // --- OTP resend timer logic with persistence ---
+        const RESEND_INTERVAL = 90; // seconds
+        const resendLink = document.getElementById('resendOtpLink');
+        const timerSpan = document.getElementById('timer');
+
+        // Get or set the timer end time in localStorage
+        const storageKey = 'otpResendEndTime';
+        let endTime = localStorage.getItem(storageKey);
+
+        if (!endTime || isNaN(Number(endTime)) || Number(endTime) < Date.now()) {
+            // Set new end time if not set or expired
+            endTime = Date.now() + RESEND_INTERVAL * 1000;
+            localStorage.setItem(storageKey, endTime);
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            let secondsLeft = Math.ceil((endTime - now) / 1000);
+
+            if (secondsLeft > 0) {
+                resendLink.style.pointerEvents = 'none';
+                resendLink.style.opacity = '0.5';
+                timerSpan.textContent = `(${secondsLeft}s)`;
+            } else {
+                resendLink.style.pointerEvents = 'auto';
+                resendLink.style.opacity = '1';
+                timerSpan.textContent = '';
+                localStorage.removeItem(storageKey);
+                clearInterval(timerInterval);
+            }
+        }
+
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
     });
 </script>
 {% endblock %}

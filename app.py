@@ -11,6 +11,8 @@ from routes.general import general_bp
 from routes.payment import payment_bp
 from routes.seva import sevas_bp
 from routes.user_seva import user_seva_bp  # Ensure correct import
+from routes.abhisheka import abhisheka_bp  # Import abhisheka routes
+from routes.vadamala import vadamala_bp # Import vadamala routes
 from database import client  # Ensure MongoDB is initialized
 import os
 import datetime
@@ -90,6 +92,12 @@ app.register_blueprint(user_bp, url_prefix="/user")
 app.register_blueprint(donation_management_bp, url_prefix="/donations")
 app.register_blueprint(donations_bp, url_prefix="/donation")
 app.register_blueprint(payment_bp, url_prefix="/payment")
+app.register_blueprint(abhisheka_bp, url_prefix="/abhisheka")  # Register abhisheka blueprint
+app.register_blueprint(vadamala_bp, url_prefix="/vadamala") # Register vadamala blueprint
+
+# Register Alankara blueprint
+from routes.alankara import alankara_bp
+app.register_blueprint(alankara_bp, url_prefix="/alankara")
 
 # Make sessions permanent by default and refresh on each request
 @app.before_request

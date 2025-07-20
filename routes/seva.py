@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash
 from database import seva_list
 from bson.objectid import ObjectId  # Import ObjectId
 from admin_required import admin_required
@@ -20,35 +20,62 @@ def seva():
 @sevas_bp.route("/admin/add_seva", methods=["POST"])
 @admin_required
 def add_seva():
-    """Add a new seva to the database"""
+    """Add a new Pooja/Vratha seva to the database"""
     if "admin" not in session:
-        return redirect(url_for("admin.login"))  # Ensure only admins can add events
+        return redirect(url_for("admin.login"))
 
+    # Use the admin-provided seva_id and standardized field names.
     new_seva = {
         "seva_id": request.form["seva_id"],
-        "seva_type": request.form["seva_type"],
-        "seva_name": request.form["seva_name"],
-        "seva_price": request.form["seva_price"],
-        "seva_description": request.form["seva_description"],
+        "seva_name": "Pooja/Vratha",
+        "seva_type": request.form["seva_name"],
+        "amount": float(request.form["amount"]),
+        "description": request.form["description"],
+        "seva_date": request.form["seva_date"]
     }
-    seva_list.insert_one(new_seva)  # Insert new seva into database
-
-    return redirect(url_for("sevas.seva"))  # Redirect back to admin_seva_table
-
+    
+    try:
+        # Check if a seva with this ID already exists to prevent duplicates.
+        if seva_list.find_one({"seva_id": new_seva["seva_id"]}):
+            flash(f"A seva with the ID '{new_seva['seva_id']}' already exists. Please use a different Seva ID.", "danger")
+        else:
+            seva_list.insert_one(new_seva)
+            flash("New Pooja/Vratha seva added successfully!", "success")
+    except Exception as e:
+        flash(f"Error adding seva: {str(e)}", "danger")
+    
+    return redirect(url_for("general_admin.manage_sevas"))
 
 
 @sevas_bp.route("/admin/delete-seva/<_id>", methods=["POST"])
 @admin_required
 def delete_seva(_id):
-    """Delete a seva from the database"""
+    """Delete a Pooja/Vratha seva from the database"""
     if "admin" not in session:
         return redirect(url_for("admin.login"))  # Ensure only admins can delete
 
     try:
-        object_id = ObjectId(_id)  # Convert _id to ObjectId
-        result = seva_list.delete_one({"_id": object_id})  # Delete seva
-        print(f"Delete result: {result.deleted_count}")  # Debug output
+        # Get the seva to verify it's a Pooja/Vratha type
+        object_id = ObjectId(_id)
+        seva = seva_list.find_one({"_id": object_id})
+        
+        if not seva:
+            flash("Seva not found!", "danger")
+            return redirect(url_for("general_admin.manage_sevas"))
+            
+        # Verify it's a Pooja/Vratha seva
+        if seva.get("seva_name") != "Pooja/Vratha":
+            flash("You can only delete Pooja/Vratha sevas from this interface!", "danger")
+            return redirect(url_for("general_admin.manage_sevas"))
+        
+        # Delete the seva
+        result = seva_list.delete_one({"_id": object_id})
+        if result.deleted_count > 0:
+            flash("Pooja/Vratha seva deleted successfully!", "success")
+        else:
+            flash("Failed to delete seva!", "danger")
+            
     except Exception as e:
-        print(f"Error deleting seva: {e}")  # Print error details
-
-    return redirect(url_for("sevas.seva"))  # Redirect back to admin_seva_table
+        flash(f"Error deleting seva: {str(e)}", "danger")
+    
+    return redirect(url_for("general_admin.manage_sevas"))

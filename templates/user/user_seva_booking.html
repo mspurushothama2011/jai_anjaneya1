@@ -31,20 +31,34 @@
                             <table class="table table-bordered table-sm mb-0">
                                 <tr>
                                     <td width="35%" class="fw-normal">Seva Name</td>
-                                    <td>{{ seva.seva_name }}</td>
+                                    <td>{{ seva.seva_type }}</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-normal">Type</td>
-                                    <td>{{ seva.seva_type|default('Pooja') }}</td>
+                                    <td>{{ seva.seva_name|default('Pooja') }}</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-normal">Price</td>
-                                    <td>₹{{ seva.seva_price }}</td>
+                                    <td>₹{{ seva.amount if seva.amount is not none else seva.seva_price }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-normal">Description</td>
-                                    <td>{% if seva.seva_description %}{{ seva.seva_description }}{% else %}No description available{% endif %}</td>
+                                    <td class="fw-normal">Booking Date</td>
+                                    <td>{{ current_date_formatted }}</td>
                                 </tr>
+                                {% if seva.seva_date and seva.seva_name == 'Pooja/Vratha' %}
+                                <tr>
+                                    <td class="fw-normal">Seva Date</td>
+                                    <td>{{ seva_date_formatted }}</td>
+                                </tr>
+                                {% else %}
+                                <!-- Date input for other sevas -->
+                                <tr>
+                                    <td class="fw-normal">Select Seva Date</td>
+                                    <td>
+                                        <input type="date" id="sevaDate" class="form-control" min="{{ current_date }}">
+                                    </td>
+                                </tr>
+                                {% endif %}
                             </table>
                         </div>
                     </div>
@@ -74,13 +88,15 @@
 
                     <hr class="my-4">
 
-                    <!-- Date selection -->
-                    <div class="mb-4">
-                        <h6 class="mb-3 text-primary"><i class="fas fa-calendar-alt me-2"></i>Select Date</h6>
-                        <div class="bg-light p-3 rounded">
-                            <input type="date" id="sevaDate" class="form-control" min="{{ current_date }}" required>
-                        </div>
-                    </div>
+                    <!-- Hidden fields for seva ID and type -->
+                    <input type="hidden" id="sevaIdInput" 
+                        {% if is_fixed_seva %}
+                        value="{{ seva.id }}"
+                        {% else %}
+                        value="{{ seva._id }}"
+                        {% endif %}
+                    >
+                    <input type="hidden" id="sevaTypeInput" value="{{ seva.seva_type }}">
 
                     <!-- Loading indicator -->
                     <div id="loadingSpinner" style="display: none;" class="text-center mb-4 p-3 bg-light rounded">
@@ -94,7 +110,7 @@
 
                     <!-- Action buttons -->
                     <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ url_for('user_seva.seva_list_view') }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('user_seva.seva_categories_view') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Back to Sevas
                         </a>
                         <button class="btn btn-primary px-4" id="proceedToPayment">
@@ -112,17 +128,28 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     document.getElementById("proceedToPayment").addEventListener("click", async function() {
-        const sevaDate = document.getElementById("sevaDate").value;
+        const sevaName = "{{ seva.seva_name }}"; // Use the name from the backend for reliability
+        const sevaId = document.getElementById("sevaIdInput").value;
+        let sevaDate;
+
+        // For Pooja/Vratha sevas, use the date from the database
+        if (sevaName === "Pooja/Vratha") {
+            sevaDate = "{{ seva.seva_date }}";
+        } else {
+            // For other seva types, get the date from the input field
+            const sevaDateInput = document.getElementById("sevaDate");
+            if (!sevaDateInput || !sevaDateInput.value) {
+                showError("Please select a date for the seva.");
+                return;
+            }
+            sevaDate = sevaDateInput.value;
+        }
+
         const loadingSpinner = document.getElementById("loadingSpinner");
         const errorMessage = document.getElementById("errorMessage");
         const proceedButton = document.getElementById("proceedToPayment");
         const paymentOverlay = document.getElementById("paymentOverlay");
         const processingStatus = document.getElementById("processingStatus");
-
-        if (!sevaDate) {
-            showError("Please select a date for the seva.");
-            return;
-        }
 
         // Show loading spinner and disable button
         loadingSpinner.style.display = "block";
@@ -130,11 +157,13 @@
         proceedButton.disabled = true;
 
         try {
+            
             const payload = {
-                seva_id: "{{ seva._id }}",
-                seva_name: "{{ seva.seva_name }}",
-                amount: "{{ seva.seva_price }}",
-                seva_date: sevaDate
+                seva_id: sevaId,
+                seva_type: "{{ seva.seva_type }}",
+                amount: "{{ seva.amount if seva.amount is not none else seva.seva_price }}",
+                seva_date: sevaDate,
+                seva_name: sevaName
             };
 
             console.log("Sending Data:", payload); // Debug log
@@ -276,7 +305,14 @@
                     processingStatus.textContent = "Payment successful! Redirecting to confirmation page...";
                     window.location.href = data.redirect_url;
                 } else {
-                    throw new Error(data.error || "Payment verification failed");
+                    // If the backend sends a redirect URL, it means an error occurred
+                    // and a flash message was set. Redirect to display it.
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Fallback for unexpected errors
+                        throw new Error(data.error || "Payment verification failed");
+                    }
                 }
             })
             .catch(error => {

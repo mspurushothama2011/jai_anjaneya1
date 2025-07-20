@@ -107,15 +107,14 @@
                     <div class="tax-info mb-4">
                         <h6 class="mb-3 text-primary"><i class="fas fa-file-invoice-dollar me-2"></i>Tax Information</h6>
                         <div class="bg-light p-3 rounded">
-                            <p class="mb-2">Your donation may be eligible for tax benefits under section 80G of the Income Tax Act.</p>
-                            <p class="mb-0">To claim tax benefits, please download and save your donation receipt for your records.</p>
+                            <p class="mb-2">Your donation are not eligible for tax benefits under section 80G of the Income Tax Act.</p>
                         </div>
                     </div>
                     {% endif %}
 
                     <div class="text-center mt-4 action-buttons">
                         {% if not is_canceled %}
-                        <a href="{{ url_for('payment.confirmation_receipt', payment_type='donation') }}" class="btn btn-outline-primary" target="_blank">
+                        <a href="{{ url_for('payment.confirmation_receipt', payment_type='donation', order_id=donation.order_id) }}" class="btn btn-outline-primary" target="_blank">
                             <i class="fas fa-download me-2"></i> Download Receipt
                         </a>
                         {% else %}

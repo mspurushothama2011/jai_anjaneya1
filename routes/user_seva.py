@@ -9,28 +9,39 @@ import hashlib
 import hmac
 from config import Config
 from utils import get_current_time  # Import from utils instead of app
+from seva_config import get_all_fixed_sevas, get_seva_by_id, get_abhisheka_sevas  # Import the hard-coded sevas
 
 user_seva_bp = Blueprint("user_seva", __name__)
 
-# ✅ 1. Display Seva List (with dropdown filter)
+# ✅ 1. Display Seva Categories Page
 @user_seva_bp.route("/seva-list")
-def seva_list_view():
-    """Fetch and display available sevas with a dropdown filter"""
-    sevas = list(seva_list.find())  # Fetch all available sevas
-    seva_types = {seva["seva_type"] for seva in sevas}  # Unique seva types for dropdown
+def seva_categories_view():
+    """Render the main seva categories page."""
+    return render_template("user/user_seva_list.html")
 
-    for seva in sevas:
-        seva["_id"] = str(seva["_id"])  # Convert ObjectId to string for frontend
+
+# ✅ New route for displaying Pooja/Vratha sevas
+@user_seva_bp.route("/pooja-vratha-list")
+def pooja_vratha_list():
+    """Fetch and display available Pooja/Vratha sevas"""
+    current_date = get_current_time().strftime("%d-%m-%Y")
+    
+    # Corrected the query to look for 'Pooja/Vratha' and filter by date
+    query = {
+        "seva_name": "Pooja/Vratha",
+        "seva_date": {"$gte": current_date}
+    }
+    db_sevas = list(seva_list.find(query))
+    
+    for seva in db_sevas:
+        seva["_id"] = str(seva["_id"])
         
-    # Use timezone-aware current date 
-    current_date = get_current_time().strftime("%Y-%m-%d")
-        
-    return render_template("user/user_seva_list.html", 
-                          sevas=sevas, 
-                          seva_types=seva_types,
+    return render_template("user/pooja_vratha_list.html", 
+                          sevas=db_sevas, 
                           current_date=current_date)
 
-# ✅ 2. Seva Booking Page
+
+# ✅ 2. Seva Booking Page (remains the same for Pooja/Vratha)
 @user_seva_bp.route("/seva-booking/<seva_id>")
 def seva_booking(seva_id):
     """Seva booking page with user and seva details"""
@@ -47,20 +58,49 @@ def seva_booking(seva_id):
             flash("User not found. Please login again.", "error")
             return redirect(url_for("user.login"))
 
-        # Get seva details
-        seva = seva_list.find_one({"_id": ObjectId(seva_id)})
+        # Check if this is a hard-coded seva or database seva
+        seva = None
+        is_fixed_seva = False
+        
+        # First check if it's a hard-coded seva
+        if seva_id.startswith(('abhisheka_', 'alankara_', 'vadamala_')):
+            seva = get_seva_by_id(seva_id)
+            is_fixed_seva = True
+        
+        # If not found in hard-coded sevas, check database
+        if not seva:
+            try:
+                object_id = ObjectId(seva_id)
+                seva = seva_list.find_one({"_id": object_id})
+                if seva:
+                    seva["_id"] = str(seva["_id"])
+                    seva["id"] = seva["_id"]  # Add id field for consistency
+            except:
+                pass
+        
         if not seva:
             flash("Seva not found.", "error")
-            return redirect(url_for("user_seva.seva_list_view"))
+            return redirect(url_for("user_seva.seva_categories_view"))
 
         # Get current date for min date in template
-        current_date = get_current_time().strftime("%Y-%m-%d")
+        current_date = get_current_time().strftime("%d-%m-%Y")
+        current_date_formatted = current_date
+        seva_date_formatted = ""
+        if seva.get("seva_date"):
+            try:
+                date_obj = datetime.strptime(seva["seva_date"], "%d-%m-%Y")
+                seva_date_formatted = date_obj.strftime("%d-%m-%Y")
+            except (ValueError, TypeError):
+                seva_date_formatted = seva.get("seva_date", "")
 
         return render_template(
             "user/user_seva_booking.html",
             seva=seva,
             user=user,
-            current_date=current_date
+            current_date=current_date,
+            current_date_formatted=current_date_formatted,
+            seva_date_formatted=seva_date_formatted,
+            is_fixed_seva=is_fixed_seva
         )
 
     except Exception as e:
@@ -68,7 +108,6 @@ def seva_booking(seva_id):
         return redirect(url_for("user_seva.seva_list_view"))
 
 # Add this route before the seva_payment route
-
 @user_seva_bp.route("/store-seva-details", methods=["POST"])
 def store_seva_details():
     """Store seva details in session before payment"""
@@ -77,11 +116,32 @@ def store_seva_details():
         data = request.json
         print("Received data:", data)  # Debug log
         
+        # Get the seva date and type
+        seva_date = data.get("seva_date")
+        seva_type = data.get("seva_type", "General Seva")
+        seva_id = data.get("seva_id")
+        
+        # For Pooja/Vratha sevas, use the date from the database
+        if seva_type == "Pooja/Vratha" and seva_id:
+            try:
+                # Check if it's a database seva
+                if not seva_id.startswith(('abhisheka_', 'alankara_', 'vadamala_')):
+                    # Get the seva from database
+                    object_id = ObjectId(seva_id)
+                    seva = seva_list.find_one({"_id": object_id})
+                    if seva and seva.get("seva_date"):
+                        seva_date = seva["seva_date"]
+            except Exception as e:
+                print(f"Error getting seva date from database: {str(e)}")
+                # Use the date from the request if there's an error
+        
         # Store essential data in session
-        session["seva_id"] = data.get("seva_id")
+        session["seva_id"] = seva_id
         session["seva_name"] = data.get("seva_name")
         session["seva_price"] = data.get("amount")
-        session["seva_date"] = data.get("seva_date")
+        session["seva_date"] = seva_date
+        session["seva_type"] = seva_type
+        session["payment_type"] = "seva"
         
         # For debugging, check what was stored
         print(f"Stored in session - ID: {session.get('seva_id')}, Name: {session.get('seva_name')}, Price: {session.get('seva_price')}")
@@ -101,16 +161,43 @@ def seva_payment():
     try:
         data = request.json
         seva_id = data.get("seva_id")
-        seva_name = data.get("seva_name")
-        amount = float(data.get("amount", 0))
         seva_date = data.get("seva_date")
+        
+        # --- SECURITY FIX: Get price and details from the database ---
+        seva_details = None
+        if ObjectId.is_valid(seva_id):
+            seva_details = seva_list.find_one({"_id": ObjectId(seva_id)})
+        
+        if not seva_details:
+            # Check hard-coded sevas if not in DB
+            seva_details = get_seva_by_id(seva_id)
+            if not seva_details:
+                return jsonify({"error": "Invalid Seva ID"}), 400
 
-        if not all([seva_id, seva_name, amount, seva_date]):
+        amount = float(seva_details.get("amount", seva_details.get("seva_price", 0)))
+        if amount <= 0:
+            return jsonify({"error": "Invalid price for the selected seva."}), 400
+        
+        # Use authoritative data from the database/config
+        seva_name = seva_details.get("seva_name")
+        seva_type = seva_details.get("seva_type")
+
+        # For Pooja/Vratha, the date is fixed and from the database
+        if seva_name == "Pooja/Vratha":
+            final_seva_date = seva_details.get("seva_date")
+        else:
+            final_seva_date = seva_date
+
+        if not all([seva_id, seva_name, seva_type, final_seva_date]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Store payment type in session
+        # Store details in session for verification after payment
         session["payment_type"] = "seva"
-        session["amount"] = amount
+        session["seva_id"] = seva_id
+        session["seva_name"] = seva_name
+        session["seva_price"] = amount
+        session["seva_date"] = final_seva_date
+        session["seva_type"] = seva_type
 
         # Create Razorpay order
         order = razorpay_client.order.create({
@@ -120,8 +207,9 @@ def seva_payment():
             "payment_capture": 1,
             "notes": {
                 "seva_name": seva_name,
-                "seva_date": seva_date,
-                "seva_id": seva_id  # Added seva_id to notes instead
+                "seva_date": final_seva_date,
+                "seva_id": seva_id,
+                "seva_type": seva_type
             }
         })
 
@@ -158,168 +246,147 @@ def verify_seva_payment():
         
         if not all([razorpay_payment_id, razorpay_order_id, razorpay_signature]):
             print("Missing verification data")  # Debug log
-            return jsonify({"error": "Missing payment verification data"}), 400
+            flash("Payment verification failed due to missing data. Please try again.", "danger")
+            return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
             
         # Get session data immediately
+        user_id = session.get("user_id")
+        seva_id = session.get("seva_id")
+        order_id = session.get("order_id")
+        
+        # Security: Verify that the Razorpay order ID from the client matches the one in the session
+        if razorpay_order_id != order_id:
+            print("Order ID mismatch")  # Debug log
+            flash("Payment could not be verified due to a security issue (Order ID mismatch).", "danger")
+            return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
+
+        # Verify signature
+        try:
+            key_secret = Config.RAZORPAY_KEY_SECRET
+            message = f"{razorpay_order_id}|{razorpay_payment_id}"
+            generated_signature = hmac.new(
+                key_secret.encode(), message.encode(), hashlib.sha256
+            ).hexdigest()
+
+            if generated_signature != razorpay_signature:
+                print("Signature mismatch")
+                flash("Payment verification failed (Invalid Signature). If payment was debited, please contact support.", "danger")
+                return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
+        except Exception as e:
+            print(f"Error during signature verification: {str(e)}")
+            flash("A critical error occurred during payment verification. Please contact support.", "danger")
+            return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
+        
+        print("Signature verified successfully")  # Debug log
+        
+        # Retrieve authoritative details from session
         user_id = session.get("user_id")
         seva_id = session.get("seva_id")
         seva_name = session.get("seva_name")
         seva_price = session.get("seva_price")
         seva_date = session.get("seva_date")
+        seva_type = session.get("seva_type")
         
-        print(f"Session data:")  # Debug log
-        print(f"User ID: {user_id}")
-        print(f"Seva ID: {seva_id}")
-        print(f"Seva Name: {seva_name}")
-        print(f"Seva Price: {seva_price}")
-        print(f"Seva Date: {seva_date}")
+        # Debugging: Print retrieved session data
+        print("Retrieved from session:")
+        print(f"  User ID: {user_id}")
+        print(f"  Seva ID: {seva_id}")
+        print(f"  Seva Name: {seva_name}")
+        print(f"  Seva Price: {seva_price}")
+        print(f"  Seva Date: {seva_date}")
+        print(f"  Seva Type: {seva_type}")
+
+        if not all([user_id, seva_id, seva_name, seva_price, seva_date, seva_type]):
+            print("Missing session data for booking")  # Debug log
+            flash("Your session has expired. Please try booking again.", "warning")
+            return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
+            
+        # Check if user exists
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            print("User not found in DB")  # Debug log
+            flash("Your user account could not be found. Please log in again.", "danger")
+            return jsonify({"success": False, "redirect_url": url_for('user.login')})
+            
+        # Check for duplicate payment
+        existing_booking = seva_collection.find_one({
+            "order_id": razorpay_order_id,
+            "status": "confirmed" # Assuming 'confirmed' means it's a successful payment
+        })
+
+        if existing_booking:
+            print("Duplicate payment detected")  # Debug log
+            # Redirect to a confirmation page with a message
+            return jsonify({
+                "success": True, 
+                "redirect_url": url_for(
+                    "user_seva.payment_confirmation", 
+                    order_id=order_id,
+                    message="This payment has already been recorded."
+                )
+            })
+
+        # Create booking record
+        booking = {
+            "user_id": ObjectId(user_id),
+            "user_name": user["name"],
+            "email": user["email"],
+            "phone": user["phone"],
+            "seva_id": seva_id,
+            "seva_name": seva_name,
+            "seva_price": seva_price,
+            "seva_date": seva_date,
+            "seva_type": seva_type,
+            "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
+            "payment_id": razorpay_payment_id,
+            "order_id": order_id,
+            "status": "Not Collected",
+        }
+
+        # Convert seva_id to ObjectId if it's from the database
+        if ObjectId.is_valid(seva_id):
+            booking["seva_id"] = ObjectId(seva_id)
         
-        # If session data is missing, create a direct verification of the payment
-        if not all([user_id, seva_id, seva_name, seva_price, seva_date]):
-            print("Session data missing, attempting to verify payment directly with Razorpay")
-            try:
-                # Verify the payment directly with Razorpay API
-                payment = razorpay_client.payment.fetch(razorpay_payment_id)
-                if payment.get('status') == 'captured':
-                    # Try to get details from the order
-                    order = razorpay_client.order.fetch(razorpay_order_id)
-                    notes = order.get('notes', {})
-                    
-                    # Extract details from order notes
-                    if notes:
-                        seva_id = notes.get('seva_id')
-                        seva_name = notes.get('seva_name')
-                        seva_date = notes.get('seva_date')
-                        seva_price = float(payment.get('amount', 0)) / 100  # Convert from paise to rupees
-                        
-                        print(f"Retrieved data from Razorpay:")
-                        print(f"Seva ID: {seva_id}")
-                        print(f"Seva Name: {seva_name}")
-                        print(f"Seva Price: {seva_price}")
-                        print(f"Seva Date: {seva_date}")
-                    else:
-                        return jsonify({"error": "Payment verified but order details missing"}), 400
-                else:
-                    return jsonify({"error": f"Payment not captured. Status: {payment.get('status')}"}), 400
-            except Exception as e:
-                print(f"Razorpay direct verification error: {str(e)}")
-                return jsonify({"error": f"Payment verification failed: {str(e)}"}), 500
+        print("Inserting booking:", booking)  # Debug log
+
+        # Insert booking into database
+        seva_collection.insert_one(booking)
         
-        # Verify Razorpay signature
-        try:
-            key_secret = Config.RAZORPAY_KEY_SECRET
-            if not key_secret:
-                print("Razorpay key secret not found")  # Debug log
-                return jsonify({"error": "Payment verification configuration error"}), 500
-                
-            print(f"Verifying with key: {key_secret[:3]}...")  # Debug log (partial for security)
-            generated_signature = hmac.new(
-                key_secret.encode(),
-                f"{razorpay_order_id}|{razorpay_payment_id}".encode(),
-                hashlib.sha256
-            ).hexdigest()
-            
-            print(f"Generated signature: {generated_signature[:10]}...")  # Debug log
-            print(f"Received signature: {razorpay_signature[:10]}...")  # Debug log
-            
-            if generated_signature != razorpay_signature:
-                print("Signature verification failed")  # Debug log
-                return jsonify({"error": "Invalid payment signature"}), 400
-                
-            print("Signature verified successfully")  # Debug log
-        except Exception as e:
-            print(f"Signature verification error: {str(e)}")  # Debug log
-            return jsonify({"error": f"Payment verification failed: {str(e)}"}), 500
-        
-        if not user_id:
-            print("User not logged in")  # Debug log
-            return jsonify({"error": "User not logged in"}), 401
+        print("Booking successful!")  # Debug log
 
-        # Get user details
-        try:
-            user = user_collection.find_one({"_id": ObjectId(user_id)})
-            if not user:
-                print(f"User not found for ID: {user_id}")  # Debug log
-                return jsonify({"error": "User not found"}), 404
-                
-            print(f"User found: {user.get('name')}")  # Debug log
-        except Exception as e:
-            print(f"Error finding user: {str(e)}")  # Debug log
-            return jsonify({"error": f"Error retrieving user data: {str(e)}"}), 500
-
-        # Store booking in seva_collection
-        formatted_time = get_current_time().strftime("%d-%m-%Y (%H:%M:%S)")
-        try:
-            # Make a JSON-serializable dictionary for the session
-            seva_booking_db = {
-                "user_id": ObjectId(user_id),
-                "user_name": user.get("name"),
-                "email": user.get("email"),
-                "phone": user.get("phone"),
-                "seva_id": ObjectId(seva_id),
-                "seva_name": seva_name,
-                "seva_price": float(seva_price),
-                "seva_date": seva_date,
-                "booking_date": formatted_time,
-                "payment_id": razorpay_payment_id,
-                "order_id": razorpay_order_id,
-                "status": "Not Collected"
-            }
-            
-            # Create a session-safe version (without ObjectId)
-            seva_booking_session = {
-                "user_id": str(user_id),
-                "user_name": user.get("name"),
-                "email": user.get("email"),
-                "phone": user.get("phone"),
-                "seva_id": str(seva_id),
-                "seva_name": seva_name,
-                "seva_price": float(seva_price),
-                "seva_date": seva_date,
-                "booking_date": formatted_time,
-                "payment_id": razorpay_payment_id,
-                "order_id": razorpay_order_id,
-                "status": "Not Collected"
-            }
-            
-            print("Saving booking to database...")  # Debug log
-            result = seva_collection.insert_one(seva_booking_db)
-            if not result.inserted_id:
-                print("Failed to insert booking")  # Debug log
-                return jsonify({"error": "Failed to store booking"}), 500
-                
-            print(f"Booking saved successfully with ID: {result.inserted_id}")  # Debug log
-            
-            # Store in session for confirmation page & PDF
-            session["seva_booking"] = seva_booking_session
-            print("JSON-safe booking stored in session")  # Debug log
-            
-        except Exception as e:
-            print(f"Error saving booking: {str(e)}")  # Debug log
-            return jsonify({"error": f"Failed to save booking: {str(e)}"}), 500
-
-        # Ensure session is committed
-        session.modified = True
-        print("Session marked as modified")  # Debug log
-
-        # Clear temporary session data
+        # Clear session data after successful booking
+        session.pop("payment_type", None)
         session.pop("seva_id", None)
         session.pop("seva_name", None)
         session.pop("seva_price", None)
         session.pop("seva_date", None)
-        print("Temporary session data cleared")  # Debug log
-
-        redirect_url = url_for("payment.payment_confirmation_page")
-        print(f"Redirecting to: {redirect_url}")  # Debug log
-        print("*** PAYMENT VERIFICATION COMPLETED SUCCESSFULLY ***\n\n")  # Debug log
+        session.pop("seva_type", None)
+        session.pop("order_id", None)
         
+        print("*** PAYMENT VERIFICATION COMPLETED ***\n\n")  # Debug log
+
+        # Return success response with redirect URL
         return jsonify({
             "success": True,
-            "message": "Seva booking successful!", 
-            "redirect_url": redirect_url
+            "redirect_url": url_for("user_seva.payment_confirmation", order_id=order_id)
         })
+        
     except Exception as e:
-        print(f"*** UNEXPECTED ERROR IN VERIFY PAYMENT: {str(e)} ***")  # Debug log
-        import traceback
-        traceback.print_exc()  # Print full traceback for debugging
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in verify_seva_payment: {str(e)}")  # Debug log
+        flash("An unexpected error occurred while verifying your payment. Please contact support.", "danger")
+        return jsonify({"success": False, "redirect_url": url_for('user_seva.seva_categories_view')})
+
+
+# ✅ 5. Payment Confirmation Page
+@user_seva_bp.route("/payment-confirmation/<order_id>")
+def payment_confirmation(order_id):
+    """Displays the payment confirmation page."""
+    booking = seva_collection.find_one({"order_id": order_id})
+    
+    is_canceled = booking and booking.get("payment_id") == "canceled"
+
+    return render_template(
+        "user/payment_confirmation.html", 
+        seva_booking=booking,
+        is_canceled=is_canceled
+    )

@@ -11,117 +11,77 @@
 
 <div class="sevas-content">
     <div class="container">
-        <!-- Filter Section -->
-        <div class="filter-container">
-            <div class="filter-label">
-                <i class="fas fa-filter"></i> Filter by Seva Type:
-            </div>
-            <select id="sevaFilter" class="filter-select">
-                <option value="">All Sevas</option>
-                {% for seva_type in seva_types %}
-                    <option value="{{ seva_type }}">{{ seva_type }}</option>
-                {% endfor %}
-            </select>
-            <div class="seva-count">
-                <span id="sevaCounter">{{ sevas|length }}</span> Sevas Available
-            </div>
-        </div>
-
-        <!-- Sevas Grid -->
+        <!-- Seva Categories Grid -->
         <div class="section-heading">
-            <h2 class="seva-section-title">Available Sevas</h2>
+            <h2 class="seva-section-title">Seva Categories</h2>
         </div>
 
-        <div class="sevas-grid" id="sevaList">
-            {% for seva in sevas %}
-            <div class="seva-card seva-item" data-type="{{ seva.seva_type }}">
-                <span class="seva-type-badge">{{ seva.seva_type }}</span>
-                
+        <div class="sevas-grid" id="sevaCategoryList">
+            <!-- Abhisheka Category Card -->
+            <div class="seva-card">
                 <div class="seva-icon-wrapper">
                     <div class="seva-icon-pattern"></div>
-                    <div class="seva-icon">
-                        <i class="fas fa-om"></i>
-                    </div>
+                    <div class="seva-icon"><i class="fas fa-hand-holding-water"></i></div>
                 </div>
-
                 <div class="seva-content">
-                    <h3 class="seva-name">{{ seva.seva_name }}</h3>
-                    <div class="seva-price">
-                        <span class="currency">₹</span>
-                        <span class="amount">{{ seva.seva_price }}</span>
-                        <div class="seva-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span class="seva-tooltip">Seva offering amount</span>
-                        </div>
-                    </div>
-                    <p class="seva-description">{{ seva.seva_description }}</p>
-                    
-                    <div class="seva-benefits">
-                        {% if seva.includes_prasadam %}
-                            <span class="seva-benefit-tag">
-                                <i class="fas fa-leaf"></i> Prasadam
-                            </span>
-                        {% endif %}
-                        {% if seva.includes_photos %}
-                            <span class="seva-benefit-tag">
-                                <i class="fas fa-camera"></i> Photos
-                            </span>
-                        {% endif %}
-                        {% if seva.includes_certificate %}
-                            <span class="seva-benefit-tag">
-                                <i class="fas fa-certificate"></i> Certificate
-                            </span>
-                        {% endif %}
-                    </div>
-
-                    {% if session.get('user_id') %}
-                        <a href="{{ url_for('user_seva.seva_booking', seva_id=seva._id) }}" class="book-seva-btn">
-                            <i class="fas fa-calendar-check"></i> Book This Seva
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for('user.login') }}" class="book-seva-btn">
-                            <i class="fas fa-sign-in-alt"></i> Login to Book
-                        </a>
-                    {% endif %}
+                    <h3 class="seva-name">Abhisheka</h3>
+                    <p class="seva-description">A sacred ritual of bathing the deity with various offerings like milk, honey, and tender coconut.</p>
+                    <a href="{{ url_for('abhisheka.abhisheka_booking') }}" class="book-seva-btn">
+                        <i class="fas fa-calendar-check"></i> View & Book
+                    </a>
                 </div>
             </div>
-            {% endfor %}
-        </div>
 
-        {% if not sevas %}
-        <div class="no-sevas">
-            <i class="fas fa-prayer-hands"></i>
-            <h3>No Sevas Available</h3>
-            <p>Currently there are no sevas available. Please check back later or contact the temple administration for more information.</p>
+            <!-- Vadamala Seva Card -->
+            <div class="seva-card">
+                <div class="seva-icon-wrapper">
+                    <div class="seva-icon-pattern"></div>
+                    <div class="seva-icon"><i class="fas fa-ring"></i></div>
+                </div>
+                <div class="seva-content">
+                    <h3 class="seva-name">Vadamala</h3>
+                    <p class="seva-description">A special garland offering made of Vadas, available only on Saturdays with limited slots.</p>
+                    <a href="{{ url_for('vadamala.booking_page') }}" class="book-seva-btn">
+                        <i class="fas fa-calendar-alt"></i> Book Vadamala
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alankara Category Card -->
+            <div class="seva-card">
+                <div class="seva-icon-wrapper">
+                    <div class="seva-icon-pattern"></div>
+                    <div class="seva-icon"><i class="fas fa-gem"></i></div>
+                </div>
+                <div class="seva-content">
+                    <h3 class="seva-name">Alankara</h3>
+                    <p class="seva-description">Special decorations for the deity using butter, sindoor, betel leaves, and other sacred items.</p>
+                    <a href="{{ url_for('alankara.alankara_booking') }}" class="book-seva-btn">
+                        <i class="fas fa-calendar-check"></i> View & Book
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pooja/Vratha Category Card -->
+            <div class="seva-card">
+                <div class="seva-icon-wrapper">
+                    <div class="seva-icon-pattern"></div>
+                    <div class="seva-icon"><i class="fas fa-om"></i></div>
+                </div>
+                <div class="seva-content">
+                    <h3 class="seva-name">Pooja & Vratha</h3>
+                    <p class="seva-description">Scheduled poojas and vrathas that you can book and participate in on specific dates.</p>
+                    <a href="{{ url_for('user_seva.pooja_vratha_list') }}" class="book-seva-btn">
+                        <i class="fas fa-calendar-alt"></i> View & Book
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Other categories will be added here -->
+
         </div>
-        {% endif %}
     </div>
 </div>
-
-<script>
-document.getElementById('sevaFilter').addEventListener('change', function() {
-    const selectedType = this.value;
-    const sevaItems = document.querySelectorAll('.seva-item');
-    let visibleCount = 0;
-    
-    sevaItems.forEach(item => {
-        if (!selectedType || item.dataset.type === selectedType) {
-            item.style.display = 'block';
-            visibleCount++;
-        } else {
-            item.style.display = 'none';
-        }
-    });
-    
-    // Update the counter
-    document.getElementById('sevaCounter').textContent = visibleCount;
-});
-
-// Add animation delay to cards
-document.querySelectorAll('.seva-card').forEach((card, index) => {
-    card.style.animationDelay = `${index * 0.1}s`;
-});
-</script>
 
 <style>
 /* Base variables */

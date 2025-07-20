@@ -9,6 +9,8 @@ import pandas as pd
 from dateutil import parser
 import json
 from pymongo import MongoClient
+from utils import get_current_time
+from flask import make_response
 
 general_admin_bp = Blueprint("general_admin", __name__, url_prefix="/admin/general")  
 
@@ -28,10 +30,18 @@ def admin_dashboard():
     # Get events statistics
     events = list(events_collection.find())
     events_count = len(events)
-    current_date = datetime.now()
-    upcoming_events_count = sum(1 for event in events if 
-                               isinstance(event.get('date'), datetime) and 
-                               event.get('date') > current_date)
+    current_date = get_current_time()
+    def to_aware(dt, ref_tz):
+        if isinstance(dt, datetime):
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=ref_tz.tzinfo)
+            return dt
+        return None
+    upcoming_events_count = sum(
+        1 for event in events
+        if isinstance(event.get('date'), datetime) and
+        to_aware(event.get('date'), current_date) > current_date
+    )
     
     # Get seva statistics
     seva_types = list(seva_list.find())
@@ -65,9 +75,13 @@ def admin_dashboard():
 @general_admin_bp.route("/manage_sevas")
 @admin_required
 def manage_sevas():
-    """Admin view to manage sevas"""
-    sevas = list(seva_list.find())  
-    return render_template("admin/admin_seva_table.html", sevas=sevas)
+    """Admin view to manage all sevas in seva_list (dedicated to Pooja/Vratha)"""
+    sevas = list(seva_list.find())
+    for seva in sevas:
+        seva["_id"] = str(seva["_id"])
+    response = make_response(render_template("admin/admin_seva_table.html", sevas=sevas))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
 
 @general_admin_bp.route("/manage_events")
 @admin_required

@@ -1,336 +1,278 @@
 {% extends "user/base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">My History</h2>
-
-    <!-- Filter Dropdown -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="form-group">
-                <label for="historyFilter">Filter by:</label>
-                <select id="historyFilter" class="form-control" onchange="window.location.href='/history?filter=' + this.value">
-                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All</option>
-                    <option value="seva" {% if filter_type == 'seva' %}selected{% endif %}>Seva</option>
-                    <option value="donation" {% if filter_type == 'donation' %}selected{% endif %}>Donations</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Seva Records -->
-    {% if filter_type in ['all', 'seva'] and seva_records %}
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Seva Bookings</h4>
-        </div>
-        <div class="card-body">
-            <!-- Desktop table view for seva records (hidden on mobile) -->
-            <div class="desktop-only-table">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Seva Name</th>
-                            <th>Seva Type</th>
-                            <th>Amount</th>
-                            <th>Seva Date</th>
-                            <th>Booking Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for seva in seva_records %}
-                        <tr>
-                            <td>{{ seva.seva_name }}</td>
-                            <td>{{ seva.seva_type if seva.seva_type else 'General Seva' }}</td>
-                            <td>₹{{ seva.seva_price if seva.seva_price else seva.amount }}</td>
-                            <td>{{ seva.seva_date.split('-')[2] }}-{{ seva.seva_date.split('-')[1] }}-{{ seva.seva_date.split('-')[0] }}</td>
-                            <td>{{ seva.booking_date }}</td>
-                            <td>
-                                <span class="badge {% if seva.status == 'Collected' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ seva.status }}</span>
-                            </td>
-                            <td>
-                                <a href="{{ url_for('payment.download_receipt', payment_type='seva', payment_id=seva._id) }}" class="btn btn-sm btn-primary">Receipt</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Mobile cards for seva records -->
-            <div class="mobile-only-cards">
-                {% for seva in seva_records %}
-                <div class="mobile-history-card">
-                    <div class="history-card-header">
-                        <h5>{{ seva.seva_name }}</h5>
-                        <span class="badge {% if seva.status == 'Collected' %}bg-success{% else %}bg-warning text-dark{% endif %} float-end">{{ seva.status }}</span>
-                    </div>
-                    <div class="history-card-body">
-                        <div class="history-item">
-                            <span class="history-label">Type:</span>
-                            <span class="history-value">{{ seva.seva_type if seva.seva_type else 'General Seva' }}</span>
-                        </div>
-                        <div class="history-item">
-                            <span class="history-label">Amount:</span>
-                            <span class="history-value">₹{{ seva.seva_price if seva.seva_price else seva.amount }}</span>
-                        </div>
-                        <div class="history-item">
-                            <span class="history-label">Seva Date:</span>
-                            <span class="history-value">{{ seva.seva_date.split('-')[2] }}-{{ seva.seva_date.split('-')[1] }}-{{ seva.seva_date.split('-')[0] }}</span>
-                        </div>
-                        <div class="history-item">
-                            <span class="history-label">Booking Date:</span>
-                            <span class="history-value">{{ seva.booking_date }}</span>
-                        </div>
-                        <div class="history-actions">
-                            <a href="{{ url_for('payment.download_receipt', payment_type='seva', payment_id=seva._id) }}" class="btn btn-primary btn-sm w-100">Download Receipt</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% elif filter_type == 'seva' and not seva_records %}
-    <div class="alert alert-info">You have not made any seva bookings yet.</div>
-    {% endif %}
-
-    <!-- Donation Records -->
-    {% if filter_type in ['all', 'donation'] and donation_records %}
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Donations</h4>
-        </div>
-        <div class="card-body">
-            <!-- Desktop table view for donation records (hidden on mobile) -->
-            <div class="desktop-only-table">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Donation Name</th>
-                            <th>Amount</th>
-                            <th>Donation Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for donation in donation_records %}
-                        <tr>
-                            <td>{{ donation.donation_name }}</td>
-                            <td>₹{{ donation.amount }}</td>
-                            <td>{{ donation.donation_date }}</td>
-                            <td><span class="badge bg-success">{{ donation.status }}</span></td>
-                            <td>
-                                <a href="{{ url_for('payment.download_receipt', payment_type='donation', payment_id=donation._id) }}" class="btn btn-sm btn-primary">Receipt</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Mobile cards for donation records -->
-            <div class="mobile-only-cards">
-                {% for donation in donation_records %}
-                <div class="mobile-history-card">
-                    <div class="history-card-header">
-                        <h5>{{ donation.donation_name }}</h5>
-                        <span class="badge bg-success float-end">{{ donation.status }}</span>
-                    </div>
-                    <div class="history-card-body">
-                        <div class="history-item">
-                            <span class="history-label">Amount:</span>
-                            <span class="history-value">₹{{ donation.amount }}</span>
-                        </div>
-                        <div class="history-item">
-                            <span class="history-label">Date:</span>
-                            <span class="history-value">{{ donation.donation_date }}</span>
-                        </div>
-                        <div class="history-actions">
-                            <a href="{{ url_for('payment.download_receipt', payment_type='donation', payment_id=donation._id) }}" class="btn btn-primary btn-sm w-100">Download Receipt</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% elif filter_type == 'donation' and not donation_records %}
-    <div class="alert alert-info">You have not made any donations yet.</div>
-    {% endif %}
-
-    {% if (filter_type == 'all' and not seva_records and not donation_records) %}
-    <div class="empty-history-container text-center">
-        <div class="empty-history-icon">
-            <i class="fas fa-history"></i>
-        </div>
-        <h3 class="mt-4">No History Found</h3>
-        <p class="text-muted mb-4">You haven't made any seva bookings or donations yet.</p>
-        <div class="empty-history-actions">
-            <a href="{{ url_for('user_seva.seva_list_view') }}" class="btn btn-primary btn-lg me-3">
-                <i class="fas fa-pray me-2"></i>Book a Seva
-            </a>
-            <a href="{{ url_for('donations.donation_list_view') }}" class="btn btn-success btn-lg">
-                <i class="fas fa-hand-holding-heart me-2"></i>Make a Donation
-            </a>
-        </div>
-    </div>
-    {% endif %}
-</div>
-
 <style>
-    /* Mobile history cards */
-    .mobile-history-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        overflow: hidden;
+    .history-card {
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(36, 20, 104, 0.08);
+        border: none;
+        margin-bottom: 32px;
     }
-    
-    .history-card-header {
-        background-color: #f8f9fa;
-        padding: 12px 15px;
-        border-bottom: 1px solid #e0e0e0;
+    .history-header {
+        background: linear-gradient(90deg, #241468 60%, #7f53ac 100%);
+        color: #fff;
+        border-radius: 18px 18px 0 0;
+        padding: 24px 32px 16px 32px;
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
     }
-    
-    .history-card-header h5 {
-        margin: 0;
-        font-size: 16px;
+    .history-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+    .history-filter-group {
+        gap: 8px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .history-filter-group .btn {
+        border-radius: 20px;
+        padding: 6px 18px;
+        font-size: 0.95rem;
+        border: none;
+        background: #fff;
+        color: #241468;
+        transition: background 0.2s, color 0.2s;
+    }
+    .history-filter-group .btn.active, .history-filter-group .btn:hover {
+        background: #241468;
+        color: #fff;
+    }
+    .history-table {
+        background: #fff;
+        border-radius: 0 0 18px 18px;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+    .history-table th, .history-table td {
+        vertical-align: middle;
+        text-align: center;
+        font-size: 1rem;
+        padding: 14px 8px;
+    }
+    .history-table th {
+        background: #f4f6fa;
+        color: #241468;
         font-weight: 600;
-        color: #333;
+        border-bottom: 2px solid #e9ecef;
     }
-    
-    .history-card-body {
-        padding: 15px;
-        background-color: #fff;
+    .history-table tr {
+        transition: background 0.15s;
     }
-    
-    .history-item {
+    .history-table tr:hover {
+        background: #f8f9fc;
+    }
+    .history-badge {
+        border-radius: 12px;
+        padding: 4px 14px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    .history-badge.seva { background: #e0e7ff; color: #241468; }
+    .history-badge.donation { background: #fff3cd; color: #856404; }
+    .history-badge.success { background: #d4edda; color: #155724; }
+    .history-badge.pending { background: #fff3cd; color: #856404; }
+    .history-badge.failed { background: #f8d7da; color: #721c24; }
+    .receipt-btn {
+        border-radius: 20px;
+        padding: 6px 18px;
+        font-size: 0.95rem;
+        border: 1px solid #241468;
+        color: #241468;
+        background: #fff;
+        transition: background 0.2s, color 0.2s;
+    }
+    .receipt-btn:hover {
+        background: #241468;
+        color: #fff;
+    }
+    @media (max-width: 768px) {
+        .history-header { flex-direction: column; align-items: flex-start; padding: 18px 12px 10px 12px; }
+        .history-title { font-size: 1.3rem; }
+        .history-table th, .history-table td { font-size: 0.95rem; padding: 10px 4px; }
+        .history-table, .history-table thead, .history-table tbody, .history-table tr, .history-table th, .history-table td {
+            display: none !important;
+        }
+        .history-mobile-list { display: block; }
+    }
+    @media (max-width: 900px) {
+        /* Hide table and show mobile cards for all small screens */
+        .history-table, .history-table thead, .history-table tbody, .history-table tr, .history-table th, .history-table td {
+            display: none !important;
+        }
+        .history-mobile-list { display: block !important; margin-top: 18px; }
+    }
+    .history-mobile-list { display: none; }
+    .history-mobile-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(36, 20, 104, 0.08);
+        margin-bottom: 18px;
+        padding: 18px 16px;
+        font-size: 1rem;
+    }
+    .history-mobile-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 14px;
+        margin-bottom: 7px;
     }
-    
-    .history-label {
-        color: #666;
-        font-weight: 500;
+    .history-mobile-label {
+        font-weight: 600;
+        color: #241468;
     }
-    
-    .history-value {
-        color: #333;
+    .history-mobile-value {
         font-weight: 400;
+        color: #333;
+    }
+    .history-mobile-badge {
+        border-radius: 12px;
+        padding: 3px 12px;
+        font-size: 0.92rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    .history-mobile-badge.seva { background: #e0e7ff; color: #241468; }
+    .history-mobile-badge.donation { background: #fff3cd; color: #856404; }
+    .history-mobile-badge.success { background: #d4edda; color: #155724; }
+    .history-mobile-badge.pending { background: #fff3cd; color: #856404; }
+    .history-mobile-badge.failed { background: #f8d7da; color: #721c24; }
+    .history-mobile-actions {
+        margin-top: 10px;
         text-align: right;
     }
-    
-    .history-actions {
-        margin-top: 12px;
-    }
-    
-    /* Display control for desktop/mobile views */
-    .desktop-only-table {
-        display: none;
-    }
-    
-    .mobile-only-cards {
-        display: block;
-    }
-    
-    @media (min-width: 768px) {
-        .desktop-only-table {
-            display: block;
-        }
-        
-        .mobile-only-cards {
-            display: none;
-        }
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 767px) {
-        .container {
-            padding-left: 10px;
-            padding-right: 10px;
-        }
-        
-        h2.mb-4 {
-            font-size: 24px;
-            text-align: center;
-        }
-        
-        .card-header h4 {
-            font-size: 18px;
-        }
-        
-        .form-group label {
-            font-size: 14px;
-        }
-    }
-    
-    /* Empty history styling */
-    .empty-history-container {
-        background-color: #f8f9fa;
-        border-radius: 12px;
-        padding: 3rem 2rem;
-        margin: 2rem auto;
-        max-width: 700px;
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05);
-    }
-    
-    .empty-history-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: #e9ecef;
-        font-size: 2.5rem;
-        color: #6c757d;
-    }
-    
-    .empty-history-container h3 {
-        font-weight: 600;
-        color: #343a40;
-    }
-    
-    .empty-history-container p {
-        font-size: 1.1rem;
-    }
-    
-    .empty-history-actions {
-        margin-top: 1.5rem;
-    }
-    
-    .empty-history-actions .btn {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        border-radius: 8px;
-        transition: transform 0.2s;
-    }
-    
-    .empty-history-actions .btn:hover {
-        transform: translateY(-3px);
-    }
-    
-    @media (max-width: 576px) {
-        .empty-history-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .empty-history-actions .btn {
-            width: 100%;
-            margin-right: 0 !important;
-        }
+    .history-mobile-actions .receipt-btn {
+        padding: 5px 14px;
+        font-size: 0.95rem;
     }
 </style>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card history-card">
+                <div class="history-header">
+                    <h4 class="history-title">My Booking History</h4>
+                    <div class="history-filter-group" id="historyFilter">
+                        <button type="button" class="btn active" data-filter="all">All</button>
+                        {% for seva_name in seva_filters %}
+                            <button type="button" class="btn" data-filter="{{ seva_name }}">{{ seva_name }}</button>
+                        {% endfor %}
+                        <button type="button" class="btn" data-filter="Donation">Donations</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if history %}
+                    <div class="table-responsive">
+                        <table class="table history-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in history %}
+                                <tr class="history-record" data-type="{{ record.type }}">
+                                    <td>
+                                        <span class="history-badge {% if record.type == 'Donation' %}donation{% else %}seva{% endif %}">
+                                            {{ record.type }}
+                                        </span>
+                                    </td>
+                                    <td>{{ record.seva_name or record.donation_name }}</td>
+                                    <td>₹{{ "%.2f"|format(record.amount if record.type == 'Donation' else record.seva_price) }}</td>
+                                    <td>{{ record.seva_date or record.donation_date }}</td>
+                                    <td>
+                                        {% if record.status == 'confirmed' or record.status == 'Not Collected' or record.status == 'Paid' %}
+                                            <span class="history-badge success">{{ record.status }}</span>
+                                        {% elif record.status == 'pending' %}
+                                            <span class="history-badge pending">{{ record.status }}</span>
+                                        {% else %}
+                                            <span class="history-badge failed">{{ record.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('payment.download_receipt', payment_type=(record.type|lower if record.type == 'Donation' else 'seva'), payment_id=record.payment_id) }}" class="receipt-btn" target="_blank" title="Download PDF Receipt">
+                                            <i class="fas fa-download me-1"></i> Receipt
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Mobile card layout -->
+                    <div class="history-mobile-list">
+                        {% for record in history %}
+                        <div class="history-mobile-card history-record" data-type="{{ record.type }}">
+                            <div class="history-mobile-row">
+                                <span class="history-mobile-badge {% if record.type == 'Donation' %}donation{% else %}seva{% endif %}">{{ record.type }}</span>
+                                <span class="history-mobile-badge {% if record.status == 'confirmed' or record.status == 'Not Collected' or record.status == 'Paid' %}success{% elif record.status == 'pending' %}pending{% else %}failed{% endif %}">{{ record.status }}</span>
+                            </div>
+                            <div class="history-mobile-row">
+                                <span class="history-mobile-label">Name:</span>
+                                <span class="history-mobile-value">{{ record.seva_name or record.donation_name }}</span>
+                            </div>
+                            <div class="history-mobile-row">
+                                <span class="history-mobile-label">Amount:</span>
+                                <span class="history-mobile-value">₹{{ "%.2f"|format(record.amount if record.type == 'Donation' else record.seva_price) }}</span>
+                            </div>
+                            <div class="history-mobile-row">
+                                <span class="history-mobile-label">Date:</span>
+                                <span class="history-mobile-value">{{ record.seva_date or record.donation_date }}</span>
+                            </div>
+                            <div class="history-mobile-actions">
+                                <a href="{{ url_for('payment.download_receipt', payment_type=(record.type|lower if record.type == 'Donation' else 'seva'), payment_id=record.payment_id) }}" class="receipt-btn" target="_blank" title="Download PDF Receipt">
+                                    <i class="fas fa-download me-1"></i> Receipt
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h4>No bookings yet.</h4>
+                        <p class="text-muted">Your booked sevas and donations will appear here.</p>
+                        <a href="{{ url_for('user_seva.seva_categories_view') }}" class="btn btn-primary">Book a Seva</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('#historyFilter .btn');
+    const historyRecords = document.querySelectorAll('.history-record');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.getAttribute('data-filter');
+
+            historyRecords.forEach(record => {
+                if (filter === 'all' || record.getAttribute('data-type') === filter) {
+                    record.style.display = '';
+                } else {
+                    record.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock %}
+
 

@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 import pytz
 from functools import wraps
+from utils import get_current_time
 
 events_bp = Blueprint("events", __name__, url_prefix="/admin")
 
@@ -24,7 +25,7 @@ def admin_required(f):
 def auto_delete_past_events():
     """Automatically delete events that are more than 30 days old"""
     # Get today's date for reference - use the same year as in the database (2025)
-    current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
     # Check if any events exist to get their year
     sample_event = events_collection.find_one()
     if sample_event and isinstance(sample_event.get('date'), datetime):
@@ -44,59 +45,46 @@ def auto_delete_past_events():
 #admin manage events page
 @events_bp.route("/events")
 @admin_required
-def events():
-    """Fetch and display events categorized by upcoming and past (within 30 days)"""
-    # Base date for comparison - use current date
-    current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Check if any events exist to get their year
-    sample_event = events_collection.find_one()
-    if sample_event and isinstance(sample_event.get('date'), datetime):
-        # Use the year from the database events
-        target_year = sample_event['date'].year
-        # Adjust current date to match the year from the database
-        current_date = current_date.replace(year=target_year)
-    
-    today = current_date
-    thirty_days_ago = today - timedelta(days=30)
-    
-    # Debug information
-    print(f"Today's date for comparison: {today}")
-    
-    # Fetch upcoming events (today or future)
-    upcoming_events_cursor = events_collection.find({"date": {"$gte": today}}).sort("date", 1)
-    upcoming_events = list(upcoming_events_cursor)
-    
-    # Fetch past events (within last 30 days)
-    past_events_cursor = events_collection.find({
-        "date": {
-            "$lt": today,
-            "$gte": thirty_days_ago
-        }
-    }).sort("date", -1)
-    past_events = list(past_events_cursor)
-    
-    # Print some debug info
-    print(f"Found {len(upcoming_events)} upcoming events and {len(past_events)} past events")
-    
-    # Convert ObjectId to string and ensure dates are properly formatted for display
-    for event in upcoming_events + past_events:
-        event["_id"] = str(event["_id"])
-        
-        # Make sure date is a datetime object
-        if not isinstance(event.get("date"), datetime):
-            try:
-                if isinstance(event.get("date"), str):
-                    event["date"] = datetime.strptime(event["date"], "%Y-%m-%d")
-            except ValueError:
-                event["date"] = datetime.now()  # Fallback to today's date if parsing fails
-    
-    return render_template("admin/manage_events.html", 
-                          upcoming_events=upcoming_events,
-                          past_events=past_events)
+def list_events():
+    """List all events"""
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Ensure current_date is naive
+    if hasattr(current_date, 'tzinfo') and current_date.tzinfo is not None:
+        current_date = current_date.replace(tzinfo=None)
+    all_events = list(events_collection.find())
+    def to_naive(dt):
+        if dt is not None and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+            return dt.replace(tzinfo=None)
+        return dt
+    upcoming_events = [e for e in all_events if e.get("date") and to_naive(e["date"]) >= current_date]
+    past_events = [e for e in all_events if e.get("date") and to_naive(e["date"]) < current_date]
+    return render_template(
+        "admin/manage_events.html",
+        upcoming_events=upcoming_events,
+        past_events=past_events,
+        current_date=current_date
+    )
+
+@events_bp.route("/events/past")
+@admin_required
+def past_events():
+    """List past events"""
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Query for events before the current date
+    events = list(events_collection.find({"date": {"$lt": current_date}}).sort("date", -1))
+    return render_template("admin/past_events.html", events=events)
+
+@events_bp.route("/events/upcoming")
+@admin_required
+def upcoming_events():
+    """List upcoming events"""
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Query for events on or after the current date
+    events = list(events_collection.find({"date": {"$gte": current_date}}).sort("date", 1))
+    return render_template("admin/upcoming_events.html", events=events)
 
 #admin add event page
-@events_bp.route("/add_event", methods=["POST"])
+@events_bp.route("/add_event", methods=["GET", "POST"])
 @admin_required
 def add_event():
     """Handle form submission to add a new event"""
@@ -126,7 +114,7 @@ def add_event():
         print(f"❌ Error adding event: {str(e)}")
         flash(f"Error adding event: {str(e)}", "error")
 
-    return redirect(url_for("events.events"))  # Redirect to events page after adding event
+    return redirect(url_for("events.list_events"))  # Redirect to events page after adding event
 
 #admin delete event page
 
@@ -140,7 +128,7 @@ def delete_event(event_id):
     except:
         flash("Failed to delete Event. Please try again.", "error")
 
-    return redirect(url_for("events.events"))  # Refresh events page after deletion
+    return redirect(url_for("events.list_events"))  # Refresh events page after deletion
 
 #admin cleanup past events page
 
@@ -151,7 +139,7 @@ def cleanup_past_events():
         return redirect(url_for("admin.login"))
 
     # Get current date - handle year adjustment
-    current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
     
     # Check if any events exist to get their year
     sample_event = events_collection.find_one()
@@ -168,20 +156,25 @@ def cleanup_past_events():
     else:
         flash("No past events to delete.", "info")
         
-    return redirect(url_for("events.events"))
+    return redirect(url_for("events.list_events"))
 
 
 #user event page
 
 @events_bp.route("/event")
 def event():
-    """Fetch and display only upcoming events"""
-    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)  # Midnight UTC
-
-    # Fetch only future events
-    events_data = list(events_collection.find({"date": {"$gte": today}}))
-
-    for event in events_data:
+    """Fetch and display all events for user, split into upcoming and past"""
+    today = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Ensure today is naive
+    if hasattr(today, 'tzinfo') and today.tzinfo is not None:
+        today = today.replace(tzinfo=None)
+    all_events = list(events_collection.find())
+    def to_naive(dt):
+        if dt is not None and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+            return dt.replace(tzinfo=None)
+        return dt
+    upcoming_events = [e for e in all_events if e.get("date") and to_naive(e["date"]) >= today]
+    past_events = [e for e in all_events if e.get("date") and to_naive(e["date"]) < today]
+    for event in all_events:
         event["_id"] = str(event["_id"])  # Convert ObjectId to string for rendering
-
-    return render_template("events.html", events=events_data)
+    return render_template("events.html", upcoming_events=upcoming_events, past_events=past_events, current_date=today)

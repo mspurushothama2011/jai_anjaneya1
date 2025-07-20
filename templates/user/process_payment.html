@@ -1,0 +1,100 @@
+{% extends "user/base.html" %}
+
+{% block title %}Complete Your Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Confirm Your Payment</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4>Payment Details</h4>
+                        <p><strong>Description:</strong> {{ payment_context.description }}</p>
+                        <p class="h4"><strong>Amount to Pay: ₹{{ payment_context.amount }}</strong></p>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button id="pay-button" class="btn btn-success btn-lg">Pay Now with Razorpay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('pay-button').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    var options = {
+        "key": "{{ razorpay_key }}",
+        "amount": "{{ (payment_context.amount * 100)|int }}", // Amount in paise
+        "currency": "INR",
+        "name": "Sri Veeranjaneya Swamy Temple",
+        "description": "{{ payment_context.description }}",
+        "order_id": "", // This will be filled by the server response
+        "handler": function (response){
+            // On successful payment, verify it on the backend
+            fetch("{{ url_for('payment.verify_generic_payment') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature
+                })
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success') {
+                    // Redirect to a confirmation page
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Payment verification failed: ' + data.message);
+                }
+            });
+        },
+        "prefill": {
+            "name": "{{ session.get('user_name', '') }}",
+            "email": "{{ session.get('user_email', '') }}",
+            "contact": "{{ session.get('user_phone', '') }}"
+        },
+        "notes": {
+            "payment_type": "{{ payment_context.type }}"
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+
+    // First, create an order on the server
+    fetch("{{ url_for('payment.create_generic_order') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+             // The server will get the amount from the session context
+        })
+    }).then(res => res.json()).then(order => {
+        if (order.id) {
+            options.order_id = order.id;
+            var rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response){
+                alert("Payment Failed: " + response.error.description);
+                // Optionally redirect or show a message
+            });
+            rzp.open();
+        } else {
+            alert('Could not create payment order. Please try again.');
+        }
+    });
+});
+</script>
+{% endblock %} 

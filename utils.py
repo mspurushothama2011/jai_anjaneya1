@@ -1,3 +1,14 @@
+"""
+utils.py
+
+Purpose:
+    - Provides timezone and datetime utility functions (IST conversion, formatting, etc.).
+    - Used by seva_config.py and other parts of the app for time handling.
+
+Note:
+    - This file is required for correct time handling in the app.
+    - Do not remove unless you refactor all time utilities elsewhere.
+"""
 from datetime import datetime, timedelta
 import pytz
 from dateutil import tz

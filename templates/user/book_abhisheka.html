@@ -1,0 +1,291 @@
+
+{% extends "user/base.html" %}
+
+{% block content %}
+<div class="abhisheka-booking-container">
+    <div class="container">
+        <h1 class="booking-title">Book an Abhisheka Seva</h1>
+        <p class="booking-subtitle">Select your desired Abhisheka type and date to receive divine blessings.</p>
+        
+        <div class="booking-form-wrapper">
+            <form id="abhishekaForm">
+                <!-- Seva Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Seva Details</h3>
+                    <div class="form-group">
+                        <label for="sevaName">Seva Name</label>
+                        <input type="text" id="sevaName" name="seva_name" value="Abhisheka" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="abhishekaType">Abhisheka Type</label>
+                        <select id="abhishekaType" name="abhisheka_type" required>
+                            <option value="" disabled selected>-- Select a Type --</option>
+                            {% for type in abhisheka_types %}
+                            <option value="{{ type.seva_type }}" data-id="{{ type._id }}">{{ type.seva_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="detailsContainer" class="details-container">
+                        <p id="description" class="seva-description"></p>
+                        <p class="seva-price">Price: <span id="price">--</span></p>
+                    </div>
+                </div>
+                
+                <!-- User Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Your Details</h3>
+                    <div class="form-group">
+                        <label for="userName">Name</label>
+                        <input type="text" id="userName" name="user_name" value="{{ user.name }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email</label>
+                        <input type="email" id="userEmail" name="user_email" value="{{ user.email }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">Phone</label>
+                        <input type="tel" id="userPhone" name="user_phone" value="{{ user.phone }}" readonly>
+                    </div>
+                </div>
+
+                <!-- Booking Date -->
+                <div class="form-section">
+                    <h3 class="section-title">Booking Date</h3>
+                    <div class="form-group">
+                        <label for="sevaDate">Select Seva Date</label>
+                        <input type="date" id="sevaDate" name="seva_date" min="{{ min_date }}" required>
+                    </div>
+                </div>
+                
+                <button type="submit" id="paymentButton" class="payment-btn">Proceed to Payment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('abhishekaType');
+    const descriptionEl = document.getElementById('description');
+    const priceEl = document.getElementById('price');
+    const detailsContainer = document.getElementById('detailsContainer');
+
+    typeSelect.addEventListener('change', async function() {
+        const selectedType = this.value;
+        if (!selectedType) {
+            detailsContainer.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/abhisheka/api/details/${selectedType}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            
+            descriptionEl.textContent = data.description;
+            priceEl.textContent = `₹${data.price}`;
+            detailsContainer.style.display = 'block';
+        } catch (error) {
+            console.error('Error fetching Abhisheka details:', error);
+            descriptionEl.textContent = 'Could not load details.';
+            priceEl.textContent = '--';
+        }
+    });
+
+    document.getElementById('abhishekaForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const selectedOption = document.getElementById('abhishekaType').options[document.getElementById('abhishekaType').selectedIndex];
+        const description = document.getElementById('description').textContent;
+        const priceText = document.getElementById('price').textContent;
+        const amount = parseFloat(priceText.replace('₹', ''));
+        const sevaDate = formData.get('seva_date');
+        const sevaType = selectedOption.value; // This is the "seva_type" like "Milk Abhisheka"
+        const selectedTypeId = selectedOption.dataset.id;
+        
+        if (!sevaType || !sevaDate || isNaN(amount)) {
+            alert('Please select a valid seva type and date.');
+            return;
+        }
+
+        // --- Store details in session before payment ---
+        try {
+            const storeResponse = await fetch('/abhisheka/store-abhisheka-details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    seva_id: selectedTypeId,
+                    seva_name: "Abhisheka", // Main category name
+                    type_name: sevaType, // Specific type like "Milk Abhisheka"
+                    price: amount,
+                    seva_date: sevaDate
+                })
+            });
+            const storeData = await storeResponse.json();
+            if (storeData.status !== 'success') {
+                throw new Error('Failed to store seva details in session.');
+            }
+        } catch (error) {
+            console.error('Error storing session data:', error);
+            alert('An error occurred. Please try again.');
+            return;
+        }
+        // ---------------------------------------------
+
+        const options = {
+            key: "{{ razorpay_key }}",
+            amount: amount * 100, // Amount in paise
+            currency: "INR",
+            name: "Temple Seva Booking",
+            description: `Abhisheka - ${sevaType}`,
+            order_id: null, // This will be set after creating order
+            handler: function (response) {
+                // --- Verify payment on the correct abhisheka endpoint ---
+                fetch('/abhisheka/verify-abhisheka-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Display specific error message from server, or a generic one
+                        const errorMessage = data.message || 'Payment verification failed. Please contact support.';
+                        alert(errorMessage);
+                        window.location.href = '/'; 
+                    }
+                });
+            },
+            prefill: {
+                name: "{{ user.name }}",
+                email: "{{ user.email }}",
+                contact: "{{ user.phone }}"
+            },
+            theme: {
+                color: "#FF7F00"
+            }
+        };
+
+        // --- Create a Razorpay order ---
+        try {
+            const orderResponse = await fetch('/abhisheka/abhisheka-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    seva_id: selectedTypeId,
+                    seva_name: "Abhisheka",
+                    type_name: sevaType,
+                    price: amount,
+                    seva_date: sevaDate
+                })
+            });
+
+            const order = await orderResponse.json();
+            if (order.error) {
+                throw new Error(order.error);
+            }
+            
+            options.order_id = order.id;
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch (err) {
+            console.error('Error creating order:', err);
+            alert('Could not initiate payment. Please try again.');
+        }
+    });
+});
+</script>
+
+<style>
+.abhisheka-booking-container {
+    padding: 2rem 0;
+    background-color: #fff9f5;
+}
+.booking-title {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    font-family: 'Cormorant Garamond', serif;
+}
+.booking-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #666;
+}
+.booking-form-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+.form-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+.section-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #FF7F00;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+}
+.form-group input:read-only {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
+}
+.details-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 0.5rem;
+    display: none; /* Initially hidden */
+}
+.seva-description {
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+.seva-price {
+    font-weight: bold;
+    color: #333;
+}
+.payment-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #FF7F00;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.payment-btn:hover {
+    background: #e67300;
+}
+</style>
+{% endblock %} 

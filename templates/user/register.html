@@ -55,9 +55,25 @@
                 <textarea name="address" id="address" rows="3" class="form-control" required></textarea>
             </div>
             
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="password" class="form-control" required>
+                        <i class="fas fa-eye-slash toggle-password"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password"><i class="fas fa-lock"></i> Confirm Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                        <i class="fas fa-eye-slash toggle-password"></i>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label for="password"><i class="fas fa-lock"></i> Password</label>
-                <input type="password" name="password" id="password" class="form-control" required>
                 <div class="password-requirements">
                     <p class="req-heading">Password must contain:</p>
                     <ul>
@@ -89,6 +105,23 @@
         padding: 20px;
     }
     
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrapper .form-control {
+        padding-right: 40px; /* Make space for the icon */
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        cursor: pointer;
+        color: #6c757d;
+    }
+
     .register-card {
         background-color: #fff;
         width: 100%;
@@ -300,25 +333,38 @@
     }
 </style>
 
-    <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            const messageDiv = document.getElementById('form-messages');
-            
-            // Check if all fields are filled
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const dob = document.getElementById('dob').value;
-            const address = document.getElementById('address').value;
-            const password = document.getElementById('password').value;
-            
-            if (!name || !email || !phone || !dob || !address || !password) {
-                e.preventDefault();
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- View Password Toggle ---
+    const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+    togglePasswordIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            const passwordInput = this.previousElementSibling;
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
+
+    // --- Form Submission Validation ---
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const messageDiv = document.getElementById('form-messages');
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const dob = document.getElementById('dob').value;
+        const address = document.getElementById('address').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (!name || !email || !phone || !dob || !address || !password || !confirmPassword) {
+            e.preventDefault();
             messageDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Please fill all fields</div>';
             return;
         }
         
-        // Check password requirements
         const lengthValid = password.length >= 8;
         const uppercaseValid = /[A-Z]/.test(password);
         const lowercaseValid = /[a-z]/.test(password);
@@ -328,76 +374,42 @@
         if (!(lengthValid && uppercaseValid && lowercaseValid && numberValid && symbolValid)) {
             e.preventDefault();
             messageDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Password does not meet all requirements</div>';
-                return;
-            }
-            
-            // Show loading message
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            messageDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Passwords do not match</div>';
+            return;
+        }
+        
         messageDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-circle-notch fa-spin"></i> Processing registration...</div>';
     });
     
-    // Password validation in real-time
+    // --- Real-time Password Validation ---
     document.getElementById('password').addEventListener('keyup', function() {
         const password = this.value;
         
-        // Check length
-        const lengthRequirement = document.getElementById('length');
-        if (password.length >= 8) {
-            lengthRequirement.classList.remove('invalid');
-            lengthRequirement.classList.add('valid');
-            lengthRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 8 characters';
-        } else {
-            lengthRequirement.classList.remove('valid');
-            lengthRequirement.classList.add('invalid');
-            lengthRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 8 characters';
+        function updateRequirement(elementId, isValid) {
+            const element = document.getElementById(elementId);
+            const icon = element.querySelector('i');
+            if (isValid) {
+                element.classList.remove('invalid');
+                element.classList.add('valid');
+                icon.className = 'fas fa-check-circle';
+            } else {
+                element.classList.remove('valid');
+                element.classList.add('invalid');
+                icon.className = 'fas fa-times-circle';
+            }
         }
         
-        // Check uppercase
-        const uppercaseRequirement = document.getElementById('uppercase');
-        if (/[A-Z]/.test(password)) {
-            uppercaseRequirement.classList.remove('invalid');
-            uppercaseRequirement.classList.add('valid');
-            uppercaseRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 uppercase letter';
-        } else {
-            uppercaseRequirement.classList.remove('valid');
-            uppercaseRequirement.classList.add('invalid');
-            uppercaseRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 uppercase letter';
-        }
-        
-        // Check lowercase
-        const lowercaseRequirement = document.getElementById('lowercase');
-        if (/[a-z]/.test(password)) {
-            lowercaseRequirement.classList.remove('invalid');
-            lowercaseRequirement.classList.add('valid');
-            lowercaseRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 lowercase letter';
-        } else {
-            lowercaseRequirement.classList.remove('valid');
-            lowercaseRequirement.classList.add('invalid');
-            lowercaseRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 lowercase letter';
-        }
-        
-        // Check number
-        const numberRequirement = document.getElementById('number');
-        if (/[0-9]/.test(password)) {
-            numberRequirement.classList.remove('invalid');
-            numberRequirement.classList.add('valid');
-            numberRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 number';
-        } else {
-            numberRequirement.classList.remove('valid');
-            numberRequirement.classList.add('invalid');
-            numberRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 number';
-        }
-        
-        // Check symbol
-        const symbolRequirement = document.getElementById('symbol');
-        if (/[^A-Za-z0-9]/.test(password)) {
-            symbolRequirement.classList.remove('invalid');
-            symbolRequirement.classList.add('valid');
-            symbolRequirement.innerHTML = '<i class="fas fa-check-circle"></i> At least 1 special character';
-        } else {
-            symbolRequirement.classList.remove('valid');
-            symbolRequirement.classList.add('invalid');
-            symbolRequirement.innerHTML = '<i class="fas fa-times-circle"></i> At least 1 special character';
-        }
-        });
-    </script>
+        updateRequirement('length', password.length >= 8);
+        updateRequirement('uppercase', /[A-Z]/.test(password));
+        updateRequirement('lowercase', /[a-z]/.test(password));
+        updateRequirement('number', /[0-9]/.test(password));
+        updateRequirement('symbol', /[^A-Za-z0-9]/.test(password));
+    });
+});
+</script>
 {% endblock %}

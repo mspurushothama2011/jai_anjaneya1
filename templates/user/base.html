@@ -73,12 +73,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #800000;
-            font-size: 28px;
             background-color: #FFF5E0;
             border-radius: 50%;
             border: 2px solid #800000;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
         
         .nav-links {
@@ -248,6 +254,178 @@
     
     .home-button:hover {
         background-color: #e64a19;
+    }
+
+    /* Styles adapted from Abhisheka/Vadamala booking page */
+    .vadamala-booking-container,
+    .abhisheka-booking-container {
+        padding: 2rem 0;
+        background-color: #fff9f5;
+    }
+    .booking-title {
+        font-size: 2.5rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        font-family: 'Cormorant Garamond', serif;
+    }
+    .booking-subtitle {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #666;
+    }
+    .booking-form-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .form-section:last-of-type {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 2rem;
+    }
+    .section-title {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+        color: #FF7F00;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+    }
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    .form-group input:read-only,
+    .form-group input.form-control[readonly] {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+    }
+    .form-group select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 0.65em auto;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #FF7F00;
+    }
+    .details-container {
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border-left: 4px solid #FF7F00;
+    }
+    .seva-description {
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    .seva-price {
+        font-weight: bold;
+        color: #1a1a1a;
+        font-size: 1.1rem;
+    }
+    .payment-btn {
+        width: 100%;
+        padding: 1rem;
+        background-color: #FF7F00;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+    .payment-btn:hover:not(:disabled) {
+        background-color: #e67300;
+        transform: translateY(-2px);
+    }
+    .payment-btn:disabled {
+        background-color: #ffb266;
+        cursor: not-allowed;
+    }
+
+    /* Overlay Styles */
+    .payment-processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1060; /* Higher than Razorpay modal */
+        flex-direction: column;
+        text-align: center;
+        color: white;
+    }
+    .overlay-content h4 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+    }
+    .overlay-content p {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .payment-animation {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1.5rem;
+    }
+    .loading-spinner, .loading-spinner-inner {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid transparent;
+    }
+    .loading-spinner {
+        border-top-color: #FF7F00;
+        animation: spin 1.5s linear infinite;
+    }
+    .loading-spinner-inner {
+        border-bottom-color: #fff9f5;
+        animation: spin 1s ease-in-out infinite reverse;
+    }
+    .loading-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        color: #FF7F00;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
     
     /* Mobile responsive */
@@ -440,23 +618,28 @@
         color: #241468;
         transform: translateY(-3px);
     }
-    
+
     .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem; /* Add gap for spacing */
         border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 20px 0;
+        padding: 20px 40px; /* Add some horizontal padding */
         margin-top: 30px;
-        text-align: center;
     }
-    
+
     .copyright {
         color: #aaa;
-    font-size: 14px;
+        font-size: 14px;
+        text-align: left; /* Align left */
     }
     
     .footer-bottom-links {
-        margin-top: 10px;
+        text-align: center; /* Center links */
     }
-    
+
     .footer-bottom-links a {
         color: #aaa;
         text-decoration: none;
@@ -464,11 +647,17 @@
         font-size: 13px;
         transition: color 0.3s;
     }
-    
+
     .footer-bottom-links a:hover {
         color: #FFC436;
     }
-    
+
+    .created-by {
+        color: #aaa;
+        font-size: 14px;
+        text-align: right; /* Align right */
+    }
+
     @media screen and (max-width: 992px) {
         .footer-container {
             flex-wrap: wrap;
@@ -491,6 +680,12 @@
         .footer-bottom {
             flex-direction: column;
             text-align: center;
+        }
+        .copyright,
+        .created-by,
+        .footer-bottom-links {
+            text-align: center; /* Center all items on mobile */
+            width: 100%; /* Take full width */
         }
     }
 
@@ -618,6 +813,7 @@
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
+            // Close More dropdown
             const dropdown = document.getElementById('navDropdown');
             const toggleButton = document.querySelector('.dropdown-toggle');
             
@@ -625,7 +821,8 @@
                 !dropdown.contains(event.target) && 
                 !toggleButton.contains(event.target)) {
                 dropdown.classList.remove('show');
-                toggleButton.querySelector('i').style.transform = 'rotate(0)';
+                const icon = toggleButton.querySelector('i');
+                if (icon) icon.style.transform = 'rotate(0)';
             }
         });
     </script>
@@ -635,7 +832,7 @@
         <nav class="navbar">
             <a href="/" class="logo">
                 <div class="logo-icon">
-                    <i class="fa-solid fa-om"></i>
+                    <img src="{{ url_for('static', filename='images/temple_logo.png') }}" alt="Temple Logo" class="logo-image">
                 </div>
                 ಶ್ರೀ ವೀರಾಂಜನೇಯ ಸ್ವಾಮಿ ದೇವಸ್ಥಾನ
             </a>
@@ -644,7 +841,10 @@
                 <a href="/" class="nav-link">Home</a>
                 <a href="/donation" class="nav-link">Donations</a>
                 <a href="/e_hundi" class="nav-link">E-Hundi</a>
-                <a href="/general-sevas" class="nav-link">Sevas</a>
+                
+                <!-- Replace dropdown with a single link -->
+                <a href="{{ url_for('general.redirect_to_seva_categories') }}" class="nav-link">Sevas</a>
+                
                 <a href="/events" class="nav-link">Events</a>
                 <div class="dropdown-container">
                     <a href="#" class="nav-link dropdown-toggle" onclick="toggleNavDropdown(event)">
@@ -703,7 +903,7 @@
                 <li><a href="/" class="nav-link">Home</a></li>
                 <li><a href="/events" class="nav-link">Events</a></li>
                 <li><a href="/donation" class="nav-link">Donations</a></li>
-                <li><a href="/general-sevas" class="nav-link">Seva List</a></li>
+                <li><a href="{{ url_for('general.redirect_to_seva_categories') }}" class="nav-link">Traditional Sevas</a></li>
                 <li><a href="/contact" class="nav-link">Contact</a></li>
                 </ul>
             </div>
@@ -725,7 +925,7 @@
             <div class="footer-column">
                 <h4>Contact Information</h4>
                 <ul class="contact-info">
-                    <li><i class="fas fa-map-marker-alt"></i> S No, 35, 3rd Main Rd, Cauveri Colony, GM Palya, C V Raman Nagar, Bengaluru, Karnataka 560075</li>
+                    <li><i class="fas fa-map-marker-alt"></i> S No 01, 3rd Main Rd, GM Palya, New Thippasandra, Bengaluru, Karnataka 560075</li>
                     <li><i class="fas fa-phone"></i> +91 98440 77918</li>
                     <li><i class="fas fa-envelope"></i> svecgmp@gmail.com</li>
                 </ul>
@@ -743,8 +943,11 @@
                 <p>&copy; 2025 Shri Veeranjaneya Swamy Temple. All Rights Reserved.</p>
             </div>
             <div class="footer-bottom-links">
-                <a href="{{ url_for('general.privacy_policy') }}">Privacy Policy</a>
+                <a href="{{ url_for('general.privacy_policy') }}">Privacy Policy</a> |
                 <a href="{{ url_for('general.terms_of_service') }}">Terms of Service</a>
+            </div>
+            <div class="created-by">
+                <p>Website created by M S Purushothama, S/O M Suresh Kumar</p>
             </div>
         </div>
     </footer>

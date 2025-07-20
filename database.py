@@ -2,25 +2,16 @@ from pymongo import MongoClient
 from bson.binary import Binary
 from dotenv import load_dotenv
 import os
+from pymongo.server_api import ServerApi
 
 load_dotenv()
 
-# Get MongoDB URI from environment variable - this will be set in Render
-mongodb_uri = os.getenv("MONGODB_URI") or os.getenv("MONGO_URI")
-
-if not mongodb_uri:
-    raise ValueError("No MongoDB connection string found in environment variables! Set MONGODB_URI or MONGO_URI")
+# Use a local MongoDB instance
+mongodb_uri = "mongodb://localhost:27017/"
 
 # Connect to MongoDB with improved error handling and connection parameters
 try:
-    client = MongoClient(
-        mongodb_uri,
-        serverSelectionTimeoutMS=5000,  # 5 seconds
-        connectTimeoutMS=10000,         # 10 seconds
-        socketTimeoutMS=45000,          # 45 seconds
-        retryWrites=True,               # Enable retry writes for reliability
-        w="majority"                    # Write concern for data durability
-    )
+    client = MongoClient(mongodb_uri)
     
     # Test the connection
     client.admin.command('ping')
@@ -35,6 +26,12 @@ try:
     user_collection = db["user_collection"]
     donations_list = db["donations_list"]  # Contains donation types/options
     donations_collection = db["donations_collection"]  # Contains completed donations
+
+    # New collections for Abhisheka functionality
+    abhisheka_types = db["abhisheka_types"]
+    alankara_types = db["alankara_types"]
+    vadamala_types = db["vadamala_types"]
+    abhisheka_bookings = db["abhisheka_bookings"]
 except Exception as e:
     print(f"MongoDB connection error: {e}")
     raise
@@ -61,11 +58,3 @@ def get_user_by_email(email):
             "verified": verified  # ✅ Include 'verified' field
         }
     return None  # Return None if user not found
-
-
-
-
-
-#Use this connection string in your application
-
-#  mongodb+srv://mspurushothama20:egEQD9sJZtl6wFk3@cluster0.nlxfpzd.mongodb.net/

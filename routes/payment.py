@@ -20,6 +20,132 @@ payment_bp = Blueprint("payment", __name__)
 # Razorpay client setup
 razorpay_client = razorpay.Client(auth=(Config.RAZORPAY_KEY_ID, Config.RAZORPAY_KEY_SECRET))
 
+@payment_bp.route("/process", methods=["GET"])
+def process_payment():
+    """
+    Generic payment processing page that reads context from the session.
+    """
+    if 'user_id' not in session:
+        flash('Please log in to proceed with the payment.', 'warning')
+        return redirect(url_for('user.login'))
+
+    payment_context = session.get('payment_context')
+    if not payment_context:
+        flash('No payment information found. Please start the booking process again.', 'danger')
+        return redirect(url_for('general.home')) # Or a more appropriate page
+
+    return render_template(
+        'user/process_payment.html',
+        payment_context=payment_context,
+        razorpay_key=Config.RAZORPAY_KEY_ID
+    )
+
+@payment_bp.route("/create_generic_order", methods=["POST"])
+def create_generic_order():
+    """
+    Creates a Razorpay order using the amount from the session's payment_context.
+    """
+    if 'user_id' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    payment_context = session.get('payment_context')
+    if not payment_context or 'amount' not in payment_context:
+        return jsonify({"error": "Invalid payment context"}), 400
+
+    amount = payment_context['amount']
+    description = payment_context.get('description', 'Temple Seva/Donation')
+
+    try:
+        order = razorpay_client.order.create({
+            "amount": int(amount * 100),  # Amount in paise
+            "currency": "INR",
+            "receipt": f"receipt_{get_current_time().timestamp()}",
+            "notes": {
+                "description": description
+            }
+        })
+        # Store order_id to verify payment later
+        session['razorpay_order_id'] = order['id']
+        return jsonify(order)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@payment_bp.route("/verify_generic_payment", methods=["POST"])
+def verify_generic_payment():
+    """
+    Verifies a Razorpay payment using the session's payment_context,
+    and saves the record to the appropriate collection.
+    """
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+
+    payment_context = session.get('payment_context')
+    if not payment_context:
+        return jsonify({"status": "error", "message": "Invalid payment context"}), 400
+
+    data = request.json
+    razorpay_order_id = data.get('razorpay_order_id')
+    razorpay_payment_id = data.get('razorpay_payment_id')
+    razorpay_signature = data.get('razorpay_signature')
+
+    # Verify signature
+    try:
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        }
+        razorpay_client.utility.verify_payment_signature(params_dict)
+    except razorpay.errors.SignatureVerificationError as e:
+        return jsonify({"status": "error", "message": "Payment signature verification failed"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"An error occurred: {e}"}), 500
+
+    # Process based on payment type from context
+    payment_type = payment_context.get('type')
+
+    if payment_type == 'seva':
+        try:
+            user_id = ObjectId(session['user_id'])
+            user = user_collection.find_one({"_id": user_id})
+
+            seva_booking = {
+                "user_id": user_id,
+                "user_name": user.get("username"),
+                "email": user.get("email"),
+                "phone": user.get("phone"),
+                "seva_id": payment_context.get('seva_id'),
+                "seva_name": payment_context.get('seva_name'),
+                "seva_price": payment_context.get('amount'),
+                "booking_date": datetime.strptime(payment_context.get('booking_date'), '%Y-%m-%d'),
+                "payment_id": razorpay_payment_id,
+                "order_id": razorpay_order_id,
+                "status": "Booked",
+                "booked_at": get_current_time(),
+                "type": "seva"
+            }
+            seva_collection.insert_one(seva_booking)
+
+            # Clean up session
+            session.pop('payment_context', None)
+            session.pop('razorpay_order_id', None)
+
+            return jsonify({
+                "status": "success",
+                "message": "Seva booked successfully!",
+                "redirect_url": url_for("user_seva.history") # Redirect to history page
+            })
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Failed to save booking: {e}"}), 500
+
+    # Add logic for 'donation' type if needed later
+    # elif payment_type == 'donation':
+    #     ...
+
+    return jsonify({"status": "error", "message": "Invalid payment type in context"}), 400
+
+
 #create order
 
 @payment_bp.route("/create-order", methods=["POST"])
@@ -93,8 +219,50 @@ def verify_payment():
         order_id = data.get("razorpay_order_id")
         payment_id = data.get("razorpay_payment_id")
         signature = data.get("razorpay_signature")
+        
+        # This is the new logic to handle direct Abhisheka bookings
+        if data.get("seva_name") == "Abhisheka":
+            # Verify signature first
+            key_secret = Config.RAZORPAY_KEY_SECRET
+            if not key_secret:
+                 return jsonify({"status": "error", "message": "Payment verification configuration error"}), 500
+            
+            generated_signature = hmac.new(
+                key_secret.encode(),
+                f"{order_id}|{payment_id}".encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            if generated_signature != signature:
+                return jsonify({"status": "error", "message": "Invalid signature"}), 400
+
+            # Fetch user details from the database
+            user_id = ObjectId(session.get("user_id"))
+            user = user_collection.find_one({"_id": user_id})
+            if not user:
+                return jsonify({"status": "error", "message": "User not found"}), 404
+
+            # Create seva booking record directly from request data
+            abhisheka_booking = {
+                "user_id": user_id,
+                "user_name": user.get("username"),
+                "email": user.get("email"),
+                "phone": user.get("phone"),
+                "seva_name": data.get("seva_name"),
+                "seva_type": data.get("seva_type"),
+                "seva_price": float(data.get("seva_price")),
+                "seva_date": data.get("seva_date"),
+                "booking_date": data.get("booking_date"),
+                "payment_id": payment_id,
+                "order_id": order_id,
+                "status": data.get("status", "Not Collected")
+            }
+            seva_collection.insert_one(abhisheka_booking)
+            return jsonify({"status": "success"})
+
+        # Existing logic for other payment types
         payment_type = session.get("payment_type")
-        payment_status = data.get("status", "")  # Get status from Razorpay callback
+        payment_status = data.get("status", "")
 
         if not all([order_id, payment_id, signature, payment_type]):
             return jsonify({"error": "Missing payment details"}), 400
@@ -329,7 +497,7 @@ def payment_confirmation_page():
 
 @payment_bp.route("/donation-confirmation")
 def donation_confirmation_page():
-    """Render the donation confirmation page"""
+    """Renders the donation confirmation page after a successful donation."""
     # Check if user is logged in
     if "user_id" not in session:
         flash("Please login to view donation confirmation", "warning")
@@ -341,503 +509,276 @@ def donation_confirmation_page():
     print(f"Donation data in session: {donation is not None}")  # Debug log
     
     if not donation:
-        print("No donation found in session")  # Debug log
-        flash("No donation found", "error")
+        flash("Donation data not found in session", "error")
         return redirect(url_for("general.home"))
-
-    # Get user details
-    user_id = session.get("user_id")
-    user = user_collection.find_one({"_id": ObjectId(user_id)})
-    if not user:
-        flash("User not found", "error")
-        return redirect(url_for("user.login"))
         
-    print(f"Rendering confirmation with donation: {donation.get('amount')}")  # Debug log
+    user = user_collection.find_one({"_id": ObjectId(session["user_id"])})
     return render_template("user/donation_confirmation.html", donation=donation, user=user)
 
-@payment_bp.route("/download-receipt/<payment_type>", methods=["GET"])
-@payment_bp.route("/download-receipt/<payment_type>/<payment_id>", methods=["GET"])
 
+def generate_seva_receipt_pdf(booking_data):
+    """Generates a PDF receipt for a seva booking with a specific design."""
+    pdf = FPDF()
+    pdf.add_page()
+            
+    # Helper to sanitize text
+    def sanitize_for_pdf(text):
+        if text is None:
+            return ""
+        # Replace non-Latin characters with a placeholder
+        return "".join(c if ord(c) < 256 else "?" for c in str(text))
 
-#generate receipt from history page
+    # --- Header ---
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, "Sri Veeranjaneya Swamy Temple", 0, 1, "C")
+    seva_name_header = sanitize_for_pdf(booking_data.get('seva_name', 'Seva'))
+    pdf.cell(0, 10, f"{seva_name_header} Receipt", 0, 1, "C")
+    pdf.line(pdf.get_x() + 10, pdf.get_y(), pdf.get_x() + 190, pdf.get_y())
+    pdf.ln(15)
 
-def download_receipt(payment_type, payment_id=None):
-    """Generate and download receipt PDF from history page or direct URL"""
-    # Check if user is logged in
-    if "user_id" not in session:
-        flash("Please login to download your receipt", "warning")
-        return redirect(url_for('user.login'))
-        
-    try:
-        print(f"Generating {payment_type} receipt PDF for payment_id: {payment_id}")  # Debug log
-        
-        # Helper function to sanitize strings for PDF (latin-1 encoding)
-        def sanitize_for_pdf(text):
-            if not text:
-                return ""
-            # Convert to string if not already
-            text = str(text)
-            # Replace problematic characters
-            text = text.replace('₹', 'Rs.')  # Replace Rupee symbol
-            # Try to encode to latin-1, replacing characters that can't be encoded
-            return text.encode('latin-1', 'replace').decode('latin-1')
-        
-        if payment_type == "seva":
-            # First try to get data from session (for fresh payments)
-            seva_booking = session.get("seva_booking")
-            
-            # If payment_id is provided or no session data, get from database
-            if payment_id or not seva_booking:
-                if payment_id:
-                    # Convert string ID to ObjectId
-                    seva_booking = seva_collection.find_one({"_id": ObjectId(payment_id)})
-                    if not seva_booking:
-                        flash("Seva booking not found", "error")
-                        return redirect(url_for("user.history"))
-                    # Convert ObjectId to string for serialization
-                    seva_booking["_id"] = str(seva_booking["_id"])
-                    if "user_id" in seva_booking and isinstance(seva_booking["user_id"], ObjectId):
-                        seva_booking["user_id"] = str(seva_booking["user_id"])
-                    if "seva_id" in seva_booking and isinstance(seva_booking["seva_id"], ObjectId):
-                        seva_booking["seva_id"] = str(seva_booking["seva_id"])
-                else:
-                    flash("No seva booking found", "error")
-                    return redirect(url_for("general.home"))
-            
-            # Get user information
-            user_name = ""
-            if "user_id" in seva_booking:
-                user = user_collection.find_one({"_id": ObjectId(seva_booking["user_id"])})
-                if user:
-                    user_name = user.get("name", "")
-            
-            # Create PDF
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # Set font
-            pdf.set_font("Arial", "B", 16)
-            
-            # Title
-            pdf.cell(0, 10, "Shri Veeranjaneya Swamy Temple", 0, 1, "C")
-            pdf.cell(0, 10, f"{sanitize_for_pdf(seva_booking.get('seva_name', ''))} Seva Receipt", 0, 1, "C")
-            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-            
-            # Add some space
-            pdf.ln(10)
-            
-            # Payment details
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Payment Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Common details
-            pdf.cell(70, 8, "Transaction ID:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("payment_id", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Order ID:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("order_id", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Amount:", 1)
-            pdf.cell(0, 8, f"Rs. {seva_booking.get('seva_price', seva_booking.get('amount', 0))}", 1, 1)
-            
-            pdf.cell(70, 8, "Booking Date:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("booking_date", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Status:", 1)
-            status_text = sanitize_for_pdf(seva_booking.get("status", ""))
-            if status_text == "Collected":
-                pdf.cell(0, 8, status_text, 1, 1)
-            elif status_text == "Not Collected":
-                pdf.cell(0, 8, f"{status_text} (Visit the temple counter to collect your seva)", 1, 1)
-            else:
-                pdf.cell(0, 8, status_text, 1, 1)
-            
-            # Seva-specific details
-            pdf.ln(10)
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Seva Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Add user name
-            pdf.cell(70, 8, "Devotee Name:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(user_name), 1, 1)
-            
-            pdf.cell(70, 8, "Seva Name:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("seva_name", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Seva Type:", 1)
-            # Extract seva type from seva_id or use a better categorization
-            seva_name = seva_booking.get("seva_name", "")
-            if "archana" in seva_name.lower():
-                seva_type = "Archana"
-            elif "abhishekam" in seva_name.lower():
-                seva_type = "Abhishekam"
-            elif "homam" in seva_name.lower():
-                seva_type = "Homam"
-            elif "pooja" in seva_name.lower() or "puja" in seva_name.lower():
-                seva_type = "Pooja"
-            else:
-                # Use directly provided type or fall back to general category
-                seva_type = seva_booking.get("seva_type", "General Seva")
-            pdf.cell(0, 8, sanitize_for_pdf(seva_type), 1, 1)
-            
-            pdf.cell(70, 8, "Seva Date:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(seva_booking.get("seva_date", "")), 1, 1)
-            
-            # Footer
-            pdf.ln(20)
-            pdf.cell(0, 10, "Thank you for your contribution!", 0, 1, "C")
-            pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
-            
-            # Generate filename
-            filename = f"seva_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
-            
-            # Output PDF to string
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            
-            # Return file
-            response = Response(
-                pdf_output,
-                mimetype="application/pdf",
-                headers={"Content-Disposition": f"attachment;filename={filename}"}
-            )
-            
-            return response
-            
-        elif payment_type == "donation":
-            # First try to get data from session (for fresh payments)
-            donation = session.get("donation")
-            
-            # If payment_id is provided or no session data, get from database
-            if payment_id or not donation:
-                if payment_id:
-                    # Convert string ID to ObjectId
-                    donation = donations_collection.find_one({"_id": ObjectId(payment_id)})
-                    if not donation:
-                        flash("Donation not found", "error")
-                        return redirect(url_for("user.history"))
-                    # Convert ObjectId to string for serialization
-                    donation["_id"] = str(donation["_id"])
-                    if "user_id" in donation and isinstance(donation["user_id"], ObjectId):
-                        donation["user_id"] = str(donation["user_id"])
-                else:
-                    flash("No donation found", "error")
-                    return redirect(url_for("general.home"))
-            
-            # Create PDF
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # Set font
-            pdf.set_font("Arial", "B", 16)
-            
-            # Title
-            pdf.cell(0, 10, "Shri Veeranjaneya Swamy Temple", 0, 1, "C")
-            pdf.cell(0, 10, "Donation Receipt", 0, 1, "C")
-            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-            
-            # Add some space
-            pdf.ln(10)
-            
-            # Payment details
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Payment Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Common details
-            pdf.cell(70, 8, "Transaction ID:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(donation.get("payment_id", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Order ID:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(donation.get("order_id", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Amount:", 1)
-            pdf.cell(0, 8, f"Rs. {donation.get('amount', 0)}", 1, 1)
-            
-            pdf.cell(70, 8, "Donation Date:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(donation.get("donation_date", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Status:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(donation.get("status", "")), 1, 1)
-            
-            # Donation-specific details
-            pdf.ln(10)
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Donation Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            pdf.cell(70, 8, "Donation Name:", 1)
-            pdf.cell(0, 8, sanitize_for_pdf(donation.get("donation_name", "")), 1, 1)
-            
-            pdf.cell(70, 8, "Donor Name:", 1)
-            donor_name = donation.get("donor_name", "")
-            if not donor_name and "user_id" in donation:
-                # If donor name is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_name = user.get("name", "")
-            pdf.cell(0, 8, sanitize_for_pdf(donor_name), 1, 1)
-            
-            pdf.cell(70, 8, "Donor Email:", 1)
-            donor_email = donation.get("donor_email", "")
-            if not donor_email and "user_id" in donation:
-                # If donor email is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_email = user.get("email", "")
-            pdf.cell(0, 8, sanitize_for_pdf(donor_email), 1, 1)
-            
-            # Footer
-            pdf.ln(20)
-            pdf.cell(0, 10, "Thank you for your generous donation!", 0, 1, "C")
-            pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
-            
-            # Generate filename
-            filename = f"donation_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
-            
-            # Output PDF to string
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            
-            # Return file
-            response = Response(
-                pdf_output,
-                mimetype="application/pdf",
-                headers={"Content-Disposition": f"attachment;filename={filename}"}
-            )
-            
-            return response
-            
-        else:
-            flash("Invalid payment type", "error")
-            return redirect(url_for("general.home"))
+    # --- Payment Details ---
+    pdf.set_font("helvetica", "B", 12)
+    pdf.cell(0, 10, "Payment Details", 0, 1, "L")
+    pdf.set_font("helvetica", "", 12)
     
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        flash(f"Error generating receipt: {str(e)}", "error")
-        if payment_type == "seva":
-            return redirect(url_for("payment.payment_confirmation_page"))
-        else:
-            return redirect(url_for("payment.donation_confirmation_page"))
-        
+    col_width1 = 40
+    line_height = 8
 
-#generate receipt from confirmation page
+    pdf.cell(col_width1, line_height, "Transaction ID:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("payment_id")), border=1, ln=1)
+    
+    pdf.cell(col_width1, line_height, "Order ID:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("order_id")), border=1, ln=1)
 
-@payment_bp.route("/confirmation-receipt/<payment_type>", methods=["GET"])
-def confirmation_receipt(payment_type):
-    """Generate and download receipt PDF from confirmation page (using session data)"""
-    # Check if user is logged in
-    if "user_id" not in session:
-        flash("Please login to download your receipt", "warning")
-        return redirect(url_for('user.login'))
+    amount = f"Rs. {booking_data.get('seva_price', 0):.1f}"
+    pdf.cell(col_width1, line_height, "Amount:", border=1)
+    pdf.cell(0, line_height, amount, border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Booking Date:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("booking_date")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Status:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("status")), border=1, ln=1)
+    
+    pdf.ln(10)
+
+    # --- Booking Details ---
+    pdf.set_font("helvetica", "B", 12)
+    pdf.cell(0, 10, "Booking Details", 0, 1, "L")
+    pdf.set_font("helvetica", "", 12)
+
+    pdf.cell(col_width1, line_height, "Devotee Name:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("user_name")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Booking Name:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("seva_name")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Booking Type:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("seva_type")), border=1, ln=1)
+    
+    pdf.cell(col_width1, line_height, "Seva Date:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("seva_date")), border=1, ln=1)
+    
+    pdf.ln(20)
+
+    # --- Footer ---
+    pdf.set_font("helvetica", "I", 9)
+    pdf.cell(0, 10, "Note: For the timings of Abhisheka and Vadamala sevas, please refer to the Pooja Timings page on the temple website.", 0, 1, "C")
+    pdf.ln(2)
+    pdf.set_font("helvetica", "I", 12)
+    pdf.cell(0, 10, "Thank you for your contribution!", 0, 1, "C")
+    pdf.ln(5)
+    pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
+            
+    # Create a buffer for the PDF
+    buffer = io.BytesIO()
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    buffer.write(pdf_output)
+    buffer.seek(0)
+    
+    return buffer
+
+
+def generate_donation_receipt_pdf(booking_data):
+    """Generates a PDF receipt for a donation with a specific design."""
+    pdf = FPDF()
+    pdf.add_page()
+            
+    # Helper to sanitize text
+    def sanitize_for_pdf(text):
+        if text is None: return ""
+        return "".join(c if ord(c) < 256 else "?" for c in str(text))
+
+    # --- Header ---
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, "Sri Veeranjaneya Swamy Temple", 0, 1, "C")
+    pdf.cell(0, 10, "Donation Receipt", 0, 1, "C")
+    pdf.line(pdf.get_x() + 10, pdf.get_y(), pdf.get_x() + 190, pdf.get_y())
+    pdf.ln(15)
+
+    # --- Payment Details ---
+    pdf.set_font("helvetica", "B", 12)
+    pdf.cell(0, 10, "Payment Details", 0, 1, "L")
+    pdf.set_font("helvetica", "", 12)
+    
+    col_width1 = 40
+    line_height = 8
+
+    pdf.cell(col_width1, line_height, "Transaction ID:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("payment_id")), border=1, ln=1)
+    
+    pdf.cell(col_width1, line_height, "Order ID:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("order_id")), border=1, ln=1)
+
+    amount = f"Rs. {booking_data.get('amount', 0):.1f}"
+    pdf.cell(col_width1, line_height, "Amount:", border=1)
+    pdf.cell(0, line_height, amount, border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Donation Date:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("donation_date")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Status:", border=1)
+    pdf.cell(0, line_height, "Paid", border=1, ln=1)
+    
+    pdf.ln(10)
+            
+    # --- Donation Details ---
+    pdf.set_font("helvetica", "B", 12)
+    pdf.cell(0, 10, "Donation Details", 0, 1, "L")
+    pdf.set_font("helvetica", "", 12)
+
+    pdf.cell(col_width1, line_height, "Donation Name:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("donation_name")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Donor Name:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("donor_name")), border=1, ln=1)
+
+    pdf.cell(col_width1, line_height, "Donor Email:", border=1)
+    pdf.cell(0, line_height, sanitize_for_pdf(booking_data.get("donor_email")), border=1, ln=1)
+    
+    pdf.ln(20)
+
+    # --- Footer ---
+    pdf.set_font("helvetica", "I", 10)
+    pdf.cell(0, 10, "Note: Donations to the temple are not eligible for 80G tax exemption.", 0, 1, "C")
+    pdf.ln(5)
+    
+    pdf.set_font("helvetica", "I", 12)
+    pdf.cell(0, 10, "Thank you for your generous donation!", 0, 1, "C")
+    pdf.ln(5)
+    pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
+            
+    # Create a buffer for the PDF
+    buffer = io.BytesIO()
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    buffer.write(pdf_output)
+    buffer.seek(0)
+    
+    return buffer
+
+
+@payment_bp.route("/download-receipt/<payment_type>/<payment_id>", methods=["GET"])
+def download_receipt(payment_type, payment_id=None):
+    """Generate and download a PDF receipt for a specific payment from the history page"""
+    if not payment_id:
+        flash("No payment ID provided for the receipt.", "error")
+        return redirect(url_for("user.history"))
+
+    if payment_type.lower() == "seva":
+        booking_data = seva_collection.find_one({"payment_id": payment_id})
+        if not booking_data:
+            flash("Could not find a booking for the specified payment ID.", "error")
+            return redirect(url_for("user.history"))
+
+        # Use the new PDF generation function for sevas
+        buffer = generate_seva_receipt_pdf(booking_data)
         
-    try:
-        print(f"Generating confirmation {payment_type} receipt from session")
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"receipt_{payment_id}.pdf",
+            mimetype="application/pdf"
+        )
+    
+    elif payment_type.lower() == "donation":
+        booking_data = donations_collection.find_one({"payment_id": payment_id})
+        if not booking_data:
+            flash("Could not find a donation for the specified payment ID.", "error")
+            return redirect(url_for("user.history"))
+
+        # Use the new PDF generation function for donations
+        buffer = generate_donation_receipt_pdf(booking_data)
         
-        # Get data from session
-        if payment_type == "seva":
-            # Get seva booking data from session
-            seva_booking = session.get("seva_booking")
-            if not seva_booking:
-                flash("Seva booking data not found in session", "error")
-                return redirect(url_for("general.home"))
-                
-            # Get user information
-            user_name = ""
-            if "user_id" in seva_booking:
-                user = user_collection.find_one({"_id": ObjectId(seva_booking["user_id"])})
-                if user:
-                    user_name = user.get("name", "")
-            
-            # Create PDF
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # Set font
-            pdf.set_font("Arial", "B", 16)
-            
-            # Title
-            pdf.cell(0, 10, "Shri Veeranjaneya Swamy Temple", 0, 1, "C")
-            pdf.cell(0, 10, f"{seva_booking.get('seva_name', '')} Seva Receipt", 0, 1, "C")
-            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-            
-            # Add some space
-            pdf.ln(10)
-            
-            # Payment details
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Payment Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Common details
-            pdf.cell(70, 8, "Transaction ID:", 1)
-            pdf.cell(0, 8, seva_booking.get("payment_id", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Order ID:", 1)
-            pdf.cell(0, 8, seva_booking.get("order_id", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Amount:", 1)
-            pdf.cell(0, 8, f"Rs. {seva_booking.get('seva_price', seva_booking.get('amount', 0))}", 1, 1)
-            
-            pdf.cell(70, 8, "Booking Date:", 1)
-            pdf.cell(0, 8, seva_booking.get("booking_date", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Status:", 1)
-            pdf.cell(0, 8, seva_booking.get("status", ""), 1, 1)
-            
-            # Seva-specific details
-            pdf.ln(10)
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Seva Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Add user name
-            pdf.cell(70, 8, "Devotee Name:", 1)
-            pdf.cell(0, 8, user_name, 1, 1)
-            
-            pdf.cell(70, 8, "Seva Name:", 1)
-            pdf.cell(0, 8, seva_booking.get("seva_name", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Seva Type:", 1)
-            # Extract seva type from seva_id or use a better categorization
-            seva_name = seva_booking.get("seva_name", "")
-            if "archana" in seva_name.lower():
-                seva_type = "Archana"
-            elif "abhishekam" in seva_name.lower():
-                seva_type = "Abhishekam"
-            elif "homam" in seva_name.lower():
-                seva_type = "Homam"
-            elif "pooja" in seva_name.lower() or "puja" in seva_name.lower():
-                seva_type = "Pooja"
-            else:
-                # Use directly provided type or fall back to general category
-                seva_type = seva_booking.get("seva_type", "General Seva")
-            pdf.cell(0, 8, seva_type, 1, 1)
-            
-            pdf.cell(70, 8, "Seva Date:", 1)
-            pdf.cell(0, 8, seva_booking.get("seva_date", ""), 1, 1)
-            
-            # Footer
-            pdf.ln(20)
-            pdf.cell(0, 10, "Thank you for your contribution!", 0, 1, "C")
-            pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
-            
-            # Generate filename
-            filename = f"seva_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
-            
-            # Output PDF to string
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            
-            # Return file
-            response = Response(
-                pdf_output,
-                mimetype="application/pdf",
-                headers={"Content-Disposition": f"attachment;filename={filename}"}
-            )
-            
-            return response
-            
-        elif payment_type == "donation":
-            # Get donation data from session
-            donation = session.get("donation")
-            if not donation:
-                flash("Donation data not found in session", "error")
-                return redirect(url_for("general.home"))
-                
-            # Create PDF
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # Set font
-            pdf.set_font("Arial", "B", 16)
-            
-            # Title
-            pdf.cell(0, 10, "Shri Veeranjaneya Swamy Temple", 0, 1, "C")
-            pdf.cell(0, 10, "Donation Receipt", 0, 1, "C")
-            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-            
-            # Add some space
-            pdf.ln(10)
-            
-            # Payment details
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Payment Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            
-            # Common details
-            pdf.cell(70, 8, "Transaction ID:", 1)
-            pdf.cell(0, 8, donation.get("payment_id", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Order ID:", 1)
-            pdf.cell(0, 8, donation.get("order_id", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Amount:", 1)
-            pdf.cell(0, 8, f"Rs. {donation.get('amount', 0)}", 1, 1)
-            
-            pdf.cell(70, 8, "Donation Date:", 1)
-            pdf.cell(0, 8, donation.get("donation_date", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Status:", 1)
-            pdf.cell(0, 8, donation.get("status", ""), 1, 1)
-            
-            # Donation-specific details
-            pdf.ln(10)
-            pdf.set_font("Arial", "B", 14)
-            pdf.cell(0, 10, "Donation Details", 0, 1)
-            
-            pdf.set_font("Arial", "", 12)
-            pdf.cell(70, 8, "Donation Name:", 1)
-            pdf.cell(0, 8, donation.get("donation_name", ""), 1, 1)
-            
-            pdf.cell(70, 8, "Donor Name:", 1)
-            donor_name = donation.get("donor_name", "")
-            if not donor_name and "user_id" in donation:
-                # If donor name is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_name = user.get("name", "")
-            pdf.cell(0, 8, donor_name, 1, 1)
-            
-            pdf.cell(70, 8, "Donor Email:", 1)
-            donor_email = donation.get("donor_email", "")
-            if not donor_email and "user_id" in donation:
-                # If donor email is not stored in donation, try to get from user collection
-                user = user_collection.find_one({"_id": ObjectId(donation["user_id"])})
-                if user:
-                    donor_email = user.get("email", "")
-            pdf.cell(0, 8, donor_email, 1, 1)
-            
-            # Footer
-            pdf.ln(20)
-            pdf.cell(0, 10, "Thank you for your generous donation!", 0, 1, "C")
-            pdf.cell(0, 10, "This is a computer-generated receipt and does not require a signature.", 0, 1, "C")
-            
-            # Generate filename
-            filename = f"donation_receipt_{get_current_time().strftime('%Y%m%d%H%M%S')}.pdf"
-            
-            # Output PDF to string
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            
-            # Return file
-            response = Response(
-                pdf_output,
-                mimetype="application/pdf",
-                headers={"Content-Disposition": f"attachment;filename={filename}"}
-            )
-            
-            return response
-        else:
-            flash("Invalid receipt type", "error")
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"donation_receipt_{payment_id}.pdf",
+            mimetype="application/pdf"
+        )
+
+    flash("Invalid receipt type.", "error")
+    return redirect(url_for("user.history"))
+
+
+# PDF receipt from confirmation page
+@payment_bp.route("/confirmation-receipt/<payment_type>/<order_id>", methods=["GET"])
+def confirmation_receipt(payment_type, order_id):
+    """Generate and download a PDF receipt after payment confirmation"""
+    if not order_id:
+        flash("No booking found for this receipt.", "error")
+        return redirect(url_for("general.home"))
+        
+    if payment_type == "seva":
+        booking_data = seva_collection.find_one({"order_id": order_id})
+        if not booking_data:
+            flash("Could not find the specified booking.", "error")
             return redirect(url_for("general.home"))
-            
+
+        # Use the new PDF generation function for sevas
+        buffer = generate_seva_receipt_pdf(booking_data)
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"receipt_{order_id}.pdf",
+            mimetype="application/pdf"
+        )
+
+    elif payment_type == "donation":
+        booking_data = donations_collection.find_one({"order_id": order_id})
+        if not booking_data:
+            flash("Could not find the specified donation.", "error")
+            return redirect(url_for("general.home"))
+        
+        # Use the new PDF generation function for donations
+        buffer = generate_donation_receipt_pdf(booking_data)
+
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"donation_receipt_{order_id}.pdf",
+            mimetype="application/pdf"
+        )
+    
+    flash("Invalid receipt type.", "error")
+    return redirect(url_for("general.home"))
+
+
+@payment_bp.route("/get-all-payments", methods=["GET"])
+def get_all_payments():
+    try:
+        # This function is not fully implemented in the provided file,
+        # so it will return a placeholder response.
+        return jsonify({"message": "get_all_payments endpoint is not fully implemented"}), 501
     except Exception as e:
-        print(f"Error generating confirmation receipt: {e}")
-        flash("An error occurred while generating the receipt", "error")
-        return redirect(url_for("general.home")) 
+        return jsonify({"error": str(e)}), 500
+
+
+@payment_bp.route("/get-all-donations", methods=["GET"])
+def get_all_donations():
+    try:
+        # This function is not fully implemented in the provided file,
+        # so it will return a placeholder response.
+        return jsonify({"message": "get_all_donations endpoint is not fully implemented"}), 501
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 

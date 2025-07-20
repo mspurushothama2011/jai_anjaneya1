@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash
 from database import user_collection, seva_collection, donations_collection
 import random  
 from bson.objectid import ObjectId
-from datetime import datetime
+from utils import get_current_time
 
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
@@ -58,7 +58,7 @@ def register():
                 "password": hashed_password,
                 "verified": False,
                 "token": token,
-                "joined_on": datetime.now().strftime("%d-%m-%Y")
+                "joined_on": get_current_time().strftime("%d-%m-%Y")
             }
             
             # Insert user data into database
@@ -637,46 +637,36 @@ def verify_email_change():
 
 @user_bp.route("/history", methods=["GET"])
 def history():
+    """Display user's seva and donation history with dynamic filters."""
     if "user_id" not in session:
+        flash("Please log in to view your history.", "warning")
         return redirect(url_for("user.login"))
+
+    user_id = ObjectId(session["user_id"])
     
-    # Get user ID from session
-    user_id = session.get("user_id")
-    
-    # Get filter type from query parameter (default to "all")
-    filter_type = request.args.get("filter", "all")
-    
-    # Initialize empty lists for sevas and donations
-    seva_records = []
-    donation_records = []
-    
-    # Fetch data based on filter type
-    if filter_type in ["all", "seva"]:
-        # Fetch seva bookings for the user
-        seva_records = list(seva_collection.find({"user_id": ObjectId(user_id)}).sort("booking_date", -1))
+    # Get user's seva bookings and add a 'type' identifier
+    seva_bookings = list(seva_collection.find({"user_id": user_id}))
+    for booking in seva_bookings:
+        # Use a more specific type for filtering, e.g., the seva_name
+        booking["type"] = booking.get("seva_name", "Seva") 
         
-        # Convert ObjectId to string for JSON serialization
-        for record in seva_records:
-            record["_id"] = str(record["_id"])
-            if isinstance(record.get("user_id"), ObjectId):
-                record["user_id"] = str(record["user_id"])
-            if isinstance(record.get("seva_id"), ObjectId):
-                record["seva_id"] = str(record["seva_id"])
+    # Get user's donations and add a 'type' identifier
+    donations = list(donations_collection.find({"user_id": user_id}))
+    for donation in donations:
+        donation["type"] = "Donation"
+
+    # Combine and sort by date in a robust way
+    # Ensure date fields exist before trying to sort
+    all_history = sorted(
+        seva_bookings + donations, 
+        key=lambda x: x.get("booking_date") or x.get("donation_date", ""), 
+        reverse=True
+    )
     
-    if filter_type in ["all", "donation"]:
-        # Fetch donations for the user
-        donation_records = list(donations_collection.find({"user_id": ObjectId(user_id)}).sort("donation_date", -1))
-        
-        # Convert ObjectId to string for JSON serialization
-        for record in donation_records:
-            record["_id"] = str(record["_id"])
-            if isinstance(record.get("user_id"), ObjectId):
-                record["user_id"] = str(record["user_id"])
+    # Define a static list of seva names for the filter buttons
+    seva_filters = ["Vadamala", "Abhisheka", "Alankara", "Pooja/Vratha"]
     
-    return render_template("user/history.html", 
-                           seva_records=seva_records,
-                           donation_records=donation_records,
-                           filter_type=filter_type)
+    return render_template("user/history.html", history=all_history, seva_filters=seva_filters)
 
 
 @user_bp.route("/dashboard")
@@ -705,10 +695,10 @@ def dashboard():
     amount_contributed = amount_result[0]["total"] if amount_result else 0
     
     # Get upcoming sevas (future dates)
-    today = datetime.now()
+    today = get_current_time()
     upcoming_sevas = seva_collection.count_documents({
         "user_id": ObjectId(user_id),
-        "seva_date": {"$gt": today.strftime("%Y-%m-%d")}
+        "seva_date": {"$gt": today.strftime("%d-%m-%Y")}
     })
     
     # Compile user stats

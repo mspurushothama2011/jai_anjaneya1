@@ -1,0 +1,405 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<!-- Payment Processing Overlay -->
+<div id="paymentOverlay" class="payment-processing-overlay" style="display: none;">
+    <div class="overlay-content">
+        <div class="payment-animation">
+            <div class="loading-spinner"></div>
+            <div class="loading-spinner-inner"></div>
+            <div class="loading-icon">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+        </div>
+        <h4 class="mt-3 text-white">Processing Payment</h4>
+        <p class="text-white-50" id="processingStatus">Please wait while we process your payment...</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="card-title mb-0 text-center">{{ seva.seva_name }} Booking</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Seva details section -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-pray me-2"></i>Seva Details</h6>
+                        <div class="bg-light p-3 rounded">
+                            <table class="table table-bordered table-sm mb-0">
+                                <tr>
+                                    <td width="35%" class="fw-normal">Seva Name</td>
+                                    <td>{{ seva.seva_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Type</td>
+                                    <td>
+                                        <select id="abhishekaType" class="form-select">
+                                            <option value="">-- Select Type --</option>
+                                            {% for type in available_types %}
+                                                <option value="{{ type._id }}" data-price="{{ type.price }}" data-description="{{ type.description }}">{{ type.type_name }} (₹{{ type.price }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Price</td>
+                                    <td id="sevaPrice">₹--</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Booking Date</td>
+                                    <td>{{ current_date_formatted }}</td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Description will appear here when a type is selected -->
+                            <div id="typeDescription" class="mt-3 p-3 bg-white rounded border" style="display: none;">
+                                <p class="mb-0 text-muted"><i class="fas fa-info-circle me-2"></i><span id="descriptionText"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- User details section -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-user me-2"></i>Your Details</h6>
+                        <div class="bg-light p-3 rounded">
+                            <table class="table table-bordered table-sm mb-0">
+                                <tr>
+                                    <td width="35%" class="fw-normal">Name</td>
+                                    <td>{{ user.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Email</td>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-normal">Phone</td>
+                                    <td>{{ user.phone }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Date selection -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-calendar-alt me-2"></i>Select Preferred Date</h6>
+                        <div class="bg-light p-3 rounded">
+                            <input type="date" id="sevaDate" class="form-control" min="{{ current_date }}" required>
+                            <small class="text-muted mt-2 d-block">Please select your preferred date for the Abhisheka.</small>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" id="sevaIdInput" value="{{ seva.id }}">
+                    <input type="hidden" id="sevaNameInput" value="{{ seva.seva_name }}">
+                    <input type="hidden" id="selectedTypeId" value="">
+                    <input type="hidden" id="selectedTypeName" value="">
+                    <input type="hidden" id="selectedPrice" value="">
+
+                    <!-- Loading indicator -->
+                    <div id="loadingSpinner" style="display: none;" class="text-center mb-4 p-3 bg-light rounded">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing your request...</p>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger py-3 px-4 mb-4" style="display: none;"></div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('general.get_general_sevas') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Sevas
+                        </a>
+                        <button class="btn btn-primary px-4" id="proceedToPayment" disabled>
+                            Confirm Booking <i class="fas fa-check ms-2"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="razorpay-container" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    // Handle type selection
+    document.getElementById("abhishekaType").addEventListener("change", function() {
+        const typeSelect = this;
+        const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+        const typeId = typeSelect.value;
+        const price = selectedOption.dataset.price;
+        const description = selectedOption.dataset.description;
+        const typeName = selectedOption.text.split(" (")[0];
+        
+        // Update price display
+        document.getElementById("sevaPrice").textContent = typeId ? `₹${price}` : "₹--";
+        
+        // Update hidden fields
+        document.getElementById("selectedTypeId").value = typeId;
+        document.getElementById("selectedTypeName").value = typeName;
+        document.getElementById("selectedPrice").value = price;
+        
+        // Show/hide description
+        const descriptionDiv = document.getElementById("typeDescription");
+        const descriptionText = document.getElementById("descriptionText");
+        
+        if (typeId && description) {
+            descriptionText.textContent = description;
+            descriptionDiv.style.display = "block";
+        } else {
+            descriptionDiv.style.display = "none";
+        }
+        
+        // Enable/disable proceed button
+        document.getElementById("proceedToPayment").disabled = !typeId;
+    });
+
+    // Handle payment process
+    document.getElementById("proceedToPayment").addEventListener("click", async function() {
+        const sevaDate = document.getElementById("sevaDate").value;
+        const typeId = document.getElementById("selectedTypeId").value;
+        const typeName = document.getElementById("selectedTypeName").value;
+        const price = document.getElementById("selectedPrice").value;
+        
+        if (!sevaDate) {
+            showError("Please select a date for the seva.");
+            return;
+        }
+        
+        if (!typeId) {
+            showError("Please select an Abhisheka type.");
+            return;
+        }
+
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        const errorMessage = document.getElementById("errorMessage");
+        const proceedButton = document.getElementById("proceedToPayment");
+        const paymentOverlay = document.getElementById("paymentOverlay");
+        const processingStatus = document.getElementById("processingStatus");
+
+        // Show loading spinner and disable button
+        loadingSpinner.style.display = "block";
+        errorMessage.style.display = "none";
+        proceedButton.disabled = true;
+
+        try {
+            const sevaId = document.getElementById("sevaIdInput").value;
+            const sevaName = document.getElementById("sevaNameInput").value;
+            
+            const payload = {
+                seva_id: sevaId,
+                seva_name: sevaName,
+                type_name: typeName,
+                price: price,
+                seva_date: sevaDate
+            };
+
+            console.log("Sending Data:", payload); // Debug log
+
+            // First store abhisheka details in session
+            processingStatus.textContent = "Preparing your payment...";
+            paymentOverlay.style.display = "flex";
+            
+            const sessionResponse = await fetch("{{ url_for('abhisheka.store_abhisheka_details') }}", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const sessionData = await sessionResponse.json();
+            if (!sessionResponse.ok) {
+                throw new Error(sessionData.error || "Failed to store abhisheka details");
+            }
+
+            // Then create Razorpay order
+            processingStatus.textContent = "Creating payment order...";
+            const orderResponse = await fetch("{{ url_for('abhisheka.abhisheka_payment') }}", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const orderData = await orderResponse.json();
+            if (!orderResponse.ok) {
+                throw new Error(orderData.error || "Failed to create payment order");
+            }
+
+            console.log("Order Data:", orderData); // Debug log
+
+            // Hide overlay when Razorpay form opens, as it has its own UI
+            paymentOverlay.style.display = "none";
+
+            // Initialize Razorpay checkout
+            const options = {
+                key: "{{ config.RAZORPAY_KEY_ID }}",
+                amount: price * 100, // Amount in paise
+                currency: "INR",
+                name: "Shri Veeranjaneya Swamy",
+                description: `${sevaName} (${typeName}) Booking`,
+                order_id: orderData.id,
+                handler: function(response) {
+                    // Show overlay again after Razorpay form closes
+                    processingStatus.textContent = "Payment successful! Verifying transaction...";
+                    paymentOverlay.style.display = "flex";
+                    verifyPayment(response);
+                },
+                modal: {
+                    ondismiss: function() {
+                        console.log("Payment cancelled by user");
+                        loadingSpinner.style.display = "none";
+                        proceedButton.disabled = false;
+                        paymentOverlay.style.display = "none";
+                    }
+                },
+                prefill: {
+                    name: "{{ user.name }}",
+                    email: "{{ user.email }}",
+                    contact: "{{ user.phone }}"
+                },
+                theme: {
+                    color: "#3399cc"
+                }
+            };
+
+            const razorpay = new Razorpay(options);
+            razorpay.open();
+
+        } catch (error) {
+            console.error("Error:", error);
+            showError(error.message || "An error occurred. Please try again.");
+            loadingSpinner.style.display = "none";
+            proceedButton.disabled = false;
+            paymentOverlay.style.display = "none";
+        }
+    });
+
+    // Function to verify payment
+    async function verifyPayment(response) {
+        try {
+            const verifyResponse = await fetch("{{ url_for('abhisheka.verify_abhisheka_payment') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(response)
+            });
+
+            const verifyData = await verifyResponse.json();
+            
+            if (!verifyResponse.ok) {
+                throw new Error(verifyData.error || "Payment verification failed");
+            }
+
+            // Redirect to confirmation page
+            window.location.href = verifyData.redirect_url;
+            
+        } catch (error) {
+            console.error("Verification Error:", error);
+            showError(error.message || "Payment verification failed. Please contact support.");
+            document.getElementById("loadingSpinner").style.display = "none";
+            document.getElementById("proceedToPayment").disabled = false;
+            document.getElementById("paymentOverlay").style.display = "none";
+        }
+    }
+
+    // Function to show error message
+    function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        
+        // Scroll to error message
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+</script>
+
+<style>
+    /* Payment Processing Overlay */
+    .payment-processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .overlay-content {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .payment-animation {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+
+    .loading-spinner {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-spinner-inner {
+        position: absolute;
+        width: 80%;
+        height: 80%;
+        top: 10%;
+        left: 10%;
+        border: 4px solid transparent;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite reverse;
+    }
+
+    .loading-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        background-color: #3498db;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .loading-icon i {
+        color: white;
+        font-size: 24px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %} 

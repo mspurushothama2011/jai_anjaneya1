@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, session, redirect, url_for, flash,
 from database import seva_collection, donations_collection, seva_list, donations_list, events_collection  
 from datetime import datetime
 import os
+from utils import get_current_time
 
 general_bp = Blueprint("general", __name__)
 
@@ -45,12 +46,15 @@ def pooja_timings():
 
 @general_bp.route("/events")
 def events():
-    """User view to display events"""
-    # Get today's date for comparison
-    current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    """Fetch and display upcoming events"""
+    # Query for events that are on or after the current date
+    current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Query for events on or after the current date
+    query = {"date": {"$gte": current_date}}
     
     # Fetch all events
-    events_data = list(events_collection.find())
+    events_data = list(events_collection.find(query))
     print(f"Found {len(events_data)} total events in the database")
     
     # Manually create a sample event if none exist (for testing)
@@ -89,8 +93,9 @@ def events():
             try:
                 if isinstance(event.get("date"), str):
                     event["date"] = datetime.strptime(event["date"], "%Y-%m-%d")
-            except ValueError:
-                event["date"] = datetime.now()  # Fallback to today's date if parsing fails
+            except (ValueError, TypeError):
+                # Fallback for older records with string dates that might be invalid
+                event["date"] = get_current_time()  # Fallback to today's date if parsing fails
         
         print(f"Event: {event.get('title', 'No title')} - Date: {event.get('date')}")
 
@@ -130,14 +135,9 @@ def e_hundi():
     return render_template("user/e_hundi.html")
 
 @general_bp.route("/general-sevas")
-def get_general_sevas():  
-    """Public view to display available sevas"""
-    sevas_data = list(seva_list.find())  
-
-    for seva in sevas_data:
-        seva["_id"] = str(seva["_id"])  # Convert ObjectId to string
-
-    return render_template("user/user_seva_list.html", sevas=sevas_data, seva_types=set(seva["seva_type"] for seva in sevas_data))
+def redirect_to_seva_categories():  
+    """Redirects the old sevas page to the new category-based view."""
+    return redirect(url_for("user_seva.seva_categories_view"))
 
 @general_bp.route("/logout")
 def logout():

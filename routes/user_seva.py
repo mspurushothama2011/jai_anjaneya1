@@ -25,19 +25,21 @@ def seva_categories_view():
 def pooja_vratha_list():
     """Fetch and display available Pooja/Vratha sevas"""
     current_date = get_current_time().strftime("%d-%m-%Y")
-    
-    # Corrected the query to look for 'Pooja/Vratha' and filter by date
-    query = {
-        "seva_name": "Pooja/Vratha",
-        "seva_date": {"$gte": current_date}
-    }
-    db_sevas = list(seva_list.find(query))
-    
-    for seva in db_sevas:
-        seva["_id"] = str(seva["_id"])
-        
+    all_sevas = list(seva_list.find({"seva_name": "Pooja/Vratha"}))
+    filtered_sevas = []
+    for seva in all_sevas:
+        seva_date_str = seva.get("seva_date", "")
+        try:
+            seva_date = datetime.strptime(seva_date_str, "%d-%m-%Y")
+            curr_date = datetime.strptime(current_date, "%d-%m-%Y")
+            if seva_date >= curr_date:
+                seva["_id"] = str(seva["_id"])
+                filtered_sevas.append(seva)
+        except Exception:
+            continue  # skip if date is invalid
+
     return render_template("user/pooja_vratha_list.html", 
-                          sevas=db_sevas, 
+                          sevas=filtered_sevas, 
                           current_date=current_date)
 
 

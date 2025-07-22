@@ -20,18 +20,18 @@ try:
     db = client["temple_system"]
     
     # Define collections
-    seva_collection = db["seva_collection"]
-    seva_list = db["seva_list"]
-    events_collection = db["events_collection"]
-    user_collection = db["user_collection"]
+    seva_collection = db["seva_collection"]#contains booked seva details   
+    seva_list = db["seva_list"]#contains pooja/varatha types
+    events_collection = db["events_collection"]#contains events details
+    user_collection = db["user_collection"]#contains user details
     donations_list = db["donations_list"]  # Contains donation types/options
     donations_collection = db["donations_collection"]  # Contains completed donations
 
     # New collections for Abhisheka functionality
-    abhisheka_types = db["abhisheka_types"]
-    alankara_types = db["alankara_types"]
-    vadamala_types = db["vadamala_types"]
-    abhisheka_bookings = db["abhisheka_bookings"]
+    abhisheka_types = db["abhisheka_types"]#contains abhisheka types
+    alankara_types = db["alankara_types"]#contains alankara types
+    vadamala_types = db["vadamala_types"]#contains vadamala types
+    abhisheka_bookings = db["abhisheka_bookings"]#contains abhisheka bookings
 except Exception as e:
     print(f"MongoDB connection error: {e}")
     raise

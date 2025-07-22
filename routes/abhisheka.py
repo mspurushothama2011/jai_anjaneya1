@@ -67,8 +67,8 @@ def abhisheka_booking():
             flash("User not found. Please login again.", "error")
             return redirect(url_for("user.login"))
 
-        # Fetch Abhisheka types from the database
-        types = list(abhisheka_types.find())
+        # Fetch only active Abhisheka types from the database
+        types = list(abhisheka_types.find({"is_active": True}))
 
         # Get tomorrow's date for the date picker
         tomorrow = get_current_time() + timedelta(days=1)

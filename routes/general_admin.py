@@ -415,11 +415,11 @@ def update_seva_status():
             {'$set': {'status': 'Collected'}}
         )
         
-        if result.modified_count > 0:
-            flash("Seva status updated to Collected successfully", "success")
-        else:
+        # Only flash error if no booking was found
+        if result.modified_count == 0:
             flash("No booking found with the provided ID", "error")
-            
+        # (No success flash here)
+        
     except Exception as e:
         flash(f"Error updating status: {str(e)}", "error")
     

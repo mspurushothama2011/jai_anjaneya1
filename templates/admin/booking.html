@@ -1,0 +1,136 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Manual Seva Booking - Admin{% endblock %}
+{% block content %}
+<style>
+    .booking-container {
+        max-width: 400px;
+        margin: 30px auto;
+        padding: 30px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        background: #fff;
+    }
+    .booking-title {
+        text-align: center;
+        color: #0074ff;
+        margin-bottom: 10px;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .booking-subtitle {
+        text-align: center;
+        color: #444;
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+    }
+    .form-label {
+        display: block;
+        margin: 18px 0 6px 0;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        box-sizing: border-box;
+        margin-bottom: 5px;
+    }
+    .btn-primary {
+        width: 100%;
+        background: #0074ff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 14px 0;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 18px;
+        transition: background 0.2s;
+    }
+    .btn-primary:hover {
+        background: #005fcc;
+    }
+    .mt-3 { margin-top: 1rem; }
+    .fade-out {
+        opacity: 1;
+        transition: opacity 1s ease-out;
+    }
+    .fade-out.hide {
+        opacity: 0;
+    }
+</style>
+<div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="flash-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} fade-out">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}    
+</div>
+<div class="booking-container">
+    
+    <div class="booking-title">Manual Seva Booking</div>
+    <div class="booking-subtitle">Add offline seva bookings for devotees</div>
+    <form method="POST">
+        <label for="user_name" class="form-label">Devotee Name</label>
+        <input type="text" class="form-control" id="user_name" name="user_name" required>
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email">
+        <label for="phone" class="form-label">Phone</label>
+        <input type="text" class="form-control" id="phone" name="phone">
+        <label for="seva_name" class="form-label">Seva Name</label>
+        <select class="form-control" id="seva_name" name="seva_name" required onchange="updateSevaTypes()">
+            <option value="" disabled selected>-- Select Seva Name --</option>
+            {% for name in seva_names %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <label for="seva_type_id" class="form-label">Seva Type</label>
+        <select class="form-control" id="seva_type_id" name="seva_type_id" required onchange="updateSevaPrice()">
+            <option value="" disabled selected>-- Select Seva Type --</option>
+        </select>
+        <label for="seva_date" class="form-label">Seva Date</label>
+        <input type="date" class="form-control" id="seva_date" name="seva_date" required>
+        <label for="seva_price" class="form-label">Price</label>
+        <input type="number" class="form-control" id="seva_price" name="seva_price" min="0" step="1" required>
+        <button type="submit" class="btn-primary">Add Booking</button>
+    </form>
+</div>
+<script>
+const sevaTypes = {{ seva_types|tojson }};
+function updateSevaTypes() {
+    const sevaName = document.getElementById('seva_name').value;
+    const sevaTypeSelect = document.getElementById('seva_type_id');
+    sevaTypeSelect.innerHTML = '<option value="" disabled selected>-- Select Seva Type --</option>';
+    if (sevaTypes[sevaName]) {
+        sevaTypes[sevaName].forEach(type => {
+            let label = type.seva_name || type.seva_type;
+            sevaTypeSelect.innerHTML += `<option value="${type._id}" data-price="${type.seva_price || type.price || 0}">${label}</option>`;
+        });
+    }
+    document.getElementById('seva_price').value = '';
+}
+function updateSevaPrice() {
+    const sevaTypeSelect = document.getElementById('seva_type_id');
+    const price = sevaTypeSelect.options[sevaTypeSelect.selectedIndex].getAttribute('data-price');
+    document.getElementById('seva_price').value = price || '';
+}
+// Fade out flash messages after 10 seconds
+window.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var flashMessages = document.querySelectorAll('.fade-out');
+        flashMessages.forEach(function(msg) {
+            msg.classList.add('hide');
+        });
+    }, 10000);
+});
+</script>
+{% endblock %} 

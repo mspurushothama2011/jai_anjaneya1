@@ -15,11 +15,11 @@ class Config:
     SERVER_NAME = os.getenv("SERVER_NAME")  # Will be automatically set by Render
 
     # Email Configuration
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp-relay.brevo.com")
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "8b4ca1003@smtp-brevo.com")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "b7kdRNhTSVwDWYsF")
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "svecgmp@gmail.com")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "bgse xmji csjq hgpi")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "svecgmp@gmail.com")
 
     # Razorpay Credentials

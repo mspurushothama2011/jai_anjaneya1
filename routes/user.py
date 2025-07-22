@@ -179,7 +179,7 @@ def send_verification_email(email, token):
                 <p>If you did not register, please ignore this email.</p>
             </div>
             <div class="footer">
-                &copy; Shri Veeranjaneya Swamy<br/>
+                &copy; Sri Veeranjaneya Swamy<br/>
                 This is an automated email, please do not reply.
             </div>
         </div>
@@ -368,7 +368,7 @@ def send_otp_email(email, otp):
             </div>
             <div class="footer">
                 <p>This is an automated message, please do not reply to this email.</p>
-                <p>&copy; Shri Veeranjaneya Swamy</p>
+                <p>&copy; Sri Veeranjaneya Swamy</p>
             </div>
         </div>
     </body>

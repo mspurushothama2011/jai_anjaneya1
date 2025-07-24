@@ -23,8 +23,8 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "svecgmp@gmail.com")
 
     # Razorpay Credentials
-    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_bXeO6QnkEReD6R")
-    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "42VhtwCjEzsqFy3ASrfEPdSp")
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_fxcQkwfn71Yz7p")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "F6uwmjwRyWineo6PepfzAcsl")
     
     # Session configuration for production
     if PRODUCTION:

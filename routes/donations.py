@@ -283,7 +283,7 @@ def verify_donation_payment():
         current_time = get_current_time(user_timezone)
         
         # Format the time for the database
-        formatted_time = current_time.strftime("%d-%m-%Y (%H:%M:%S)")
+        
 
         # Create donation record for database
         donation_db = {
@@ -295,7 +295,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": formatted_time,
+            "donation_date": current_time,
             "status": "Paid"
         }
 
@@ -309,7 +309,7 @@ def verify_donation_payment():
             "donor_email": donor_email,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "donation_date": formatted_time,
+            "donation_date": current_time.strftime("%d-%m-%Y (%H:%M:%S)"),
             "status": "Paid"
         }
 

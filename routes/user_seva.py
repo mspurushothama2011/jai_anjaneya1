@@ -88,15 +88,10 @@ def seva_booking(seva_id):
         current_date = get_current_time().strftime("%d-%m-%Y")
         current_date_formatted = current_date
         seva_date_formatted = ""
-        if seva.get("seva_date"):
-            try:
-                date_obj = datetime.strptime(seva["seva_date"], "%d-%m-%Y")
-                seva_date_formatted = date_obj.strftime("%d-%m-%Y")
-            except (ValueError, TypeError):
-                seva_date_formatted = seva.get("seva_date", "")
+        if seva and seva.get("seva_date"):
+            seva_date_formatted = seva.get("seva_date")
 
-        return render_template(
-            "user/user_seva_booking.html",
+        return render_template("user/pooja_vratha_booking.html", 
             seva=seva,
             user=user,
             current_date=current_date,

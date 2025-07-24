@@ -176,6 +176,40 @@ def verify_payment():
         # seva_date: "YYYY-MM-DD"
         seva_date_obj = datetime.strptime(seva_date_str, "%d-%m-%Y")
         
+        # --- RACE CONDITION FIX & REFUND LOGIC ---
+        # Re-check availability atomically before inserting the booking
+        booking_count = seva_collection.count_documents({
+            "seva_name": "Vadamala",
+            "seva_date": seva_date_obj
+        })
+
+        if booking_count >= 3:
+            # The slot was filled while payment was being made. Refund the payment.
+            try:
+                amount_to_refund = int(float(vadamala_type.get("price", 0)) * 100)
+                if amount_to_refund > 0:
+                    razorpay_client.payment.refund(razorpay_payment_id, {
+                        "amount": amount_to_refund,
+                        "speed": "normal",
+                        "notes": {
+                            "reason": "Booking slot filled during payment (race condition)."
+                        }
+                    })
+                
+                # Inform user of the situation
+                return jsonify({
+                    "status": "error", 
+                    "message": "We're sorry, but the selected date was fully booked while you were making the payment. Your payment has been automatically refunded."
+                }), 409 # 409 Conflict is a good status code here
+
+            except Exception as e:
+                # Log the critical error and inform user to contact support
+                print(f"CRITICAL: Refund failed for payment {razorpay_payment_id}. Error: {e}")
+                return jsonify({
+                    "status": "error",
+                    "message": "Booking failed because slots are full. We tried to refund your payment automatically but failed. Please contact support with your payment ID for a manual refund."
+                }), 500
+
         # booking_date: "DD-MM-YYYY (HH:MM:SS)"
         booking_timestamp = get_current_time()
         booking_date_formatted = booking_timestamp.strftime("%d-%m-%Y (%H:%M:%S)")

@@ -8,6 +8,7 @@ from database import user_collection, seva_collection, donations_collection
 import random  
 from bson.objectid import ObjectId
 from utils import get_current_time
+from datetime import datetime
 
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
@@ -644,24 +645,41 @@ def history():
 
     user_id = ObjectId(session["user_id"])
     
-    # Get user's seva bookings and add a 'type' identifier
+    def safe_date_parser(date_val):
+        """Safely parse date, handling both datetime objects and strings."""
+        if isinstance(date_val, datetime):
+            return date_val
+        if isinstance(date_val, str):
+            try:
+                # First, try to parse the format with time
+                return datetime.strptime(date_val, "%d-%m-%Y (%H:%M:%S)")
+            except ValueError:
+                try:
+                    # Fallback to parsing just the date
+                    return datetime.strptime(date_val, "%d-%m-%Y")
+                except ValueError:
+                    return None  # Return None if parsing fails
+        return None
+
+    # Get user's seva bookings and donations
     seva_bookings = list(seva_collection.find({"user_id": user_id}))
-    for booking in seva_bookings:
-        # Use a more specific type for filtering, e.g., the seva_name
-        booking["type"] = booking.get("seva_name", "Seva") 
-        
-    # Get user's donations and add a 'type' identifier
     donations = list(donations_collection.find({"user_id": user_id}))
+
+    # Combine and prepare for sorting
+    all_history = []
+    for booking in seva_bookings:
+        booking["type"] = booking.get("seva_name", "Seva") 
+        booking["sort_date"] = safe_date_parser(booking.get("booking_date"))
+        all_history.append(booking)
+        
     for donation in donations:
         donation["type"] = "Donation"
+        donation["sort_date"] = safe_date_parser(donation.get("donation_date"))
+        all_history.append(donation)
 
-    # Combine and sort by date in a robust way
-    # Ensure date fields exist before trying to sort
-    all_history = sorted(
-        seva_bookings + donations, 
-        key=lambda x: x.get("booking_date") or x.get("donation_date", ""), 
-        reverse=True
-    )
+    # Filter out items with no valid date and sort
+    all_history = [item for item in all_history if item["sort_date"]]
+    all_history.sort(key=lambda x: x["sort_date"], reverse=True)
     
     # Define a static list of seva names for the filter buttons
     seva_filters = ["Vadamala", "Abhisheka", "Alankara", "Pooja/Vratha"]

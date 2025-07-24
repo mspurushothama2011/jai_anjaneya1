@@ -46,63 +46,34 @@ def pooja_timings():
 
 @general_bp.route("/events")
 def events():
-    """Fetch and display upcoming events"""
-    # Query for events that are on or after the current date
+    """Fetch and display upcoming and past events"""
     current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Query for events on or after the current date
-    query = {"date": {"$gte": current_date}}
-    
-    # Fetch all events
-    events_data = list(events_collection.find(query))
-    print(f"Found {len(events_data)} total events in the database")
-    
-    # Manually create a sample event if none exist (for testing)
-    if not events_data:
-        print("No events found, creating sample events")
-        sample_events = [
-            {
-                "title": "Navratri Celebration",
-                "date": datetime(2025, 4, 18),
-                "venue": "Temple Grounds",
-                "description": "Nine days of music and dance celebrating the Divine Mother"
-            },
-            {
-                "title": "Diwali Festival",
-                "date": datetime(2025, 4, 28),
-                "venue": "Temple Complex",
-                "description": "Festival of lights with special ceremonies and cultural programs"
-            },
-            {
-                "title": "Yoga Workshop",
-                "date": datetime(2025, 4, 3),
-                "venue": "Meditation Hall",
-                "description": "Learn traditional yoga practices with experienced teachers"
-            }
-        ]
-        events_data = sample_events
-    
-    # Process events data
+    def to_naive(dt):
+        if dt is not None and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+            return dt.replace(tzinfo=None)
+        return dt
+    current_date = to_naive(current_date)
+    events_data = list(events_collection.find())
+
+    # Ensure all event dates are datetime objects and naive
     for event in events_data:
-        # Convert ObjectId to string for MongoDB documents
-        if "_id" in event:
-            event["_id"] = str(event["_id"])
-            
-        # Ensure date is a datetime object
         if not isinstance(event.get("date"), datetime):
             try:
                 if isinstance(event.get("date"), str):
                     event["date"] = datetime.strptime(event["date"], "%Y-%m-%d")
             except (ValueError, TypeError):
-                # Fallback for older records with string dates that might be invalid
-                event["date"] = get_current_time()  # Fallback to today's date if parsing fails
-        
-        print(f"Event: {event.get('title', 'No title')} - Date: {event.get('date')}")
+                event["date"] = current_date
+        event["date"] = to_naive(event["date"])
+        if "_id" in event:
+            event["_id"] = str(event["_id"])
 
-    # Sort events by date
-    events_data.sort(key=lambda x: x["date"])
-    
-    return render_template("user/events.html", events=events_data, current_date=current_date)
+    # Split into upcoming and past events
+    upcoming_events = [e for e in events_data if e.get("date") and e["date"] >= current_date]
+    past_events = [e for e in events_data if e.get("date") and e["date"] < current_date]
+    upcoming_events.sort(key=lambda x: x["date"])
+    past_events.sort(key=lambda x: x["date"], reverse=True)
+
+    return render_template("user/events.html", upcoming_events=upcoming_events, past_events=past_events, current_date=current_date)
 
 @general_bp.route("/history")
 def general_history():

@@ -738,23 +738,35 @@ def dashboard():
     
     # Combine and sort recent activities
     recent_activities = []
-    
+
+    def safe_date_parser_dashboard(date_val):
+        from datetime import datetime
+        if isinstance(date_val, datetime):
+            return date_val
+        if isinstance(date_val, str):
+            for fmt in ["%d-%m-%Y (%H:%M:%S)", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]:
+                try:
+                    return datetime.strptime(date_val, fmt)
+                except Exception:
+                    continue
+        return datetime(1900, 1, 1)  # fallback for invalid/missing dates
+
     for seva in recent_sevas:
         recent_activities.append({
-            "date": seva.get("booking_date"),
+            "date": safe_date_parser_dashboard(seva.get("booking_date")),
             "type": "Seva",
             "description": seva.get("seva_name", "Unknown Seva"),
             "amount": seva.get("amount", 0)
         })
-    
+
     for donation in recent_donations:
         recent_activities.append({
-            "date": donation.get("donation_date"),
+            "date": safe_date_parser_dashboard(donation.get("donation_date")),
             "type": "Donation",
             "description": donation.get("donation_purpose", "General Donation"),
             "amount": donation.get("amount", 0)
         })
-    
+
     # Sort by date descending and limit to 5
     recent_activities.sort(key=lambda x: x["date"], reverse=True)
     recent_activities = recent_activities[:5]

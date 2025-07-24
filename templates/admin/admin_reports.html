@@ -95,6 +95,27 @@
                         </tbody>
                     </table>
                 </div>
+            {% if total_pages and total_pages > 1 %}
+            <div class="pagination-container">
+                <ul class="pagination">
+                    {# Previous button #}
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page-1, date_filter=request.args.get('date_filter', '')) }}">Previous</a>
+                    </li>
+                    {# Page numbers #}
+                    {% for p in range(1, total_pages+1) %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=p, date_filter=request.args.get('date_filter', '')) }}">{{ p }}</a>
+                        </li>
+                    {% endfor %}
+                    {# Next button #}
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page+1, date_filter=request.args.get('date_filter', '')) }}">Next</a>
+                    </li>
+                </ul>
+                <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_bookings }} bookings)</span>
+            </div>
+            {% endif %}
             {% else %}
                 <div class="no-data">
                     <p>No seva bookings found in the system.</p>
@@ -494,6 +515,47 @@
             width: 100%;
             justify-content: center;
         }
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0 10px 0;
+    }
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0 10px 0 0;
+    }
+    .pagination .page-item {
+        margin: 0 2px;
+    }
+    .pagination .page-link {
+        display: block;
+        padding: 6px 12px;
+        background: #f8f9fa;
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: background 0.2s, color 0.2s;
+    }
+    .pagination .page-item.active .page-link {
+        background: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #aaa;
+        pointer-events: none;
+        background: #e9ecef;
+    }
+    .pagination-info {
+        font-size: 0.95rem;
+        color: #555;
     }
 </style>
 

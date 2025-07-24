@@ -173,8 +173,17 @@ def reports():
     report_type = request.args.get('type', 'seva')  # Default to seva if not specified
     
     if report_type == 'seva':
-        # Get all seva bookings with joined data from related collections
-        bookings = list(seva_collection.find())
+        # Pagination parameters
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        skip = (page - 1) * per_page
+
+        # Get total count for pagination
+        total_bookings = seva_collection.count_documents({})
+        total_pages = (total_bookings + per_page - 1) // per_page
+
+        # Get only the bookings for the current page
+        bookings = list(seva_collection.find().skip(skip).limit(per_page))
         
         # Process the bookings to ensure all have seva_date in a comparable format
         enhanced_bookings = []
@@ -312,7 +321,10 @@ def reports():
         
         return render_template("admin/admin_reports.html", 
                               report_type='seva',
-                              bookings=filtered_bookings)
+                              bookings=filtered_bookings,
+                              page=page,
+                              total_pages=total_pages,
+                              total_bookings=total_bookings)
     else:
         # Get all donations with joined data from related collections
         donations = list(donations_collection.find().sort('donation_date', -1))

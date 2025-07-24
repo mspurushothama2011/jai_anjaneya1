@@ -782,3 +782,51 @@ def get_all_donations():
         return jsonify({"message": "get_all_donations endpoint is not fully implemented"}), 501
     except Exception as e:
         return jsonify({"error": str(e)}), 500 
+
+# Razorpay Webhook Handler
+@payment_bp.route('/razorpay/webhook', methods=['POST'])
+def razorpay_webhook():
+    import json
+    from flask import request
+    webhook_secret = Config.RAZORPAY_WEBHOOK_SECRET  # Set this in your .env and Razorpay dashboard
+    payload = request.data
+    received_signature = request.headers.get('X-Razorpay-Signature')
+
+    # Verify webhook signature
+    import hmac
+    import hashlib
+    expected_signature = hmac.new(
+        webhook_secret.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected_signature, received_signature):
+        return 'Invalid signature', 400
+
+    event = json.loads(payload)
+    event_type = event.get('event')
+    payload_data = event.get('payload', {})
+
+    # Handle payment.captured event
+    if event_type == 'payment.captured':
+        payment_entity = payload_data.get('payment', {}).get('entity', {})
+        order_id = payment_entity.get('order_id')
+        payment_id = payment_entity.get('id')
+        status = payment_entity.get('status')
+        amount = payment_entity.get('amount') / 100 if payment_entity.get('amount') else 0
+        email = payment_entity.get('email')
+        contact = payment_entity.get('contact')
+        notes = payment_entity.get('notes', {})
+        # Try to find the order in your DB
+        # For seva
+        seva = seva_collection.find_one({'order_id': order_id})
+        if seva and seva.get('status') != 'Paid':
+            seva_collection.update_one({'_id': seva['_id']}, {'$set': {'status': 'Paid', 'payment_id': payment_id}})
+        # For donation
+        donation = donations_collection.find_one({'order_id': order_id})
+        if donation and donation.get('status') != 'Paid':
+            donations_collection.update_one({'_id': donation['_id']}, {'$set': {'status': 'Paid', 'payment_id': payment_id}})
+        # Optionally, log or notify admin
+        print(f"[Webhook] Payment captured: {payment_id} for order {order_id}")
+    # You can handle other event types as needed
+    return 'OK', 200 

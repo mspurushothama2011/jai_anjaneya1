@@ -31,6 +31,16 @@
                             <label for="date_filter">Filter by Seva Date:</label>
                             <input type="date" id="date_filter" name="date_filter" class="date-input" value="{{ request.args.get('date_filter', '') }}">
                         </div>
+                        <div class="filter-input-group">
+                            <label for="seva_name">Filter by Seva Name:</label>
+                            <select id="seva_name" name="seva_name" class="date-input">
+                                <option value="">All</option>
+                                <option value="Abhisheka" {% if request.args.get('seva_name') == 'Abhisheka' %}selected{% endif %}>Abhisheka</option>
+                                <option value="Alankara" {% if request.args.get('seva_name') == 'Alankara' %}selected{% endif %}>Alankara</option>
+                                <option value="Pooja/Vratha" {% if request.args.get('seva_name') == 'Pooja/Vratha' %}selected{% endif %}>Pooja/Vratha</option>
+                                <option value="Vadamala" {% if request.args.get('seva_name') == 'Vadamala' %}selected{% endif %}>Vadamala</option>
+                            </select>
+                        </div>
                         <div class="filter-buttons">
                             <button type="submit" class="filter-button apply">
                                 <i class="fas fa-filter"></i> Apply Filter

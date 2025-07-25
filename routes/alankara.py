@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash
 from database import seva_collection, user_collection, db
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from utils import get_current_time
 from config import Config
 import hmac
@@ -36,9 +36,11 @@ def alankara_booking():
 
     user = user_collection.find_one({"_id": ObjectId(session["user_id"])})
 
-    # Fetch already booked dates for any Alankara seva
-    booked_dates = [
-        record['seva_date'] for record in seva_collection.find(
+    # Fetch already booked seva_date values for any Alankara seva
+    booked_seva_dates = [
+        record['seva_date'].strftime("%Y-%m-%d") if isinstance(record['seva_date'], (datetime, date))
+        else record['seva_date']
+        for record in seva_collection.find(
             {"seva_name": "Alankara"},
             {"seva_date": 1, "_id": 0}
         )
@@ -53,7 +55,7 @@ def alankara_booking():
         # Tuesday is 1, Thursday is 3
         if current_date.weekday() in [1, 3]:
             date_str = current_date.strftime("%Y-%m-%d")
-            if date_str not in booked_dates:
+            if date_str not in booked_seva_dates:
                 available_dates.append(date_str)
     
     types = list(alankara_types.find({"is_active": True}))
@@ -120,8 +122,13 @@ def verify_alankara_payment():
         # Get details from session
         seva_id = session.get("alankara_seva_id")
         seva_date = session.get("alankara_seva_date")
+        # Convert seva_date to datetime in UTC if possible
+        try:
+            seva_date_obj = datetime.strptime(seva_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except Exception:
+            seva_date_obj = seva_date
 
-        if not all([seva_id, seva_date]):
+        if not all([seva_id, seva_date_obj]):
             return jsonify({"status": "error", "message": "Session data missing. Please try again."})
 
         # Get authoritative data from the database
@@ -142,7 +149,7 @@ def verify_alankara_payment():
         # Re-check availability before inserting the booking
         is_slot_available = seva_collection.find_one({
             "seva_name": "Alankara",
-            "seva_date": seva_date
+            "seva_date": seva_date_obj
         })
 
         if is_slot_available:
@@ -181,7 +188,7 @@ def verify_alankara_payment():
             "seva_name": "Alankara",
             "seva_type": seva_type_details.get("seva_type"),
             "seva_price": float(seva_type_details.get("price")),
-            "seva_date": seva_date,
+            "seva_date": seva_date_obj,
             "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,

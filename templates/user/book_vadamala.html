@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const processingStatus = document.getElementById('processingStatus');
         const errorMessage = document.getElementById('errorMessage');
 
-        function showError(message) {
+        function showModal(message) {
             const modal = document.getElementById('infoModal');
             const modalMessage = document.getElementById('modalMessage');
             const closeBtn = document.querySelector('.close-btn');
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         errorMessage.style.display = 'none';
 
         if (!sevaDate) {
-            showError('Please select a valid Seva Date.');
+            showModal('Please select a valid Seva Date.');
             return;
         }
 
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        showError(error.message);
+                        showModal(error.message);
                         paymentButton.disabled = false;
                         paymentButton.textContent = 'Proceed to Payment';
                         paymentOverlay.style.display = 'none';
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             rzp.open();
 
         } catch (error) {
-            showError(error.message);
+            showModal(error.message);
             paymentButton.disabled = false;
             paymentButton.textContent = 'Proceed to Payment';
             paymentOverlay.style.display = 'none';
@@ -352,33 +352,32 @@ document.addEventListener('DOMContentLoaded', function() {
 .info-modal {
     display: none;
     position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
     width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    max-width: 500px;
+    background: none;
+    box-shadow: none;
 }
 .info-modal-content {
-    background-color: #fff;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
+    background: #fff;
+    color: #333;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     position: relative;
+    margin: 0 auto;
 }
 .close-btn {
-    color: #aaa;
     position: absolute;
     top: 10px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
+    right: 16px;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
 }
 .close-btn:hover,
 .close-btn:focus {

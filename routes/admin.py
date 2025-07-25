@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
 from database import seva_collection, seva_list, abhisheka_types, alankara_types, vadamala_types
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import flash
 from bson import ObjectId
 
@@ -79,6 +79,14 @@ def manual_booking():
         seva_name = request.form.get("seva_name")
         seva_type_id = request.form.get("seva_type_id")
         seva_date = request.form.get("seva_date")
+        # For Vadamala, Alankara, Abhisheka, and Pooja/Vratha, store seva_date as a datetime object in UTC
+        if seva_name in ["Vadamala", "Alankara", "Abhisheka", "Pooja/Vratha"]:
+            try:
+                seva_date_obj = datetime.strptime(seva_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            except Exception:
+                seva_date_obj = seva_date  # fallback to string if parsing fails
+        else:
+            seva_date_obj = seva_date
         seva_price = float(request.form.get("seva_price", 0))
         selected_type = next((t for t in seva_types[seva_name] if str(t.get('_id')) == seva_type_id), None)
         seva_type = selected_type.get("seva_type") if selected_type else ""
@@ -95,7 +103,7 @@ def manual_booking():
             "seva_type": seva_type_name or seva_type,
             "seva_price": seva_price,
             "booking_date": datetime.now().strftime("%d-%m-%Y (%H:%M:%S)"),
-            "seva_date": seva_date,
+            "seva_date": seva_date_obj,
             "payment_id": None,
             "order_id": None,
             "status": "Not Collected"

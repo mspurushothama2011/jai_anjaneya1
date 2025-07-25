@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash
 from database import abhisheka_types, abhisheka_bookings, user_collection
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from utils import get_current_time
 from routes.payment import razorpay_client
 import hashlib
@@ -189,10 +189,15 @@ def verify_abhisheka_payment():
         abhisheka_type = session.get("abhisheka_type")
         abhisheka_price = session.get("abhisheka_price")
         abhisheka_date = session.get("abhisheka_date")
+        # Convert abhisheka_date to datetime in UTC if possible
+        try:
+            abhisheka_date_obj = datetime.strptime(abhisheka_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except Exception:
+            abhisheka_date_obj = abhisheka_date
         
         print(f"Session data - User ID: {user_id}, Seva ID: {abhisheka_id}, Price: {abhisheka_price}")
 
-        if not all([user_id, abhisheka_id, abhisheka_name, abhisheka_type, abhisheka_price, abhisheka_date]):
+        if not all([user_id, abhisheka_id, abhisheka_name, abhisheka_type, abhisheka_price, abhisheka_date_obj]):
             print("Verification failed: Missing required session data.")
             return jsonify({"status": "error", "message": "Your session may have expired. Please try booking again."}), 400
         
@@ -232,7 +237,7 @@ def verify_abhisheka_payment():
             "seva_type": abhisheka_type, # e.g., "Milk Abhisheka"
             "seva_price": float(abhisheka_price),
             "booking_date": formatted_time,
-            "seva_date": abhisheka_date,
+            "seva_date": abhisheka_date_obj,
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
             "status": "Not Collected"

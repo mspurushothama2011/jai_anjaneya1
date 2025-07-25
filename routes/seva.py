@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from database import seva_list
 from bson.objectid import ObjectId
 from admin_required import admin_required
-from datetime import datetime  # Imported for date conversion
+from datetime import datetime, timezone  # Imported for date conversion
 
 sevas_bp = Blueprint("sevas", __name__)
 
@@ -23,9 +23,9 @@ def add_seva():
         return redirect(url_for("admin.login"))
 
     try:
-        # Convert the date to dd-mm-yyyy format
+        # Store seva_date as a string (YYYY-MM-DD) for admin-added Pooja/Vratha
         date_obj = datetime.strptime(request.form["seva_date"], "%Y-%m-%d")
-        formatted_date = date_obj.strftime("%d-%m-%Y")
+        formatted_date = date_obj.strftime("%Y-%m-%d")
 
         # Construct new seva entry
         new_seva = {

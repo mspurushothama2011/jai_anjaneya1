@@ -175,17 +175,24 @@ def reports():
     report_type = request.args.get('type', 'seva')  # Default to seva if not specified
     
     if report_type == 'seva':
+        # New: Get seva_name filter from query params
+        seva_name_filter = request.args.get('seva_name', None)
         # Pagination parameters
         page = int(request.args.get('page', 1))
         per_page = 50
         skip = (page - 1) * per_page
 
+        # Build query
+        query = {}
+        if seva_name_filter:
+            query['seva_name'] = seva_name_filter
+
         # Get total count for pagination
-        total_bookings = seva_collection.count_documents({})
+        total_bookings = seva_collection.count_documents(query)
         total_pages = (total_bookings + per_page - 1) // per_page
 
         # Get only the bookings for the current page
-        bookings = list(seva_collection.find().skip(skip).limit(per_page))
+        bookings = list(seva_collection.find(query).skip(skip).limit(per_page))
         
         # Process the bookings to ensure all have seva_date in a comparable format
         enhanced_bookings = []

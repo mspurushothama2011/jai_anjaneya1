@@ -4,7 +4,7 @@ import requests
 import os
 from routes.payment import razorpay_client
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 from config import Config
@@ -28,15 +28,26 @@ def pooja_vratha_list():
     all_sevas = list(seva_list.find({"seva_name": "Pooja/Vratha"}))
     filtered_sevas = []
     for seva in all_sevas:
-        seva_date_str = seva.get("seva_date", "")
-        try:
-            seva_date = datetime.strptime(seva_date_str, "%d-%m-%Y")
-            curr_date = datetime.strptime(current_date, "%d-%m-%Y")
-            if seva_date >= curr_date:
-                seva["_id"] = str(seva["_id"])
-                filtered_sevas.append(seva)
-        except Exception:
-            continue  # skip if date is invalid
+        seva_date_val = seva.get("seva_date", "")
+        curr_date = get_current_time().date()
+        seva_date = None
+        # Expect string in YYYY-MM-DD, but handle legacy formats
+        if isinstance(seva_date_val, str):
+            try:
+                seva_date = datetime.strptime(seva_date_val, "%Y-%m-%d").date()
+            except Exception:
+                try:
+                    seva_date = datetime.fromisoformat(seva_date_val).date()
+                except Exception:
+                    try:
+                        seva_date = datetime.strptime(seva_date_val, "%d-%m-%Y").date()
+                    except Exception:
+                        seva_date = None
+        elif hasattr(seva_date_val, 'date'):
+            seva_date = seva_date_val.date()
+        if seva_date and seva_date >= curr_date:
+            seva["_id"] = str(seva["_id"])
+            filtered_sevas.append(seva)
 
     return render_template("user/pooja_vratha_list.html", 
                           sevas=filtered_sevas, 
@@ -127,7 +138,11 @@ def store_seva_details():
                     object_id = ObjectId(seva_id)
                     seva = seva_list.find_one({"_id": object_id})
                     if seva and seva.get("seva_date"):
-                        seva_date = seva["seva_date"]
+                        seva_date_val = seva["seva_date"]
+                        if hasattr(seva_date_val, 'isoformat'):
+                            seva_date = seva_date_val.isoformat()
+                        else:
+                            seva_date = str(seva_date_val)
             except Exception as e:
                 print(f"Error getting seva date from database: {str(e)}")
                 # Use the date from the request if there's an error
@@ -324,6 +339,15 @@ def verify_seva_payment():
             })
 
         # Create booking record
+        # For Pooja/Vratha, convert seva_date from string to datetime object in UTC before storing
+        if seva_name == "Pooja/Vratha":
+            try:
+                seva_date_obj = datetime.strptime(seva_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            except Exception:
+                seva_date_obj = seva_date
+        else:
+            seva_date_obj = seva_date
+
         booking = {
             "user_id": ObjectId(user_id),
             "user_name": user["name"],
@@ -332,7 +356,7 @@ def verify_seva_payment():
             "seva_id": seva_id,
             "seva_name": seva_name,
             "seva_price": seva_price,
-            "seva_date": seva_date,
+            "seva_date": seva_date_obj,
             "seva_type": seva_type,
             "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
             "payment_id": razorpay_payment_id,

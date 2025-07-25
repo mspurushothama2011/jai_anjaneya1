@@ -24,7 +24,20 @@
                     </div>
                     <p class="seva-description">{{ seva.description }}</p>
                     <div class="seva-date">
-                        <strong>Seva Date:</strong> {{ seva.seva_date.split('T')[0] if 'T' in seva.seva_date else seva.seva_date }}
+                        <strong>Seva Date:</strong> 
+                        {% if seva.seva_date %}
+                            {% if seva.seva_date.__class__.__name__ == 'datetime' %}
+                                {{ seva.seva_date.strftime('%Y-%m-%d') }}
+                            {% elif 'T' in seva.seva_date %}
+                                {{ seva.seva_date.split('T')[0] }}
+                            {% elif '-' in seva.seva_date and seva.seva_date|length == 10 %}
+                                {{ seva.seva_date }}
+                            {% else %}
+                                {{ seva.seva_date }}
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
                     </div>
                     {% if session.get('user_id') %}
                         <a href="{{ url_for('user_seva.seva_booking', seva_id=seva._id) }}" class="book-seva-btn">

@@ -11,6 +11,7 @@ import json
 from pymongo import MongoClient
 from utils import get_current_time
 from flask import make_response
+from cleanup import cleanup_old_records
 
 general_admin_bp = Blueprint("general_admin", __name__, url_prefix="/admin/general")  
 
@@ -169,6 +170,7 @@ def delete_user(user_id):
 @general_admin_bp.route("/reports")
 @admin_required
 def reports():
+    cleanup_old_records()  # Delete old records when reports page is accessed
     """Admin view to see all seva bookings and donations"""
     report_type = request.args.get('type', 'seva')  # Default to seva if not specified
     

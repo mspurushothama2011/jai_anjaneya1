@@ -15,16 +15,16 @@ class Config:
     SERVER_NAME = os.getenv("SERVER_NAME")  # Will be automatically set by Render
 
     # Email Configuration
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
-    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "svecgmp@gmail.com")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "bgse xmji csjq hgpi")
-    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "svecgmp@gmail.com")
+    MAIL_SERVER = os.getenv("MAIL_SERVER")
+    MAIL_PORT = int(os.getenv("MAIL_PORT"))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS") == "True"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
     # Razorpay Credentials
-    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_fxcQkwfn71Yz7p")
-    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "F6uwmjwRyWineo6PepfzAcsl")
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
     
     # Session configuration for production
     if PRODUCTION:

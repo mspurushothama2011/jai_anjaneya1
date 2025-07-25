@@ -7,7 +7,7 @@ from pymongo.server_api import ServerApi
 load_dotenv()
 
 # Use a local MongoDB instance
-mongodb_uri = "mongodb+srv://mspurushothama20:Sriveeranjaneyaswamy@cluster0.nlxfpzd.mongodb.net/temple_system?retryWrites=true&w=majority"
+mongodb_uri = os.getenv("MONGODB_URI")
 
 # Connect to MongoDB with improved error handling and connection parameters
 try:

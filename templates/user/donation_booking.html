@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.status === 401) {
                     // Handle unauthorized (not logged in)
                     paymentOverlay.style.display = "none";
-                    alert('Your session has expired. Please log in again.');
+                    showModal('Your session has expired. Please log in again.');
                     window.location.href = '/user/login?next=' + window.location.pathname;
                     return Promise.reject('Unauthorized');
                 }
@@ -254,14 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 createOrder(donationDetails);
             } else {
                 paymentOverlay.style.display = "none";
-                alert('Error: ' + data.error);
+                showModal('Error: ' + data.error);
             }
         })
         .catch(error => {
             console.error('Error storing donation details:', error); // Detailed error log
             paymentOverlay.style.display = "none";
             if (error !== 'Unauthorized') {
-                alert('An error occurred. Please try again.');
+                showModal('An error occurred. Please try again.');
             }
         });
     });
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.status === 401) {
                     // Handle unauthorized (not logged in)
                     paymentOverlay.style.display = "none";
-                    alert('Your session has expired. Please log in again.');
+                    showModal('Your session has expired. Please log in again.');
                     window.location.href = '/user/login?next=' + window.location.pathname;
                     return Promise.reject('Unauthorized');
                 }
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(order => {
             if (order.error) {
                 paymentOverlay.style.display = "none";
-                alert('Error: ' + order.error);
+                showModal('Error: ' + order.error);
                 return;
             }
             
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
             paymentOverlay.style.display = "none";
             if (error !== 'Unauthorized') {
                 console.error('Error creating order:', error);
-                alert('An error occurred. Please try again.');
+                showModal('An error occurred. Please try again.');
             }
         });
     }
@@ -369,14 +369,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = data.redirect_url;
             } else {
                 paymentOverlay.style.display = "none";
-                alert('Payment verification failed: ' + data.error);
+                showModal('Payment verification failed: ' + data.error);
             }
         })
         .catch(error => {
             console.error('Error verifying payment:', error);
             paymentOverlay.style.display = "none";
-            alert('Payment verification failed. Please contact support with your payment ID.');
+            showModal('Payment verification failed. Please contact support with your payment ID.');
         });
+    }
+
+    function showModal(message) {
+        const modal = document.getElementById('infoModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeBtn = document.querySelector('.close-btn');
+
+        modalMessage.textContent = message;
+        modal.style.display = 'block';
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     }
 });
 </script>

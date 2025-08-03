@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error storing session data:', error);
-            alert('An error occurred. Please try again.');
+            showModal('An error occurred. Please try again.');
             paymentOverlay.style.display = 'none';
             return;
         }
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         // Display specific error message from server, or a generic one
                         const errorMessage = data.message || 'Payment verification failed. Please contact support.';
-                        alert(errorMessage);
+                        showModal(errorMessage);
                         window.location.href = '/'; 
                     }
                 });
@@ -220,11 +220,29 @@ document.addEventListener('DOMContentLoaded', function() {
             rzp.open();
         } catch (err) {
             console.error('Error creating order:', err);
-            alert('Could not initiate payment. Please try again.');
+            showModal('Could not initiate payment. Please try again.');
             paymentOverlay.style.display = 'none';
         }
     });
 });
+
+    function showModal(message) {
+        const modal = document.getElementById('infoModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeBtn = document.querySelector('.close-btn');
+
+        modalMessage.textContent = message;
+        modal.style.display = 'block';
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    }
 </script>
 
 <style>

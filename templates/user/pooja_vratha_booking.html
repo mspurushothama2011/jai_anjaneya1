@@ -329,15 +329,26 @@
         verifyWithRetry();
     }
 
+    function showModal(message) {
+        const modal = document.getElementById('infoModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeBtn = document.querySelector('.close-btn');
+
+        modalMessage.textContent = message;
+        modal.style.display = 'block';
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    }
+
     function showError(message) {
-        const errorMessage = document.getElementById("errorMessage");
-        const paymentOverlay = document.getElementById("paymentOverlay");
-        
-        errorMessage.textContent = message;
-        errorMessage.style.display = "block";
-        document.getElementById("loadingSpinner").style.display = "none";
-        document.getElementById("proceedToPayment").disabled = false;
-        paymentOverlay.style.display = "none";
+        showModal(message);
     }
 </script>
 

@@ -125,11 +125,22 @@ def create_order():
         if amount <= 0:
             return jsonify({"error": "Invalid price for the selected seva."}), 400
 
+        # Get seva details for notes
+        seva_date_str = session.get('seva_date', '')
+        seva_name = "Vadamala"
+        type_name = vadamala_type.get("type_name", "Regular VadaMala")
+
         order = razorpay_client.order.create({
             "amount": int(amount * 100),  # Amount in paise
             "currency": "INR",
             "receipt": f"vadamala_{get_current_time().timestamp()}",
-            "payment_capture": 1
+            "payment_capture": 1,
+            "notes": {
+                "seva_date": seva_date_str,
+                "seva_id": str(vadamala_type_id),
+                "seva_name": seva_name,
+                "type_name": type_name
+            }
         })
 
         session['razorpay_order_id'] = order['id']
@@ -174,7 +185,11 @@ def verify_payment():
 
         # --- Format dates as per the new requirement ---
         # seva_date: "YYYY-MM-DD"
-        seva_date_obj = datetime.strptime(seva_date_str, "%d-%m-%Y")
+        try:
+            seva_date_obj = datetime.strptime(seva_date_str, "%Y-%m-%d")
+        except ValueError:
+            # Fallback to legacy format if needed
+            seva_date_obj = datetime.strptime(seva_date_str, "%d-%m-%Y")
         
         # --- RACE CONDITION FIX & REFUND LOGIC ---
         # Re-check availability atomically before inserting the booking

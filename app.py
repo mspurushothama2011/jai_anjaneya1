@@ -1,4 +1,4 @@
-from flask import Flask, session, request, jsonify
+from flask import Flask, session, request, jsonify, render_template
 from flask_mail import Mail
 from config import Config
 from routes.user import user_bp  # Import user routes
@@ -27,16 +27,15 @@ app.config.from_object(Config)
 app.jinja_env.globals.update(get_current_time=get_current_time)
 app.jinja_env.globals.update(format_time_in_timezone=format_time_in_timezone)
 
-# Configure session to use filesystem
+# Configure session with secure defaults
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=1)
-app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_USE_SIGNER'] = True
 
 # Ensure CSRF is properly configured
-app.config['WTF_CSRF_ENABLED'] = False  # Disabled for Razorpay callbacks
+app.config['WTF_CSRF_ENABLED'] = True  # Enable CSRF protection
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour token validity
 
 # ✅ Initialize Flask-Mail
 mail = Mail(app)
@@ -68,10 +67,13 @@ def set_timezone():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# Middleware to handle timezone for each request
+# Middleware to handle timezone and session configuration for each request
 @app.before_request
-def check_timezone():
-    # Try to get timezone from request headers, fall back to session or cookie
+def before_request():
+    # Make sessions permanent by default
+    session.permanent = True
+    
+    # Handle timezone
     timezone = request.headers.get('X-User-Timezone')
     if not timezone:
         timezone = request.cookies.get('userTimezone')
@@ -99,19 +101,22 @@ app.register_blueprint(vadamala_bp, url_prefix="/vadamala") # Register vadamala 
 from routes.alankara import alankara_bp
 app.register_blueprint(alankara_bp, url_prefix="/alankara")
 
-# Make sessions permanent by default and refresh on each request
-@app.before_request
-def make_session_permanent():
-    session.permanent = True  # Use the permanent session lifetime defined above
-
 # Register error handlers
 @app.errorhandler(404)
 def page_not_found(e):
     return "Page not found", 404
 
+@app.errorhandler(401)
+def unauthorized(e):
+    return render_template('401.html'), 401
+
+@app.errorhandler(429)
+def too_many_requests(e):
+    return render_template('429.html'), 429
+
 @app.errorhandler(500)
 def internal_server_error(e):
-    return "Internal server error: " + str(e), 500
+    return render_template('500.html'), 500
 
 # ✅ Run the Application
 if __name__ == "__main__":

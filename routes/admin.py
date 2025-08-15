@@ -3,43 +3,104 @@ from database import seva_collection, seva_list, abhisheka_types, alankara_types
 from datetime import datetime, timezone
 from flask import flash
 from bson import ObjectId
+import os
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired
+import time
+from flask import current_app
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-ADMIN_CREDENTIALS = {"username": "admin", "password": "admin"}
+# Helper to get admin credentials from config/env at runtime
+
+def get_admin_credentials():
+	username = current_app.config.get("ADMIN_USERNAME") or os.getenv("ADMIN_USERNAME")
+	password = current_app.config.get("ADMIN_PASSWORD") or os.getenv("ADMIN_PASSWORD")
+	return {"username": username, "password": password}
+
+# Brute force protection settings
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = 300  # 5 minutes in seconds
+LOGIN_ATTEMPTS_KEY = "admin_login_attempts"
+LOCKOUT_UNTIL_KEY = "admin_lockout_until"
+
+class AdminLoginForm(FlaskForm):
+	"""Admin Login Form with CSRF protection"""
+	username = StringField('Username', validators=[DataRequired()])
+	password = PasswordField('Password', validators=[DataRequired()])
+	submit = SubmitField('Login')
 
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
-    """Admin Login Page"""
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+	"""Admin Login Page with CSRF and Brute Force Protection"""
+	current_time = time.time()
+	form = AdminLoginForm()
+	
+	# Check if account is locked out
+	lockout_until = session.get(LOCKOUT_UNTIL_KEY, 0)
+	if current_time < lockout_until:
+		remaining_time = int(lockout_until - current_time)
+		return render_template("admin/login.html", 
+							 form=form,
+							 message=f"Account temporarily locked. Try again in {remaining_time} seconds.",
+							 locked=True), 429
+	
+	if form.validate_on_submit():
+		# Reset lockout if time has passed
+		if current_time >= lockout_until:
+			session.pop(LOCKOUT_UNTIL_KEY, None)
+			session.pop(LOGIN_ATTEMPTS_KEY, None)
+		
+		username = form.username.data
+		password = form.password.data
 
-        if username == ADMIN_CREDENTIALS["username"] and password == ADMIN_CREDENTIALS["password"]:
-            session["admin"] = True
-            return redirect(url_for("general_admin.admin_dashboard"))
-        else:
-            return render_template("admin/login.html", message="Invalid credentials!")
+		creds = get_admin_credentials()
 
-    # Prevent caching of login page
-    response = make_response(render_template("admin/login.html"))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
+		# Check credentials
+		if username == creds.get("username") and password == creds.get("password"):
+			# Successful login - reset attempts
+			session.pop(LOGIN_ATTEMPTS_KEY, None)
+			session.pop(LOCKOUT_UNTIL_KEY, None)
+			session["admin"] = True
+			return redirect(url_for("general_admin.admin_dashboard"))
+		else:
+			# Failed login - increment attempts
+			attempts = session.get(LOGIN_ATTEMPTS_KEY, 0) + 1
+			session[LOGIN_ATTEMPTS_KEY] = attempts
+			
+			if attempts >= MAX_LOGIN_ATTEMPTS:
+				# Lock account
+				session[LOCKOUT_UNTIL_KEY] = current_time + LOCKOUT_DURATION
+				return render_template("admin/login.html", 
+								 form=form,
+								 message=f"Too many failed attempts. Account locked for {LOCKOUT_DURATION//60} minutes.",
+								 locked=True), 429
+			else:
+				remaining_attempts = MAX_LOGIN_ATTEMPTS - attempts
+				return render_template("admin/login.html", 
+								 form=form,
+								 message=f"Invalid credentials! {remaining_attempts} attempts remaining.")
+
+	# Prevent caching of login page
+	response = make_response(render_template("admin/login.html", form=form))
+	response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+	response.headers["Pragma"] = "no-cache"
+	response.headers["Expires"] = "0"
+	return response
 
 @admin_bp.route("/logout")
 def logout():
-    """Admin Logout"""
-    # Clear all session data
-    session.clear()
+	"""Admin Logout"""
+	# Clear all session data
+	session.clear()
 
-    # Prevent caching after logout
-    response = make_response(redirect(url_for("admin.login")))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
+	# Prevent caching after logout
+	response = make_response(redirect(url_for("admin.login")))
+	response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+	response.headers["Pragma"] = "no-cache"
+	response.headers["Expires"] = "0"
+	return response
 
 @admin_bp.route("/dashboard")
 def dashboard():

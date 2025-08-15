@@ -28,9 +28,9 @@
             </div>
             <div class="stat-info">
                 <span class="stat-category">Sevas</span>
-                <span class="stat-number">{{ seva_bookings_count }}</span>
-                <span class="stat-details">Total Bookings</span>
-                <span class="stat-details">{{ seva_types_count }} Types</span>
+                <span class="stat-number">{{ month_seva_bookings_count }}</span>
+                <span class="stat-details">This month's bookings</span>
+                <span class="stat-details">All-time: {{ seva_bookings_count }} bookings • {{ seva_types_count }} types</span>
             </div>
         </div>
 
@@ -41,9 +41,9 @@
             </div>
             <div class="stat-info">
                 <span class="stat-category">Donations</span>
-                <span class="stat-number">{{ donations_count }}</span>
-                <span class="stat-details">Total Donations</span>
-                <span class="stat-details">₹{{ donation_amount }}</span>
+                <span class="stat-number">₹{{ month_donation_amount }}</span>
+                <span class="stat-details">{{ month_donations_count }} donations this month</span>
+                <span class="stat-details">All-time donations: ₹{{ donation_amount }} </span>
             </div>
         </div>
 

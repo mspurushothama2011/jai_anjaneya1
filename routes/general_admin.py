@@ -6,7 +6,7 @@ from functools import wraps
 import csv
 import io
 import pandas as pd
-from dateutil import parser
+from dateutil import parser, tz
 import json
 from pymongo import MongoClient
 from utils import get_current_time
@@ -49,12 +49,80 @@ def admin_dashboard():
     seva_types_count = len(seva_types)
     seva_bookings = list(seva_collection.find())
     seva_bookings_count = len(seva_bookings)
+
+    # Current-month seva bookings count
+    month_seva_bookings_count = 0
+    now = get_current_time("Asia/Kolkata") if callable(get_current_time) else get_current_time
+    cm, cy = now.month, now.year
+
+    def to_ist_dt(val):
+        dt_local = None
+        if isinstance(val, datetime):
+            dt_local = val
+        elif isinstance(val, str):
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d-%m-%Y (%H:%M:%S)", "%d/%m/%Y", "%d/%m/%Y (%H:%M:%S)", "%Y/%m/%d"):
+                try:
+                    dt_local = datetime.strptime(val, fmt)
+                    break
+                except Exception:
+                    dt_local = None
+            if dt_local is None:
+                try:
+                    dt_local = parser.parse(val, dayfirst=True)
+                except Exception:
+                    dt_local = None
+        if dt_local:
+            ist = tz.gettz("Asia/Kolkata")
+            if dt_local.tzinfo:
+                dt_local = dt_local.astimezone(ist)
+            else:
+                dt_local = dt_local.replace(tzinfo=ist)
+        return dt_local
+
+    for b in seva_bookings:
+        dt_obj = to_ist_dt(b.get('seva_date'))
+        if dt_obj and dt_obj.month == cm and dt_obj.year == cy:
+            month_seva_bookings_count += 1
     
-    # Get donation statistics
+    # Get donation statistics (current month and totals)
     donations = list(donations_collection.find())
     donations_count = len(donations)
     donation_amount = sum(float(donation.get('amount', 0)) for donation in donations)
     donation_amount = round(donation_amount, 2)
+
+    # Calculate current month donations
+    month_donations_count = 0
+    month_donation_amount = 0.0
+    # Normalize to IST month/year to match donation_date creation
+    now = get_current_time("Asia/Kolkata") if callable(get_current_time) else get_current_time
+    current_month = now.month
+    current_year = now.year
+
+    for d in donations:
+        dd = d.get('donation_date')
+        if not dd:
+            continue
+        dt = None
+        if isinstance(dd, datetime):
+            dt = dd
+        elif isinstance(dd, str):
+            # Try known formats then fall back to dateutil
+            for fmt in ("%d-%m-%Y (%H:%M:%S)", "%Y-%m-%d", "%d-%m-%Y"):
+                try:
+                    dt = datetime.strptime(dd, fmt)
+                    break
+                except Exception:
+                    dt = None
+            if dt is None:
+                try:
+                    dt = parser.parse(dd)
+                except Exception:
+                    dt = None
+        if dt and dt.month == current_month and dt.year == current_year:
+            month_donations_count += 1
+            month_donation_amount += float(d.get('amount', 0))
+
+    month_donation_amount = round(month_donation_amount, 2)
     
     # Get user statistics
     users = list(user_collection.find())
@@ -70,7 +138,10 @@ def admin_dashboard():
         donations_count=donations_count,
         donation_amount=donation_amount,
         users_count=users_count,
-        verified_users_count=verified_users_count
+        verified_users_count=verified_users_count,
+        month_donations_count=month_donations_count,
+        month_donation_amount=month_donation_amount,
+        month_seva_bookings_count=month_seva_bookings_count
     )
 
 @general_admin_bp.route("/manage_sevas")
@@ -175,24 +246,55 @@ def reports():
     report_type = request.args.get('type', 'seva')  # Default to seva if not specified
     
     if report_type == 'seva':
-        # New: Get seva_name filter from query params
+        # Get all filter parameters
         seva_name_filter = request.args.get('seva_name', None)
-        # Pagination parameters
-        page = int(request.args.get('page', 1))
-        per_page = 50
-        skip = (page - 1) * per_page
-
-        # Build query
+        date_filter = request.args.get('date_filter')
+        
+        # Build database query
         query = {}
         if seva_name_filter:
             query['seva_name'] = seva_name_filter
-
-        # Get total count for pagination
+        
+        # Apply date filter at database level if possible
+        if date_filter:
+            try:
+                filter_date = datetime.strptime(date_filter, '%Y-%m-%d')
+                # Add date range to query for better performance
+                start_date = filter_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_date = filter_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+                query['seva_date'] = {'$gte': start_date, '$lte': end_date}
+            except ValueError:
+                flash("Invalid date format. Please use the date picker to select a valid date.", "error")
+                # Reset date filter if invalid
+                date_filter = None
+        
+        # Get total count for pagination (after applying all filters)
         total_bookings = seva_collection.count_documents(query)
-        total_pages = (total_bookings + per_page - 1) // per_page
-
-        # Get only the bookings for the current page
-        bookings = list(seva_collection.find(query).skip(skip).limit(per_page))
+        
+        # Pagination parameters
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        total_pages = (total_bookings + per_page - 1) // per_page if total_bookings > 0 else 0
+        
+        # Validate page number
+        if page < 1:
+            page = 1
+        elif total_pages > 0 and page > total_pages:
+            page = total_pages
+            
+        skip = (page - 1) * per_page
+        
+        # Get paginated results with sorting
+        bookings = list(seva_collection.find(query).skip(skip).limit(per_page).sort('seva_date', -1))
+        
+        # Add flash message if no bookings found after filtering
+        if total_bookings == 0 and (seva_name_filter or date_filter):
+            filter_message = []
+            if seva_name_filter:
+                filter_message.append(f"seva name: {seva_name_filter}")
+            if date_filter:
+                filter_message.append(f"date: {date_filter}")
+            flash(f"No seva bookings found for {' and '.join(filter_message)}", "info")
         
         # Process the bookings to ensure all have seva_date in a comparable format
         enhanced_bookings = []
@@ -298,45 +400,35 @@ def reports():
             
             enhanced_bookings.append(booking)
         
-        # Apply date filter if provided
-        date_filter = request.args.get('date_filter')
-        filtered_bookings = enhanced_bookings
-        if date_filter:
-            try:
-                # Convert the input date string to a datetime object
-                filter_date = datetime.strptime(date_filter, '%Y-%m-%d')
-                
-                # Filter bookings to only include those matching the selected date
-                filtered_bookings = []
-                for booking in enhanced_bookings:
-                    if isinstance(booking.get('seva_date_for_sort'), datetime):
-                        # Compare only year, month and day (ignore time)
-                        booking_date = booking['seva_date_for_sort']
-                        if (booking_date.year == filter_date.year and 
-                            booking_date.month == filter_date.month and 
-                            booking_date.day == filter_date.day):
-                            filtered_bookings.append(booking)
-                
-                # If no bookings found after filtering, add a flash message
-                if not filtered_bookings:
-                    flash(f"No seva bookings found for date: {filter_date.strftime('%d-%m-%Y')}", "info")
-            except ValueError:
-                # If date parsing fails, show error message
-                flash("Invalid date format. Please use the date picker to select a valid date.", "error")
-                filtered_bookings = enhanced_bookings  # Fallback to unfiltered list
-        
         # Sort bookings by seva_date_for_sort in descending order (newest to oldest)
-        filtered_bookings.sort(key=lambda x: x['seva_date_for_sort'] if isinstance(x.get('seva_date_for_sort'), datetime) else datetime(1900, 1, 1), reverse=True)
+        enhanced_bookings.sort(key=lambda x: x['seva_date_for_sort'] if isinstance(x.get('seva_date_for_sort'), datetime) else datetime(1900, 1, 1), reverse=True)
         
         return render_template("admin/admin_reports.html", 
                               report_type='seva',
-                              bookings=filtered_bookings,
+                              bookings=enhanced_bookings,
                               page=page,
                               total_pages=total_pages,
                               total_bookings=total_bookings)
     else:
         # Get all donations with joined data from related collections
-        donations = list(donations_collection.find().sort('donation_date', -1))
+        # Add pagination for donations
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        
+        # Get total count for pagination
+        total_donations = donations_collection.count_documents({})
+        total_pages = (total_donations + per_page - 1) // per_page if total_donations > 0 else 0
+        
+        # Validate page number
+        if page < 1:
+            page = 1
+        elif total_pages > 0 and page > total_pages:
+            page = total_pages
+            
+        skip = (page - 1) * per_page
+        
+        # Get paginated donations
+        donations = list(donations_collection.find().skip(skip).limit(per_page).sort('donation_date', -1))
         enhanced_donations = []
         
         for donation in donations:
@@ -413,7 +505,10 @@ def reports():
         
         return render_template("admin/admin_reports.html", 
                               report_type='donation',
-                              donations=enhanced_donations)
+                              donations=enhanced_donations,
+                              page=page,
+                              total_pages=total_pages,
+                              total_donations=total_donations)
 
 @general_admin_bp.route("/update_seva_status", methods=["POST"])
 @admin_required

@@ -118,35 +118,6 @@
                         </form>
                     </div>
                 </div>
-                
-                <div class="donation-benefits mt-4 text-center">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i class="fas fa-receipt"></i>
-                                </div>
-                                <div class="benefit-text">Tax Receipt Provided</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i class="fas fa-lock"></i>
-                                </div>
-                                <div class="benefit-text">Secure Payment</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i class="fas fa-pray"></i>
-                                </div>
-                                <div class="benefit-text">Divine Blessings</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -307,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 key: '{{ razorpay_key_id }}', // Your Razorpay Key ID
                 amount: order.amount,
                 currency: order.currency,
-                name: 'Temple Management',
+                name: 'Donation',
                 description: donationDetails.donation_name + ' Donation',
                 order_id: order.id,
                 handler: function (response) {

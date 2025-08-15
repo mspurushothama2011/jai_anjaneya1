@@ -154,9 +154,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const options = {
             key: "{{ razorpay_key }}",
-            amount: amount * 100, // Amount in paise
+            amount: null, // Will be set from order response
             currency: "INR",
-            name: "Temple Seva Booking",
+            name: "Abhisheka Seva Booking",
             description: `Abhisheka - ${sevaType}`,
             order_id: null, // This will be set after creating order
             handler: function (response) {
@@ -201,7 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     seva_id: selectedTypeId,
                     seva_name: "Abhisheka",
                     type_name: sevaType,
-                    price: amount,
                     seva_date: sevaDate
                 })
             });
@@ -212,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             options.order_id = order.id;
+            options.amount = order.amount; // Use amount from order response
             const rzp = new Razorpay(options);
             
             // Hide overlay when Razorpay form opens

@@ -21,7 +21,7 @@
     <div class="reports-content">
         {% if report_type == 'seva' %}
             <div class="reports-header">
-                <h2><i class="fas fa-praying-hands"></i> Seva Bookings ({{ bookings|length }})</h2>
+                <h2><i class="fas fa-praying-hands"></i> Seva Bookings ({{ total_bookings }})</h2>
                 
                 <!-- Date Filter Form -->
                 <div class="filter-container">
@@ -110,17 +110,17 @@
                 <ul class="pagination">
                     {# Previous button #}
                     <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page-1, date_filter=request.args.get('date_filter', '')) }}">Previous</a>
+                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page-1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Previous</a>
                     </li>
                     {# Page numbers #}
                     {% for p in range(1, total_pages+1) %}
                         <li class="page-item {% if p == page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=p, date_filter=request.args.get('date_filter', '')) }}">{{ p }}</a>
+                            <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=p, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">{{ p }}</a>
                         </li>
                     {% endfor %}
                     {# Next button #}
                     <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page+1, date_filter=request.args.get('date_filter', '')) }}">Next</a>
+                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page+1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Next</a>
                     </li>
                 </ul>
                 <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_bookings }} bookings)</span>
@@ -132,7 +132,7 @@
                 </div>
             {% endif %}
         {% else %}
-            <h2><i class="fas fa-hand-holding-heart"></i> Donations ({{ donations|length }})</h2>
+            <h2><i class="fas fa-hand-holding-heart"></i> Donations ({{ total_donations }})</h2>
             {% if donations %}
                 <div class="table-responsive">
                     <table class="reports-table donation-table">
@@ -168,6 +168,29 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {# Pagination for donations #}
+                {% if total_pages and total_pages > 1 %}
+                <div class="pagination-container">
+                    <ul class="pagination">
+                        {# Previous button #}
+                        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=page-1) }}">Previous</a>
+                        </li>
+                        {# Page numbers #}
+                        {% for p in range(1, total_pages+1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=p) }}">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                        {# Next button #}
+                        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=page+1) }}">Next</a>
+                        </li>
+                    </ul>
+                    <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_donations }} donations)</span>
+                </div>
+                {% endif %}
             {% else %}
                 <div class="no-data">
                     <p>No donations found in the system.</p>

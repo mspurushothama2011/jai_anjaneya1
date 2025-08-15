@@ -25,6 +25,10 @@ class Config:
     # Razorpay Credentials
     RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
     RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+    # Admin credentials
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
     
     # Session configuration for production
     if PRODUCTION:

@@ -25,20 +25,23 @@
         {% endwith %}
 
         <form method="POST" class="login-form">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="email"><i class="fas fa-envelope"></i> Email</label>
-                <input type="email" id="email" name="email" class="form-control" required>
+                <label for="{{ form.email.id }}"><i class="fas fa-envelope"></i> Email</label>
+                {{ form.email(class="form-control", required=true) }}
             </div>
 
             <div class="form-group">
-                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <label for="{{ form.password.id }}"><i class="fas fa-lock"></i> Password</label>
                 <div class="password-wrapper">
-                    <input type="password" id="password" name="password" class="form-control" required>
+                    {{ form.password(class="form-control", required=true) }}
                     <i class="fas fa-eye-slash" id="togglePassword"></i>
                 </div>
             </div>
 
-            <button type="submit" class="btn-login">Login <i class="fas fa-sign-in-alt"></i></button>
+            <button type="submit" class="btn-login" {% if locked %}disabled{% endif %}>
+                {% if locked %}Account Locked{% else %}Login{% endif %} <i class="fas fa-sign-in-alt"></i>
+            </button>
             
             <div class="login-links">
                 <a href="{{ url_for('user.forgot_password') }}" class="forgot-link"><i class="fas fa-key"></i> Forgot Password?</a>
@@ -192,6 +195,15 @@
     
     .btn-login:hover {
         background-color: #872929;
+    }
+    
+    .btn-login:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .btn-login:disabled:hover {
+        background-color: #ccc;
     }
     
     .login-links {

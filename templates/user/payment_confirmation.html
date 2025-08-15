@@ -8,11 +8,11 @@
         <div class="col-lg-7 mx-auto">
             {% if seva_booking %}
             <div class="card border-0 shadow-lg">
-                <div class="card-header {% if is_canceled %}bg-danger{% else %}bg-success{% endif %} text-white py-3 text-center">
+                <div class="card-header {% if is_canceled %}bg-danger{% else %}bg-success{% endif %} text-white py-3">
                     <h4 class="mb-0">{% if is_canceled %}Payment Canceled{% else %}Payment Confirmation{% endif %}</h4>
                 </div>
                 <div class="card-body p-4">
-                    <div class="text-center mb-4">
+                    <div class="mb-4">
                         <div class="{% if is_canceled %}failure-animation{% else %}success-animation{% endif %}">
                             {% if is_canceled %}
                             <div id="errorAnimation" style="width: 150px; height: 150px; margin: 0 auto;"></div>
@@ -143,7 +143,7 @@
                             </div>
                         {% endif %}
 
-                    <div class="text-center mt-4 action-buttons">
+                    <div class="mt-4 action-buttons">
                         {% if not is_canceled %}
                         <a href="{{ url_for('payment.confirmation_receipt', payment_type='seva', order_id=seva_booking.order_id) }}" class="btn btn-success" target="_blank">
                             <i class="fas fa-download me-2"></i> Download Receipt
@@ -164,10 +164,10 @@
             </div>
             {% else %}
             <div class="card border-0 shadow-lg">
-                <div class="card-header bg-warning text-white py-3 text-center">
+                <div class="card-header bg-warning text-white py-3">
                     <h4 class="mb-0">Booking Information</h4>
                 </div>
-                <div class="card-body p-4 text-center">
+                <div class="card-body p-4">
                     <div class="py-4">
                         <i class="fas fa-exclamation-circle text-warning" style="font-size: 5rem;"></i>
                         <h3 class="mt-4 fw-bold">No Booking Found</h3>
@@ -357,6 +357,17 @@
         .action-buttons .btn {
             margin-bottom: 0.5rem;
         }
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    
+    .action-buttons .btn {
+        margin: 0;
     }
 </style>
 

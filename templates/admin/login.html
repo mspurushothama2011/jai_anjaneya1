@@ -20,25 +20,26 @@
             {% endif %}
             
             <form method="POST" action="/admin/login">
+                {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="username">
+                    <label for="{{ form.username.id }}">
                         <i class="fas fa-user"></i> Username
                     </label>
-                    <input type="text" id="username" name="username" required>
+                    {{ form.username(class="form-control", required=true) }}
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">
+                    <label for="{{ form.password.id }}">
                         <i class="fas fa-lock"></i> Password
                     </label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" name="password" required>
+                        {{ form.password(class="form-control", required=true) }}
                         <i class="fas fa-eye-slash" id="togglePassword"></i>
                     </div>
                 </div>
                 
-                <button type="submit" class="login-button">
-                    <i class="fas fa-sign-in-alt"></i> Login
+                <button type="submit" class="login-button" {% if locked %}disabled{% endif %}>
+                    <i class="fas fa-sign-in-alt"></i> {% if locked %}Account Locked{% else %}Login{% endif %}
                 </button>
             </form>
             
@@ -161,16 +162,19 @@
         margin-right: 8px;
     }
     
-    .form-group input {
+    .form-group input,
+    .form-group .form-control {
         width: 100%;
         padding: 12px 15px;
         border: 1px solid #ddd;
         border-radius: 8px;
         font-size: 1rem;
         transition: all 0.3s ease;
+        box-sizing: border-box;
     }
     
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group .form-control:focus {
         border-color: #FF7F00;
         box-shadow: 0 0 0 3px rgba(255, 127, 0, 0.2);
         outline: none;
@@ -195,6 +199,15 @@
     
     .login-button:hover {
         background-color: #e65100;
+    }
+    
+    .login-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .login-button:disabled:hover {
+        background-color: #ccc;
     }
     
     .back-link {
@@ -246,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const togglePassword = document.querySelector('#togglePassword');
     const password = document.querySelector('#password');
 
-    if (togglePassword) {
+    if (togglePassword && password) {
         togglePassword.addEventListener('click', function (e) {
             // toggle the type attribute
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';

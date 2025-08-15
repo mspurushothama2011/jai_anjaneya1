@@ -204,9 +204,9 @@
             // Initialize Razorpay checkout
             const options = {
                 key: "{{ config.RAZORPAY_KEY_ID }}",
-                amount: "{{ seva.seva_price }}" * 100, // Amount in paise
+                amount: orderData.amount, // Use amount from order response instead of session
                 currency: "INR",
-                name: "Shri Veeranjaneya Swamy ",
+                name: "Pooja/Vratha Seva Booking",
                 description: "Seva Booking Payment",
                 order_id: orderData.id,
                 handler: function(response) {

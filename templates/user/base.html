@@ -10,12 +10,81 @@
     <title>{% block title %}Sri Veeranjaneya Swamy Temple{% endblock %}</title>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Lottie Animation Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.6/lottie.min.js"></script>
     <!-- User timezone detection -->
     <script src="{{ url_for('static', filename='js/timezone.js') }}"></script>
+    
+    <!-- Loading Screen Styles -->
+    <style>
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FF7F00, #FF9033);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .om-symbol {
+            font-size: 48px;
+            color: white;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        /* Hide main content until loaded */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        
+        .main-content.loaded {
+            opacity: 1;
+        }
+    </style>
     <style>
         /* Global Styles */
         * {
@@ -58,7 +127,8 @@
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
+            white-space: nowrap;
             font-weight: 700;
             color: black;
             text-decoration: none;
@@ -95,7 +165,7 @@
         
         .nav-link {
             text-decoration: none;
-            color: #444;
+            color: #444 !important;
             font-weight: 500;
             font-size: 0.95rem;
             transition: color 0.3s;
@@ -115,11 +185,20 @@
         }
         
         .nav-link:hover {
-            color: whitesmoke;
+            color: whitesmoke !important;
         }
         
         .nav-link:hover:after {
             width: 100%;
+        }
+        
+        /* Ensure navigation links maintain proper color */
+        .navbar .nav-links .nav-link {
+            color: #444 !important;
+        }
+        
+        .navbar .nav-links .nav-link:hover {
+            color: whitesmoke !important;
         }
         
         /* Auth Buttons */
@@ -485,6 +564,7 @@
         min-width: 250px;
         margin-bottom: 30px;
         padding: 0 15px;
+        text-align: left;
     }
     
     .footer-logo {
@@ -496,7 +576,7 @@
     .footer-logo-icon {
         width: 40px;
         height: 40px;
-        background-color: #FFC436;
+        background-color: #FFD700 !important;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -512,6 +592,7 @@
         margin: 0;
         max-width: 180px;
         line-height: 1.3;
+        text-align: left;
     }
     
     .footer-description {
@@ -519,14 +600,17 @@
         font-size: 14px;
         line-height: 1.6;
         margin-top: 15px;
+        text-align: left;
     }
     
     .footer-column h4 {
-        color: #FFC436;
+        color: #FFD700 !important;
         font-size: 18px;
         margin-bottom: 20px;
         position: relative;
         padding-bottom: 10px;
+        text-align: left;
+        font-weight: 700;
     }
     
     .footer-column h4:after {
@@ -536,7 +620,20 @@
         bottom: 0;
         width: 50px;
         height: 2px;
-        background-color: #FFC436;
+        background-color: #FFD700 !important;
+    }
+    
+    /* Ensure all footer text is left-aligned */
+    .footer-column * {
+        text-align: left;
+    }
+    
+    .footer-column ul {
+        text-align: left;
+    }
+    
+    .footer-column li {
+        text-align: left;
     }
     
     .footer-links, .temple-hours, .contact-info {
@@ -558,7 +655,7 @@
     }
     
     .footer-links a:hover {
-        color: #FFC436;
+        color: #FFD700 !important;
         transform: translateX(5px);
     }
     
@@ -569,7 +666,7 @@
     }
     
     .temple-hours li span {
-        color: #FFC436;
+        color: #FFD700 !important;
         font-weight: 500;
         margin-right: 5px;
     }
@@ -583,7 +680,7 @@
     }
     
     .contact-info li i {
-        color: #FFC436;
+        color: #FFD700 !important;
         margin-right: 10px;
         font-size: 16px;
         margin-top: 3px;
@@ -614,7 +711,7 @@
     }
     
     .social-link:hover {
-        background-color: #FFC436;
+        background-color: #FFD700 !important;
         color: #241468;
         transform: translateY(-3px);
     }
@@ -711,13 +808,14 @@
         position: absolute;
         top: 100%;
         left: 0;
-        background: white;
+        background: white !important;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         min-width: 180px;
         z-index: 1000;
         padding: 8px 0;
         margin-top: 5px;
+        text-align: left;
     }
     
     .nav-dropdown-menu.show {
@@ -729,15 +827,40 @@
         display: block;
         padding: 10px 16px;
         text-decoration: none;
-        color: #333;
+        color: #333 !important;
         font-size: 14px;
         transition: all 0.2s;
+        text-align: left;
+        text-align-last: left;
     }
     
     .dropdown-item:hover {
-        background: #f8f9fa ;
-        color: #FF6B00;
+        color: #FF6B00 !important;
         padding-left: 20px;
+    }
+    
+    /* Ensure dropdown items are left-aligned */
+    .nav-dropdown-menu .dropdown-item {
+        text-align: left !important;
+        text-align-last: left !important;
+        justify-content: flex-start;
+        align-items: flex-start;
+        display: block !important;
+        width: 100%;
+        color: #333 !important;
+    }
+    
+    .nav-dropdown-menu .dropdown-item:hover {
+        color: #FF6B00 !important;
+    }
+    
+    /* Override any inherited text alignment */
+    .nav-dropdown-menu {
+        text-align: left !important;
+    }
+    
+    .nav-dropdown-menu * {
+        text-align: left !important;
     }
 </style>
 
@@ -826,15 +949,44 @@
             }
         });
     </script>
+    <style>
+        /* Prevent FOUC: hide content until styles/fonts are ready */
+        html.fouc-prevent body { visibility: hidden; }
+        /* Optional: provide a minimal skeleton container if desired */
+        .fouc-skeleton { display: none; }
+        html.fouc-prevent .fouc-skeleton { display: block; }
+    </style>
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('fouc-prevent');
+            function reveal() { root.classList.remove('fouc-prevent'); }
+            if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+                document.fonts.ready.then(function () { requestAnimationFrame(reveal); });
+            } else {
+                window.addEventListener('load', reveal);
+            }
+            setTimeout(reveal, 3000);
+        })();
+    </script>
 </head>
 <body>
-    <header class="header">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="om-symbol">ॐ</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Divine Experience...</div>
+    </div>
+    
+    <!-- Main Content Wrapper -->
+    <div class="main-content">
+        <header class="header">
         <nav class="navbar">
             <a href="/" class="logo">
                 <div class="logo-icon">
                     <img src="{{ url_for('static', filename='images/temple_logo.png') }}" alt="Temple Logo" class="logo-image">
                 </div>
-                ಶ್ರೀ ವೀರಾಂಜನೇಯ ಸ್ವಾಮಿ ದೇವಸ್ಥಾನ  &nbsp &nbsp&nbsp            
+                ಶ್ರೀ ವೀರಾಂಜನೇಯ ಸ್ವಾಮಿ   &nbsp &nbsp&nbsp            
             </a>
         
         <div class="nav-links">
@@ -951,5 +1103,44 @@
             </div>
         </div>
     </footer>
+    </div> <!-- End of main-content wrapper -->
+    
+    <!-- Loading Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for all resources to load
+            window.addEventListener('load', function() {
+                // Hide loading screen
+                const loadingScreen = document.getElementById('loading-screen');
+                const mainContent = document.querySelector('.main-content');
+                
+                // Fade out loading screen
+                loadingScreen.classList.add('fade-out');
+                
+                // Show main content
+                mainContent.classList.add('loaded');
+                
+                // Remove loading screen after animation
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            });
+            
+            // Fallback: Hide loading screen after 3 seconds if load event doesn't fire
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                const mainContent = document.querySelector('.main-content');
+                
+                if (loadingScreen && !mainContent.classList.contains('loaded')) {
+                    loadingScreen.classList.add('fade-out');
+                    mainContent.classList.add('loaded');
+                    
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 3000);
+        });
+    </script>
 </body>
 </html>

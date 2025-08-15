@@ -3,7 +3,47 @@
 {% block title %}Temple Events{% endblock %}
 
 {% block content %}
+<!-- Events Hero Section -->
+<section class="events-hero-section">
+    <div class="events-hero-content">
+        <h1 class="events-hero-title">Temple Events</h1>
+        <p class="events-hero-subtitle">Discover and participate in our upcoming spiritual events, festivals, and special celebrations.</p>
+    </div>
+</section>
+
 <style>
+    /* Events Hero Section Styles */
+    .events-hero-section {
+        background: linear-gradient(135deg, #f4b400, #ff7300);
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 3rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .events-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .events-hero-title {
+        color: white;
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .events-hero-subtitle {
+        color: white;
+        font-size: 1.3rem;
+        margin-bottom: 0;
+        line-height: 1.6;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
     .events-hero {
         background-color: #f8f9fa;
         padding: 60px 0 30px;
@@ -149,16 +189,39 @@
             margin-right: 10px;
             font-size: 1.8rem;
         }
+        
+        /* Responsive Events Hero */
+        .events-hero-section {
+            padding: 2.5rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .events-hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .events-hero-subtitle {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .events-hero-section {
+            padding: 2rem 1rem;
+            border-radius: 0;
+        }
+        
+        .events-hero-title {
+            font-size: 2rem;
+        }
+        
+        .events-hero-subtitle {
+            font-size: 1rem;
+        }
     }
 </style>
 
-<div class="events-hero">
-    <div class="container">
-        <h1 class="events-title">Temple Events</h1>
-        <p class="events-subtitle">Stay updated with our upcoming events and celebrations</p>
-        <div class="om-symbol">ॐ</div>
-    </div>
-</div>
+
 
 <div class="events-section">
     <div class="container">

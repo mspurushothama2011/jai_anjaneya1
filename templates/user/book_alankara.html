@@ -173,8 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
             paymentOverlay.style.display = 'none';
             const options = {
                 key: "{{ razorpay_key }}",
+                amount: order.amount, // Use amount from order response
                 order_id: order.id,
-                name: "Temple Seva Booking",
+                name: "Alankara Seva Booking",
                 description: `Alankara Seva: ${selectedTypeOption.value}`,
                 handler: async function (response) {
                     // Show overlay again after Razorpay form closes

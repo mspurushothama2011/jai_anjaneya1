@@ -10,6 +10,24 @@
     <title>{% block title %}Sri Veeranjaneya Swamy Temple - Admin{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        html.fouc-prevent body { visibility: hidden; }
+        .fouc-skeleton { display: none; }
+        html.fouc-prevent .fouc-skeleton { display: block; }
+    </style>
+    <script>
+        (function(){
+            var root = document.documentElement;
+            root.classList.add('fouc-prevent');
+            function reveal(){ root.classList.remove('fouc-prevent'); }
+            if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+                document.fonts.ready.then(function(){ requestAnimationFrame(reveal); });
+            } else {
+                window.addEventListener('load', reveal);
+            }
+            setTimeout(reveal, 3000);
+        })();
+    </script>
+    <style>
         /* Global Styles */
         * {
             margin: 0;

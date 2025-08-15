@@ -132,11 +132,20 @@ def abhisheka_payment():
         seva_id = data.get("seva_id")
         seva_name = data.get("seva_name")
         type_name = data.get("type_name")
-        amount = float(data.get("price", 0))
         seva_date = data.get("seva_date")
 
-        if not all([seva_id, seva_name, type_name, amount, seva_date]):
+        if not all([seva_id, seva_name, type_name, seva_date]):
             return jsonify({"error": "Missing required fields"}), 400
+
+        # Get amount from database for security
+        from database import abhisheka_types
+        abhisheka_details = abhisheka_types.find_one({"_id": ObjectId(seva_id)})
+        if not abhisheka_details:
+            return jsonify({"error": "Invalid Abhisheka ID"}), 400
+        
+        amount = float(abhisheka_details.get("price", 0))
+        if amount <= 0:
+            return jsonify({"error": "Invalid price for the selected abhisheka."}), 400
 
         # Store payment type in session
         session["payment_type"] = "abhisheka"

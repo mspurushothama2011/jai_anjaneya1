@@ -9,12 +9,28 @@ import random
 from bson.objectid import ObjectId
 from utils import get_current_time
 from datetime import datetime
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email
+import time
 
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
 
 mail = Mail()
 serializer = URLSafeTimedSerializer("SECRET_KEY")  # Replace with actual secret key
+
+# Brute force protection settings for user login
+USER_MAX_LOGIN_ATTEMPTS = 5
+USER_LOCKOUT_DURATION = 300  # 5 minutes in seconds
+USER_LOGIN_ATTEMPTS_KEY = "user_login_attempts"
+USER_LOCKOUT_UNTIL_KEY = "user_lockout_until"
+
+class UserLoginForm(FlaskForm):
+    """User Login Form with CSRF protection"""
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
 
 # ----------------------------------
@@ -206,9 +222,32 @@ def send_verification_email(email, token):
 
 @user_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+    """User Login with CSRF and Brute Force Protection"""
+    current_time = time.time()
+    form = UserLoginForm()
+    
+    # Debug: Print session info at start
+    print(f"DEBUG START: Session ID: {id(session)}")
+    print(f"DEBUG START: Session data: {dict(session)}")
+    print(f"DEBUG START: Lockout until: {session.get(USER_LOCKOUT_UNTIL_KEY, 0)}")
+    print(f"DEBUG START: Login attempts: {session.get(USER_LOGIN_ATTEMPTS_KEY, 0)}")
+    
+    # Check if account is locked out
+    lockout_until = session.get(USER_LOCKOUT_UNTIL_KEY, 0)
+    if current_time < lockout_until:
+        remaining_time = int(lockout_until - current_time)
+        flash(f"Account temporarily locked. Try again in {remaining_time} seconds.", "danger")
+        return render_template('429.html'), 429
+    
+    if form.validate_on_submit():
+        # Reset lockout only if it was set and has expired
+        if lockout_until and current_time >= lockout_until:
+            session.pop(USER_LOCKOUT_UNTIL_KEY, None)
+            session.pop(USER_LOGIN_ATTEMPTS_KEY, None)
+            session.modified = True
+        
+        email = form.email.data
+        password = form.password.data
 
         # Fetch user from MongoDB
         user = user_collection.find_one({"email": email})
@@ -218,24 +257,90 @@ def login():
             verified = user.get("verified", False)
 
             if not hashed_password:
-                flash("Invalid password stored! Please reset your password.", "danger")
-                return redirect(url_for("user.login"))
+                # Increment attempts for invalid password storage
+                attempts = session.get(USER_LOGIN_ATTEMPTS_KEY, 0) + 1
+                session[USER_LOGIN_ATTEMPTS_KEY] = attempts
+                session.modified = True
+                
+                if attempts >= USER_MAX_LOGIN_ATTEMPTS:
+                    session[USER_LOCKOUT_UNTIL_KEY] = current_time + USER_LOCKOUT_DURATION
+                    session.modified = True
+                    flash(f"Too many failed attempts. Account locked for {USER_LOCKOUT_DURATION//60} minutes.", "danger")
+                    return render_template("user/login.html", form=form, locked=True), 429
+                else:
+                    remaining_attempts = USER_MAX_LOGIN_ATTEMPTS - attempts
+                    flash(f"Invalid password stored! {remaining_attempts} attempts remaining.", "danger")
+                return render_template("user/login.html", form=form)
 
             if not verified:
-                flash("Please verify your email before logging in.", "warning")
-                return redirect(url_for("user.login"))
+                # Increment attempts for unverified account
+                attempts = session.get(USER_LOGIN_ATTEMPTS_KEY, 0) + 1
+                session[USER_LOGIN_ATTEMPTS_KEY] = attempts
+                session.modified = True
+                
+                if attempts >= USER_MAX_LOGIN_ATTEMPTS:
+                    session[USER_LOCKOUT_UNTIL_KEY] = current_time + USER_LOCKOUT_DURATION
+                    session.modified = True
+                    flash(f"Too many failed attempts. Account locked for {USER_LOCKOUT_DURATION//60} minutes.", "danger")
+                    return render_template("user/login.html", form=form, locked=True), 429
+                else:
+                    remaining_attempts = USER_MAX_LOGIN_ATTEMPTS - attempts
+                    flash(f"Please verify your email before logging in. {remaining_attempts} attempts remaining.", "warning")
+                return render_template("user/login.html", form=form)
 
             # Validate hashed password using bcrypt
             if bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8")):
+                # Successful login - reset attempts
+                session.pop(USER_LOGIN_ATTEMPTS_KEY, None)
+                session.pop(USER_LOCKOUT_UNTIL_KEY, None)
                 session["user_id"] = str(user["_id"])  # Store user ID in session
                 flash("Login successful!", "success")
                 return redirect(url_for("general.home"))
             else:
-                flash("Incorrect password! Please try again.", "danger")
+                # Failed login - increment attempts
+                attempts = int(session.get(USER_LOGIN_ATTEMPTS_KEY, 0)) + 1
+                session[USER_LOGIN_ATTEMPTS_KEY] = attempts
+                session.modified = True
+                
+                if attempts >= USER_MAX_LOGIN_ATTEMPTS:
+                    # Lock account
+                    session[USER_LOCKOUT_UNTIL_KEY] = current_time + USER_LOCKOUT_DURATION
+                    flash(f"Too many failed attempts. Account locked for {USER_LOCKOUT_DURATION//60} minutes.", "danger")
+                    return render_template('429.html'), 429
+                else:
+                    remaining_attempts = USER_MAX_LOGIN_ATTEMPTS - attempts
+                    flash(f"Incorrect password! {remaining_attempts} attempts remaining.", "danger")
         else:
-            flash("Email not found! Please check your email or register a new account.", "danger")
+            # Email not found - increment attempts
+            attempts = int(session.get(USER_LOGIN_ATTEMPTS_KEY, 0)) + 1
+            session[USER_LOGIN_ATTEMPTS_KEY] = attempts
+            
+            # Mark session as modified to ensure it's saved
+            session.modified = True
+            
+            # Debug logging
+            print(f"DEBUG: Session ID: {id(session)}")
+            print(f"DEBUG: Current attempts: {attempts}")
+            print(f"DEBUG: Session data: {dict(session)}")
+            print(f"DEBUG: Session modified: {session.modified}")
+            
+            if attempts >= USER_MAX_LOGIN_ATTEMPTS:
+                # Lock account
+                session[USER_LOCKOUT_UNTIL_KEY] = current_time + USER_LOCKOUT_DURATION
+                session.modified = True  # Mark as modified again
+                flash(f"Too many failed attempts. Account locked for {USER_LOCKOUT_DURATION//60} minutes.", "danger")
+                return render_template("user/login.html", form=form, locked=True), 429
+            else:
+                remaining_attempts = USER_MAX_LOGIN_ATTEMPTS - attempts
+                flash(f"Email not found! {remaining_attempts} attempts remaining.", "danger")
 
-    return render_template("user/login.html")
+    # Debug: Print session info at end
+    print(f"DEBUG END: Session ID: {id(session)}")
+    print(f"DEBUG END: Session data: {dict(session)}")
+    print(f"DEBUG END: Lockout until: {session.get(USER_LOCKOUT_UNTIL_KEY, 0)}")
+    print(f"DEBUG END: Login attempts: {session.get(USER_LOGIN_ATTEMPTS_KEY, 0)}")
+    
+    return render_template("user/login.html", form=form)
 
 
 @user_bp.route("/logout")

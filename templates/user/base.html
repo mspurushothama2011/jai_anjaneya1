@@ -8,6 +8,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>{% block title %}Sri Veeranjaneya Swamy Temple{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/temple_logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/temple_logo.png') }}">
+    <!-- Open Graph / Search Support -->
+    <meta property="og:image" content="{{ url_for('static', filename='images/temple_logo.png', _external=True) }}">
+    <meta property="og:title" content="Sri Veeranjaneya Swamy Temple">
+    <meta property="og:description" content="Official website of Sri Veeranjaneya Swamy Temple, GM Palya, Bengaluru.">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main CSS file -->

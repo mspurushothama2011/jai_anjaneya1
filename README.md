@@ -6,11 +6,14 @@ A web-based temple management system built with Flask and MongoDB.
 
 - User authentication and management
 - Seva (ritual service) booking and management
+- **Gallery Management**: Upload and manage temple photos with automatic optimization
+- **Announcement System**: Send professional emails to devotees directly from the admin panel
 - Donation management
 - Event calendar and management
 - Admin dashboard with reports
 - E-Hundi (digital donation) services
 - Payment integration with Razorpay
+- **Security**: Robust CSRF protection and filtered inputs
 
 ## Technology Stack
 

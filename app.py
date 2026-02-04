@@ -47,6 +47,7 @@ csrf.init_app(app)
 
 # Add route to set user timezone
 @app.route('/set-timezone', methods=['POST'])
+@csrf.exempt  # Exempt this route from CSRF protection as it's an API endpoint called via AJAX
 def set_timezone():
     try:
         # Get timezone from request JSON or headers

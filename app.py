@@ -1,6 +1,6 @@
 from flask import Flask, session, request, jsonify, render_template
-from flask_mail import Mail
 from config import Config
+from extensions import mail, csrf
 from routes.user import user_bp  # Import user routes
 from routes.admin import admin_bp
 from routes.donations import donations_bp
@@ -27,6 +27,10 @@ app.config.from_object(Config)
 app.jinja_env.globals.update(get_current_time=get_current_time)
 app.jinja_env.globals.update(format_time_in_timezone=format_time_in_timezone)
 
+@app.context_processor
+def inject_year():
+    return {'year': datetime.datetime.now().year}
+
 # Configure session with secure defaults
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=1)
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
@@ -37,8 +41,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['WTF_CSRF_ENABLED'] = True  # Enable CSRF protection
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour token validity
 
-# ✅ Initialize Flask-Mail
-mail = Mail(app)
+# ✅ Initialize Flask-Mail and CSRF
+mail.init_app(app)
+csrf.init_app(app)
 
 # Add route to set user timezone
 @app.route('/set-timezone', methods=['POST'])

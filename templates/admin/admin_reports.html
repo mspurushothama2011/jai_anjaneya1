@@ -6,196 +6,216 @@
 <div class="reports-container">
     <div class="reports-header">
         <h1>Temple Records</h1>
-        
+
         <!-- Toggle Buttons -->
         <div class="toggle-buttons">
-            <a href="{{ url_for('general_admin.reports', type='seva') }}" class="button {% if report_type == 'seva' %}blue{% else %}{% endif %}">
+            <a href="{{ url_for('general_admin.reports', type='seva') }}"
+                class="button {% if report_type == 'seva' %}blue{% else %}{% endif %}">
                 <i class="fas fa-praying-hands"></i> Seva Bookings
             </a>
-            <a href="{{ url_for('general_admin.reports', type='donation') }}" class="button {% if report_type == 'donation' %}blue{% else %}{% endif %}">
+            <a href="{{ url_for('general_admin.reports', type='donation') }}"
+                class="button {% if report_type == 'donation' %}blue{% else %}{% endif %}">
                 <i class="fas fa-hand-holding-heart"></i> Donations
             </a>
         </div>
     </div>
-    
+
     <div class="reports-content">
         {% if report_type == 'seva' %}
-            <div class="reports-header">
-                <h2><i class="fas fa-praying-hands"></i> Seva Bookings ({{ total_bookings }})</h2>
-                
-                <!-- Date Filter Form -->
-                <div class="filter-container">
-                    <form action="{{ url_for('general_admin.reports') }}" method="GET" class="date-filter-form">
-                        <input type="hidden" name="type" value="seva">
-                        <div class="filter-input-group">
-                            <label for="date_filter">Filter by Seva Date:</label>
-                            <input type="date" id="date_filter" name="date_filter" class="date-input" value="{{ request.args.get('date_filter', '') }}">
-                        </div>
-                        <div class="filter-input-group">
-                            <label for="seva_name">Filter by Seva Name:</label>
-                            <select id="seva_name" name="seva_name" class="date-input">
-                                <option value="">All</option>
-                                <option value="Abhisheka" {% if request.args.get('seva_name') == 'Abhisheka' %}selected{% endif %}>Abhisheka</option>
-                                <option value="Alankara" {% if request.args.get('seva_name') == 'Alankara' %}selected{% endif %}>Alankara</option>
-                                <option value="Pooja/Vratha" {% if request.args.get('seva_name') == 'Pooja/Vratha' %}selected{% endif %}>Pooja/Vratha</option>
-                                <option value="Vadamala" {% if request.args.get('seva_name') == 'Vadamala' %}selected{% endif %}>Vadamala</option>
-                            </select>
-                        </div>
-                        <div class="filter-buttons">
-                            <button type="submit" class="filter-button apply">
-                                <i class="fas fa-filter"></i> Apply Filter
-                            </button>
-                            <a href="{{ url_for('general_admin.reports', type='seva') }}" class="filter-button clear">
-                                <i class="fas fa-times"></i> Clear
-                            </a>
-                        </div>
-                    </form>
-                </div>
+        <div class="reports-header">
+            <h2><i class="fas fa-praying-hands"></i> Seva Bookings ({{ total_bookings }})</h2>
+
+            <!-- Date Filter Form -->
+            <div class="filter-container">
+                <form action="{{ url_for('general_admin.reports') }}" method="GET" class="date-filter-form">
+                    <input type="hidden" name="type" value="seva">
+                    <div class="filter-input-group">
+                        <label for="date_filter">Filter by Seva Date:</label>
+                        <input type="date" id="date_filter" name="date_filter" class="date-input"
+                            value="{{ request.args.get('date_filter', '') }}">
+                    </div>
+                    <div class="filter-input-group">
+                        <label for="seva_name">Filter by Seva Name:</label>
+                        <select id="seva_name" name="seva_name" class="date-input">
+                            <option value="">All</option>
+                            <option value="Abhisheka" {% if request.args.get('seva_name')=='Abhisheka' %}selected{%
+                                endif %}>Abhisheka</option>
+                            <option value="Alankara" {% if request.args.get('seva_name')=='Alankara' %}selected{% endif
+                                %}>Alankara</option>
+                            <option value="Pooja/Vratha" {% if request.args.get('seva_name')=='Pooja/Vratha'
+                                %}selected{% endif %}>Pooja/Vratha</option>
+                            <option value="Vadamala" {% if request.args.get('seva_name')=='Vadamala' %}selected{% endif
+                                %}>Vadamala</option>
+                        </select>
+                    </div>
+                    <div class="filter-buttons">
+                        <button type="submit" class="filter-button apply">
+                            <i class="fas fa-filter"></i> Apply Filter
+                        </button>
+                        <a href="{{ url_for('general_admin.reports', type='seva') }}" class="filter-button clear">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </form>
             </div>
-            {% if bookings %}
-                <div class="table-responsive">
-                    <table class="reports-table">
-                        <thead>
-                            <tr>
-                                <th>Seva Type</th>
-                                <th>Seva Name</th>
-                                <th>Booked By</th>
-                                <th>Phone</th>
-                                <th>Price</th>
-                                <th>Seva Date</th>
-                                <th>Booking Date</th>
-                                <th>Payment ID</th>
-                                <th>Collection Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for booking in bookings %}
-                                <tr>
-                                    <td title="{{ booking.seva_type }}">{{ booking.seva_type }}</td>
-                                    <td title="{{ booking.seva_name }}">{{ booking.seva_name }}</td>
-                                    <td title="{{ booking.user_name }}">{{ booking.user_name }}</td>
-                                    <td title="{{ booking.user_phone }}">{{ booking.user_phone }}</td>
-                                    <td title="₹{{ booking.seva_price if booking.seva_price else booking.amount }}">₹{{ booking.seva_price if booking.seva_price else booking.amount }}</td>
-                                    <td title="{{ booking.formatted_seva_date if booking.formatted_seva_date else booking.seva_date }}">{{ booking.formatted_seva_date if booking.formatted_seva_date else booking.seva_date }}</td>
-                                    <td title="{{ booking.formatted_date }}">{{ booking.formatted_date }}</td>
-                                    <td title="{{ booking.payment_id }}">{{ booking.payment_id }}</td>
-                                    <td>
-                                        <span class="status-badge {{ 'success' if booking.status == 'Collected' else 'pending' }}">
-                                            {{ 'Collected' if booking.status == 'Collected' else 'Not Collected' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if booking.status != 'Collected' %}
-                                        <form action="{{ url_for('general_admin.update_seva_status') }}" method="POST" class="collection-form">
-                                            <input type="hidden" name="booking_id" value="{{ booking._id }}">
-                                            <input type="hidden" name="date_filter" value="{{ request.args.get('date_filter', '') }}">
-                                            <button type="submit" class="collection-button">
-                                                <i class="fas fa-check-circle"></i> Mark as Collected
-                                            </button>
-                                        </form>
-                                        {% else %}
-                                        <span class="already-collected">
-                                            <i class="fas fa-check-double"></i> Verified
-                                        </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% if total_pages and total_pages > 1 %}
-            <div class="pagination-container">
-                <ul class="pagination">
-                    {# Previous button #}
-                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page-1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Previous</a>
-                    </li>
-                    {# Page numbers #}
-                    {% for p in range(1, total_pages+1) %}
-                        <li class="page-item {% if p == page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=p, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">{{ p }}</a>
-                        </li>
+        </div>
+        {% if bookings %}
+        <div class="table-responsive">
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Seva Type</th>
+                        <th>Seva Name</th>
+                        <th>Booked By</th>
+                        <th>Phone</th>
+                        <th>Price</th>
+                        <th>Seva Date</th>
+                        <th>Booking Date</th>
+                        <th>Payment ID</th>
+                        <th>Collection Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td title="{{ booking.seva_type }}">{{ booking.seva_type }}</td>
+                        <td title="{{ booking.seva_name }}">{{ booking.seva_name }}</td>
+                        <td title="{{ booking.user_name }}">{{ booking.user_name }}</td>
+                        <td title="{{ booking.user_phone }}">{{ booking.user_phone }}</td>
+                        <td title="₹{{ booking.seva_price if booking.seva_price else booking.amount }}">₹{{
+                            booking.seva_price if booking.seva_price else booking.amount }}</td>
+                        <td
+                            title="{{ booking.formatted_seva_date if booking.formatted_seva_date else booking.seva_date }}">
+                            {{ booking.formatted_seva_date if booking.formatted_seva_date else booking.seva_date }}</td>
+                        <td title="{{ booking.formatted_date }}">{{ booking.formatted_date }}</td>
+                        <td title="{{ booking.payment_id }}">{{ booking.payment_id }}</td>
+                        <td>
+                            <span class="status-badge {{ 'success' if booking.status == 'Collected' else 'pending' }}">
+                                {{ 'Collected' if booking.status == 'Collected' else 'Not Collected' }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if booking.status != 'Collected' %}
+                            <form action="{{ url_for('general_admin.update_seva_status') }}" method="POST"
+                                class="collection-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="booking_id" value="{{ booking._id }}">
+                                <input type="hidden" name="date_filter"
+                                    value="{{ request.args.get('date_filter', '') }}">
+                                <button type="submit" class="collection-button">
+                                    <i class="fas fa-check-circle"></i> Mark as Collected
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="already-collected">
+                                <i class="fas fa-check-double"></i> Verified
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endfor %}
-                    {# Next button #}
-                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('general_admin.reports', type='seva', page=page+1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Next</a>
-                    </li>
-                </ul>
-                <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_bookings }} bookings)</span>
-            </div>
-            {% endif %}
-            {% else %}
-                <div class="no-data">
-                    <p>No seva bookings found in the system.</p>
-                </div>
-            {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_pages and total_pages > 1 %}
+        <div class="pagination-container">
+            <ul class="pagination">
+                {# Previous button #}
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('general_admin.reports', type='seva', page=page-1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Previous</a>
+                </li>
+                {# Page numbers #}
+                {% for p in range(1, total_pages+1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('general_admin.reports', type='seva', page=p, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">{{
+                        p }}</a>
+                </li>
+                {% endfor %}
+                {# Next button #}
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('general_admin.reports', type='seva', page=page+1, date_filter=request.args.get('date_filter', ''), seva_name=request.args.get('seva_name', '')) }}">Next</a>
+                </li>
+            </ul>
+            <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_bookings }} bookings)</span>
+        </div>
+        {% endif %}
         {% else %}
-            <h2><i class="fas fa-hand-holding-heart"></i> Donations ({{ total_donations }})</h2>
-            {% if donations %}
-                <div class="table-responsive">
-                    <table class="reports-table donation-table">
-                        <thead>
-                            <tr>
-                                <th>Donation Type</th>
-                                <th>Donor Name</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Amount</th>
-                                <th>Payment ID</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for donation in donations %}
-                            <tr>
-                                <td title="{{ donation.donation_name }}">{{ donation.donation_name }}</td>
-                                <td title="{{ donation.user_name }}">{{ donation.user_name }}</td>
-                                <td title="{{ donation.user_phone }}">{{ donation.user_phone }}</td>
-                                <td title="{{ donation.user_email }}">{{ donation.user_email }}</td>
-                                <td title="₹{{ donation.amount }}">₹{{ donation.amount }}</td>
-                                <td title="{{ donation.payment_id }}">{{ donation.payment_id }}</td>
-                                <td title="{{ donation.formatted_date }}">{{ donation.formatted_date }}</td>
-                                <td>
-                                    <span class="status-badge {{ 'success' if donation.status == 'Paid' else 'pending' }}">
-                                        {{ donation.status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                {# Pagination for donations #}
-                {% if total_pages and total_pages > 1 %}
-                <div class="pagination-container">
-                    <ul class="pagination">
-                        {# Previous button #}
-                        <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=page-1) }}">Previous</a>
-                        </li>
-                        {# Page numbers #}
-                        {% for p in range(1, total_pages+1) %}
-                            <li class="page-item {% if p == page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=p) }}">{{ p }}</a>
-                            </li>
-                        {% endfor %}
-                        {# Next button #}
-                        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=page+1) }}">Next</a>
-                        </li>
-                    </ul>
-                    <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_donations }} donations)</span>
-                </div>
-                {% endif %}
-            {% else %}
-                <div class="no-data">
-                    <p>No donations found in the system.</p>
-                </div>
-            {% endif %}
+        <div class="no-data">
+            <p>No seva bookings found in the system.</p>
+        </div>
+        {% endif %}
+        {% else %}
+        <h2><i class="fas fa-hand-holding-heart"></i> Donations ({{ total_donations }})</h2>
+        {% if donations %}
+        <div class="table-responsive">
+            <table class="reports-table donation-table">
+                <thead>
+                    <tr>
+                        <th>Donation Type</th>
+                        <th>Donor Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Amount</th>
+                        <th>Payment ID</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in donations %}
+                    <tr>
+                        <td title="{{ donation.donation_name }}">{{ donation.donation_name }}</td>
+                        <td title="{{ donation.user_name }}">{{ donation.user_name }}</td>
+                        <td title="{{ donation.user_phone }}">{{ donation.user_phone }}</td>
+                        <td title="{{ donation.user_email }}">{{ donation.user_email }}</td>
+                        <td title="₹{{ donation.amount }}">₹{{ donation.amount }}</td>
+                        <td title="{{ donation.payment_id }}">{{ donation.payment_id }}</td>
+                        <td title="{{ donation.formatted_date }}">{{ donation.formatted_date }}</td>
+                        <td>
+                            <span class="status-badge {{ 'success' if donation.status == 'Paid' else 'pending' }}">
+                                {{ donation.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination for donations #}
+        {% if total_pages and total_pages > 1 %}
+        <div class="pagination-container">
+            <ul class="pagination">
+                {# Previous button #}
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('general_admin.reports', type='donation', page=page-1) }}">Previous</a>
+                </li>
+                {# Page numbers #}
+                {% for p in range(1, total_pages+1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('general_admin.reports', type='donation', page=p) }}">{{ p
+                        }}</a>
+                </li>
+                {% endfor %}
+                {# Next button #}
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('general_admin.reports', type='donation', page=page+1) }}">Next</a>
+                </li>
+            </ul>
+            <span class="pagination-info">Page {{ page }} of {{ total_pages }} ({{ total_donations }} donations)</span>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="no-data">
+            <p>No donations found in the system.</p>
+        </div>
+        {% endif %}
         {% endif %}
     </div>
 </div>
@@ -211,7 +231,7 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .reports-header {
         display: flex;
         justify-content: space-between;
@@ -219,20 +239,20 @@
         margin-bottom: 15px;
         flex-wrap: wrap;
     }
-    
+
     .reports-header h1 {
         margin: 0;
         font-size: 1.8rem;
         font-weight: bold;
         color: #333;
     }
-    
+
     .toggle-buttons {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
     }
-    
+
     .toggle-buttons .button {
         padding: 8px 12px;
         background-color: #6c757d;
@@ -243,27 +263,27 @@
         display: inline-flex;
         align-items: center;
     }
-    
+
     .toggle-buttons .button i {
         margin-right: 8px;
     }
-    
+
     .toggle-buttons .blue {
         background-color: #007bff;
     }
-    
+
     .reports-content {
         background: white;
         padding: 10px;
         border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         width: 100%;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
-    
+
     .reports-content h2 {
         margin-bottom: 10px;
         color: #333;
@@ -271,18 +291,18 @@
         align-items: left;
         font-size: 1.3rem;
     }
-    
+
     .reports-content h2 i {
         margin-right: 10px;
         color: #007bff;
     }
-    
+
     .table-responsive {
         width: 100%;
         overflow: auto;
         flex: 1;
     }
-    
+
     .reports-table {
         width: 100%;
         border-collapse: collapse;
@@ -290,8 +310,9 @@
         table-layout: fixed;
         margin-bottom: 0;
     }
-    
-    .reports-table th, .reports-table td {
+
+    .reports-table th,
+    .reports-table td {
         padding: 8px;
         border-bottom: 1px solid #ddd;
         text-align: left;
@@ -300,14 +321,15 @@
         white-space: normal;
         word-break: break-word;
     }
-    
+
     /* Specific styling for columns that need to display longer text */
-    .reports-table td:nth-child(8) { /* Payment ID column */
+    .reports-table td:nth-child(8) {
+        /* Payment ID column */
         max-width: 180px;
         min-width: 120px;
         word-break: break-all;
     }
-    
+
     .reports-table th {
         background-color: #343a40;
         color: white;
@@ -318,45 +340,119 @@
         font-size: 0.85rem;
         text-transform: uppercase;
     }
-    
+
     /* Column width optimization for seva bookings */
-    .reports-table th:nth-child(1) { width: 8%; }  /* Seva Type */
-    .reports-table th:nth-child(2) { width: 10%; }  /* Seva Name */
-    .reports-table th:nth-child(3) { width: 10%; } /* Booked By */
-    .reports-table th:nth-child(4) { width: 8%; }  /* Phone */
-    .reports-table th:nth-child(5) { width: 6%; }  /* Price */
-    .reports-table th:nth-child(6) { width: 8%; } /* Seva Date */
-    .reports-table th:nth-child(7) { width: 8%; }  /* Booking Date */
-    .reports-table th:nth-child(8) { width: 15%; } /* Payment ID */
-    .reports-table th:nth-child(9) { width: 10%; } /* Collection Status */
-    .reports-table th:nth-child(10) { width: 10%; } /* Action */
-    
+    .reports-table th:nth-child(1) {
+        width: 8%;
+    }
+
+    /* Seva Type */
+    .reports-table th:nth-child(2) {
+        width: 10%;
+    }
+
+    /* Seva Name */
+    .reports-table th:nth-child(3) {
+        width: 10%;
+    }
+
+    /* Booked By */
+    .reports-table th:nth-child(4) {
+        width: 8%;
+    }
+
+    /* Phone */
+    .reports-table th:nth-child(5) {
+        width: 6%;
+    }
+
+    /* Price */
+    .reports-table th:nth-child(6) {
+        width: 8%;
+    }
+
+    /* Seva Date */
+    .reports-table th:nth-child(7) {
+        width: 8%;
+    }
+
+    /* Booking Date */
+    .reports-table th:nth-child(8) {
+        width: 15%;
+    }
+
+    /* Payment ID */
+    .reports-table th:nth-child(9) {
+        width: 10%;
+    }
+
+    /* Collection Status */
+    .reports-table th:nth-child(10) {
+        width: 10%;
+    }
+
+    /* Action */
+
     /* Column width optimization for donations */
-    .donation-table th:nth-child(1) { width: 12%; }  /* Donation Type */
-    .donation-table th:nth-child(2) { width: 15%; }  /* Donor Name */
-    .donation-table th:nth-child(3) { width: 12%; }  /* Phone */
-    .donation-table th:nth-child(4) { width: 18%; }  /* Email */
-    .donation-table th:nth-child(5) { width: 8%; }   /* Amount */
-    .donation-table th:nth-child(6) { width: 18%; }  /* Payment ID */
-    .donation-table th:nth-child(7) { width: 10%; }  /* Date */
-    .donation-table th:nth-child(8) { width: 7%; }   /* Status */
-    
+    .donation-table th:nth-child(1) {
+        width: 12%;
+    }
+
+    /* Donation Type */
+    .donation-table th:nth-child(2) {
+        width: 15%;
+    }
+
+    /* Donor Name */
+    .donation-table th:nth-child(3) {
+        width: 12%;
+    }
+
+    /* Phone */
+    .donation-table th:nth-child(4) {
+        width: 18%;
+    }
+
+    /* Email */
+    .donation-table th:nth-child(5) {
+        width: 8%;
+    }
+
+    /* Amount */
+    .donation-table th:nth-child(6) {
+        width: 18%;
+    }
+
+    /* Payment ID */
+    .donation-table th:nth-child(7) {
+        width: 10%;
+    }
+
+    /* Date */
+    .donation-table th:nth-child(8) {
+        width: 7%;
+    }
+
+    /* Status */
+
     /* Adjust styles for email and payment ID columns to improve text wrapping */
-    .donation-table td:nth-child(4),  /* Email column */
-    .donation-table td:nth-child(6) { /* Payment ID column */
+    .donation-table td:nth-child(4),
+    /* Email column */
+    .donation-table td:nth-child(6) {
+        /* Payment ID column */
         max-width: 180px;
         min-width: 120px;
         word-break: break-all;
     }
-    
+
     .reports-table tr:hover {
         background-color: #f5f5f5;
     }
-    
+
     .reports-table tr:nth-child(even) {
         background-color: #f9f9f9;
     }
-    
+
     .status-badge {
         display: inline-block;
         padding: 4px 6px;
@@ -365,17 +461,17 @@
         font-weight: bold;
         text-transform: uppercase;
     }
-    
+
     .status-badge.success {
         background-color: #28a745;
         color: white;
     }
-    
+
     .status-badge.pending {
         background-color: #ffc107;
         color: black;
     }
-    
+
     .no-data {
         padding: 20px;
         text-align: center;
@@ -384,17 +480,17 @@
         margin: 10px 0;
         flex: 1;
     }
-    
+
     .no-data p {
         font-size: 16px;
         color: #6c757d;
     }
-    
+
     /* Collection button styling */
     .collection-form {
         margin: 0;
     }
-    
+
     .collection-button {
         background-color: #28a745;
         color: white;
@@ -407,11 +503,11 @@
         align-items: center;
         gap: 5px;
     }
-    
+
     .collection-button:hover {
         background-color: #218838;
     }
-    
+
     .already-collected {
         color: #28a745;
         font-size: 0.8rem;
@@ -419,48 +515,49 @@
         align-items: center;
         gap: 5px;
     }
-    
+
     @media (max-width: 768px) {
         .reports-header {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .reports-header h1 {
             margin-bottom: 10px;
         }
-        
+
         .toggle-buttons {
             justify-content: flex-start;
             margin-bottom: 10px;
         }
-        
+
         .reports-content {
             padding: 5px;
             height: calc(100vh - 150px);
         }
-        
+
         .reports-table {
             font-size: 0.8rem;
         }
-        
-        .reports-table th, .reports-table td {
+
+        .reports-table th,
+        .reports-table td {
             padding: 6px 4px;
         }
-        
+
         .collection-button {
             padding: 3px 6px;
             font-size: 0.7rem;
         }
     }
-    
+
     .reports-content .reports-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
     }
-    
+
     /* Filter styles */
     .filter-container {
         margin-top: 10px;
@@ -468,41 +565,41 @@
         background-color: #f8f9fa;
         padding: 15px;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-    
+
     .date-filter-form {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
         align-items: flex-end;
     }
-    
+
     .filter-input-group {
         display: flex;
         flex-direction: column;
         min-width: 200px;
     }
-    
+
     .filter-input-group label {
         font-size: 0.9rem;
         margin-bottom: 5px;
         color: #555;
         font-weight: 500;
     }
-    
+
     .date-input {
         padding: 8px 12px;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 0.9rem;
     }
-    
+
     .filter-buttons {
         display: flex;
         gap: 10px;
     }
-    
+
     .filter-button {
         padding: 8px 15px;
         border-radius: 4px;
@@ -515,35 +612,35 @@
         gap: 5px;
         text-decoration: none;
     }
-    
+
     .filter-button.apply {
         background-color: #007bff;
         border: none;
     }
-    
+
     .filter-button.apply:hover {
         background-color: #0069d9;
     }
-    
+
     .filter-button.clear {
         background-color: #6c757d;
     }
-    
+
     .filter-button.clear:hover {
         background-color: #5a6268;
     }
-    
+
     @media (max-width: 768px) {
         .date-filter-form {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .filter-input-group,
         .filter-buttons {
             width: 100%;
         }
-        
+
         .filter-button {
             width: 100%;
             justify-content: center;
@@ -556,15 +653,18 @@
         align-items: center;
         margin: 20px 0 10px 0;
     }
+
     .pagination {
         display: flex;
         list-style: none;
         padding: 0;
         margin: 0 10px 0 0;
     }
+
     .pagination .page-item {
         margin: 0 2px;
     }
+
     .pagination .page-link {
         display: block;
         padding: 6px 12px;
@@ -576,16 +676,19 @@
         font-size: 0.95rem;
         transition: background 0.2s, color 0.2s;
     }
+
     .pagination .page-item.active .page-link {
         background: #007bff;
         color: white;
         font-weight: bold;
     }
+
     .pagination .page-item.disabled .page-link {
         color: #aaa;
         pointer-events: none;
         background: #e9ecef;
     }
+
     .pagination-info {
         font-size: 0.95rem;
         color: #555;
@@ -597,10 +700,10 @@
 
 <!-- JavaScript for collection status update confirmation -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const collectionForms = document.querySelectorAll('.collection-form');
         collectionForms.forEach(form => {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function (e) {
                 if (!confirm('Are you sure you want to mark this seva as Collected? This action cannot be undone.')) {
                     e.preventDefault();
                 }

@@ -1,0 +1,122 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Send Announcements - Sri Veeranjaneya Swamy Temple{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+
+            <div class="card border-0 shadow-lg" style="border-radius: 10px; overflow: hidden;">
+
+                <!-- Header -->
+                <div class="card-header text-white text-center py-3" style="background-color: #762626;">
+                    <h4 class="mb-0 fw-bold">Send Announcement</h4>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body p-5" style="background-color: #f9f9f9;">
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <!-- Form -->
+                    <form action="{{ url_for('general_admin.announcements') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+                        <!-- To Recipients Row -->
+                        <div class="row mb-4 align-items-center">
+                            <div class="col-md-3 text-md-start">
+                                <label for="recipient_group" class="form-label mb-0 fw-semibold"
+                                    style="color: #5a5a5a;">To Recipients</label>
+                            </div>
+                            <div class="col-md-9">
+                                <select class="form-select" id="recipient_group" name="recipient_group" required
+                                    style="border-radius: 8px; border: 1px solid #ddd; padding: 10px;">
+                                    <option value="all" selected>All Users</option>
+                                    <option value="verified">Verified Users Only</option>
+                                    <option value="unverified">Unverified Users Only</option>
+                                </select>
+                                <div class="form-text mt-2 d-flex align-items-center"
+                                    style="color: #6c757d; font-size: 0.9rem;">
+                                    <i class="fas fa-info-circle me-2"></i> Select the group of users asking for this
+                                    update
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subject Row -->
+                        <div class="row mb-4 align-items-center">
+                            <div class="col-md-3 text-md-start">
+                                <label for="subject" class="form-label mb-0 fw-semibold"
+                                    style="color: #5a5a5a;">Subject</label>
+                            </div>
+                            <div class="col-md-9">
+                                <input type="text" class="form-control" id="subject" name="subject"
+                                    placeholder="e.g., Special Pooja Invitation" required
+                                    style="border-radius: 8px; border: 1px solid #ddd; padding: 10px;">
+                            </div>
+                        </div>
+
+                        <!-- Message Content Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-md-start">
+                                <label for="message" class="form-label mb-0 fw-semibold" style="color: #5a5a5a;">Message
+                                    Content</label>
+                            </div>
+                            <div class="col-md-9">
+                                <textarea class="form-control" id="message" name="message" rows="8"
+                                    placeholder="Type your announcement details here..." required
+                                    style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; line-height: 1.6;"></textarea>
+                                <div class="form-text mt-2 d-flex align-items-center"
+                                    style="color: #6c757d; font-size: 0.9rem;">
+                                    <i class="fas fa-check-circle me-2"></i> This text will be automatically formatted
+                                    in the email
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-md-9 offset-md-3">
+                                <button type="submit" class="btn text-dark fw-bold px-5 py-2"
+                                    style="background-color: #FFA500; border: none; border-radius: 6px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px;"
+                                    onmouseover="this.style.backgroundColor='#ff9500'"
+                                    onmouseout="this.style.backgroundColor='#FFA500'"
+                                    onclick="return confirm('Are you sure you want to send this email to all selected users?');">
+                                    <i class="fas fa-paper-plane me-2"></i> SEND ANNOUNCEMENT
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Footer Note -->
+                <div class="card-footer text-center bg-white border-0 py-3">
+                    <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Securely processed. Large lists
+                        are sent in batches to ensure delivery.</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #762626;
+        box-shadow: 0 0 0 0.2rem rgba(118, 38, 38, 0.15);
+    }
+</style>
+{% endblock %}

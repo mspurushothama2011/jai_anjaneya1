@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash, request
-from database import seva_collection, donations_collection, seva_list, donations_list, events_collection  
+from flask import Blueprint, render_template, session, redirect, url_for, flash, request, Response
+from database import seva_collection, donations_collection, seva_list, donations_list, events_collection, gallery_collection
 from datetime import datetime
+from bson import ObjectId
 import os
 from utils import get_current_time
 
@@ -12,33 +13,28 @@ def home():
 
 @general_bp.route("/gallery")
 def gallery():
-    """Display all images from the gallery folder"""
-    # Path to the gallery folder within static/images
-    gallery_path = os.path.join('static', 'images', 'gallery')
-    print(f"Gallery path: {gallery_path}")
-    print(f"Gallery path exists: {os.path.exists(gallery_path)}")
+    """Display all images from the database"""
+    # Fetch images from MongoDB, sorted by newest first
+    # Only fetch _id to generate URLs, we don't need the binary data here
+    gallery_images = list(gallery_collection.find({}, {"image_data": 0}).sort("upload_date", -1))
     
-    # Get all image files from the directory
-    image_files = []
-    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
-    
-    # Check if directory exists
-    if os.path.exists(gallery_path):
-        for file in os.listdir(gallery_path):
-            # Check if it's an image file
-            ext = os.path.splitext(file)[1].lower()
-            if ext in allowed_extensions:
-                image_files.append(file)
-                print(f"Found image: {file}")
-    
-    # Create full paths for template (use forward slashes for URLs)
-    gallery_images = []
-    for img in image_files:
-        img_path = 'images/gallery/' + img
-        gallery_images.append(img_path)
-    
-    print(f"Number of images found: {len(gallery_images)}")
+    # Convert IDs to string
+    for img in gallery_images:
+        img['_id'] = str(img['_id'])
+        
     return render_template("user/gallery.html", gallery_images=gallery_images)
+
+@general_bp.route("/gallery/image/<image_id>")
+def get_gallery_image(image_id):
+    """Serve a gallery image from the database"""
+    try:
+        image = gallery_collection.find_one({"_id": ObjectId(image_id)})
+        if image and "image_data" in image:
+            return Response(image["image_data"], mimetype=image.get("content_type", "image/jpeg"))
+        else:
+            return "Image not found", 404
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 @general_bp.route("/pooja-timings")
 def pooja_timings():

@@ -24,15 +24,7 @@ def admin_required(f):
 @events_bp.before_request
 def auto_delete_past_events():
     """Automatically delete events that are more than 30 days old"""
-    # Get today's date for reference - use the same year as in the database (2025)
     current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
-    # Check if any events exist to get their year
-    sample_event = events_collection.find_one()
-    if sample_event and isinstance(sample_event.get('date'), datetime):
-        # Use the year from the database events
-        target_year = sample_event['date'].year
-        # Adjust current date to match the year from the database
-        current_date = current_date.replace(year=target_year)
     
     thirty_days_ago = current_date - timedelta(days=30)
     
@@ -91,15 +83,6 @@ def add_event():
     try:
         # Convert input date (string) to a real datetime object
         event_date = datetime.strptime(request.form["date"], "%Y-%m-%d")
-        
-        # Check if any events exist to get the target year
-        sample_event = events_collection.find_one()
-        if sample_event and isinstance(sample_event.get('date'), datetime):
-            # Use the year from existing events for consistency
-            target_year = sample_event['date'].year
-            # If the event year doesn't match existing events, update it
-            if event_date.year != target_year:
-                event_date = event_date.replace(year=target_year)
 
         new_event = {
             "title": request.form["title"],
@@ -138,16 +121,8 @@ def cleanup_past_events():
     if "admin" not in session:
         return redirect(url_for("admin.login"))
 
-    # Get current date - handle year adjustment
+    # Get current date
     current_date = get_current_time().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Check if any events exist to get their year
-    sample_event = events_collection.find_one()
-    if sample_event and isinstance(sample_event.get('date'), datetime):
-        # Use the year from the database events
-        target_year = sample_event['date'].year
-        # Adjust current date to match the year from the database
-        current_date = current_date.replace(year=target_year)
     
     result = events_collection.delete_many({"date": {"$lt": current_date}})
     

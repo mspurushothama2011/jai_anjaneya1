@@ -13,7 +13,8 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
-        height: calc(100vh - 60px); /* Adjust for nav height */
+        height: calc(100vh - 60px);
+        /* Adjust for nav height */
         display: flex;
         flex-direction: column;
     }
@@ -30,8 +31,10 @@
         display: flex;
         gap: 30px;
         flex: 1;
-        min-height: 0; /* Important for nested scrolling */
-        max-height: calc(100vh - 120px); /* Ensure enough space */
+        min-height: 0;
+        /* Important for nested scrolling */
+        max-height: calc(100vh - 120px);
+        /* Ensure enough space */
     }
 
     /* Add New Donation Type Form */
@@ -42,7 +45,8 @@
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         height: fit-content;
-        margin-top: -15px;  /* Move the form up slightly */
+        margin-top: -15px;
+        /* Move the form up slightly */
     }
 
     .donation-form h2 {
@@ -125,7 +129,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        min-height: 0; /* Important for nested scrolling */
+        min-height: 0;
+        /* Important for nested scrolling */
         overflow: hidden;
     }
 
@@ -147,10 +152,12 @@
         gap: 20px;
         overflow-y: auto;
         padding-right: 15px;
-        padding-bottom: 30px; /* Add bottom padding to ensure visibility of last row */
+        padding-bottom: 30px;
+        /* Add bottom padding to ensure visibility of last row */
         flex: 1;
         min-height: 200px;
-        max-height: calc(100vh - 200px); /* Limit max height */
+        max-height: calc(100vh - 200px);
+        /* Limit max height */
         scrollbar-gutter: stable;
         margin-top: -15px;
     }
@@ -214,7 +221,8 @@
         cursor: pointer;
         transition: background-color 0.3s;
         align-self: flex-end;
-        margin-top: auto; /* Push to bottom of flex container */
+        margin-top: auto;
+        /* Push to bottom of flex container */
     }
 
     .delete-btn:hover {
@@ -231,7 +239,7 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         grid-column: 1 / -1;
     }
-    
+
     /* Mobile Responsive Styles */
     @media (max-width: 992px) {
         .content-wrapper {
@@ -240,64 +248,64 @@
             overflow-y: auto;
             max-height: calc(100vh - 120px);
         }
-        
+
         .donation-form {
             flex: 0 0 auto;
             width: 100%;
             margin-top: 0;
         }
-        
+
         .donation-grid {
             grid-template-columns: repeat(2, 1fr);
             max-height: none;
         }
     }
-    
+
     @media (max-width: 768px) {
         .container {
             padding: 15px;
             height: auto;
             overflow-y: auto;
         }
-        
+
         h1 {
             font-size: 28px;
         }
-        
+
         .content-wrapper {
             max-height: none;
         }
-        
+
         .donation-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .donation-card {
             min-height: 150px;
             padding: 15px;
         }
-        
+
         .donation-card h3 {
             font-size: 18px;
             margin-bottom: 10px;
         }
-        
+
         .donation-info p {
             margin: 5px 0;
             font-size: 14px;
         }
-        
+
         body {
             overflow-y: auto;
             height: auto;
         }
     }
-    
+
     @media (max-width: 480px) {
         .donation-card {
             padding: 12px;
         }
-        
+
         .delete-btn {
             padding: 6px 12px;
             font-size: 14px;
@@ -309,24 +317,24 @@
     <h1>Manage Donation Types</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message {{ category }}" role="alert">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const flashMessages = document.querySelectorAll('.flash-message');
-            
-            flashMessages.forEach(function(message) {
+
+            flashMessages.forEach(function (message) {
                 // Start fade out after 10 seconds
-                setTimeout(function() {
+                setTimeout(function () {
                     message.classList.add('fade-out');
-                    
+
                     // Remove the message from DOM after fade animation
-                    setTimeout(function() {
+                    setTimeout(function () {
                         message.remove();
                     }, 500); // 500ms matches the CSS transition duration
                 }, 10000); // 10 seconds
@@ -339,6 +347,7 @@
         <div class="donation-form">
             <h2>Add New Donation Type</h2>
             <form action="{{ url_for('donation_management.manage_donations') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="form-group">
                     <label for="id">Donation ID:</label>
                     <input type="text" id="id" name="id" required placeholder="Enter donation ID">
@@ -351,7 +360,8 @@
 
                 <div class="form-group">
                     <label for="description">Donation Description:</label>
-                    <textarea id="description" name="description" required placeholder="Enter donation description"></textarea>
+                    <textarea id="description" name="description" required
+                        placeholder="Enter donation description"></textarea>
                 </div>
 
                 <button type="submit">Add Donation Type</button>
@@ -363,22 +373,24 @@
             <h2>Donation Types</h2>
             <div class="donation-grid">
                 {% if donations %}
-                    {% for donation in donations %}
-                    <div class="donation-card">
-                        <h3>{{ donation.name }}</h3>
-                        <div class="donation-info">
-                            <p><strong>ID:</strong> {{ donation.id }}</p>
-                            <p><strong>Description:</strong> {{ donation.description }}</p>
-                        </div>
-                        <form action="{{ url_for('donation_management.delete_donation', donation_id=donation._id) }}" method="POST">
-                            <button type="submit" class="delete-btn">Delete</button>
-                        </form>
+                {% for donation in donations %}
+                <div class="donation-card">
+                    <h3>{{ donation.name }}</h3>
+                    <div class="donation-info">
+                        <p><strong>ID:</strong> {{ donation.id }}</p>
+                        <p><strong>Description:</strong> {{ donation.description }}</p>
                     </div>
-                    {% endfor %}
+                    <form action="{{ url_for('donation_management.delete_donation', donation_id=donation._id) }}"
+                        method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="empty-state">
-                        <p>No donation types available.</p>
-                    </div>
+                <div class="empty-state">
+                    <p>No donation types available.</p>
+                </div>
                 {% endif %}
             </div>
         </div>

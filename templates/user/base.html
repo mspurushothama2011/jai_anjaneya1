@@ -10,16 +10,16 @@
     <meta http-equiv="Expires" content="0">
     <title>{% block title %}Sri Veeranjaneya Swamy Temple{% endblock %}</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/temple_logo.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/temple_logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon-removebg.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/favicon-removebg.png') }}">
     <!-- SEO Meta Tags -->
     <meta name="description"
         content="{% block meta_description %}Welcome to the official website of Sri Veeranjaneya Swamy Temple, GM Palya, Bengaluru. Book Sevas online, view temple history, and make donations to Lord Hanuman.{% endblock %}">
     <meta name="keywords"
-        content="{% block meta_keywords %}Sri Veeranjaneya Swamy Temple, Hanuman Temple, GM Palya, Bengaluru, Bangalore, Online Seva, Temple Donation, Hindu Temple, Anjaneya Swamy{% endblock %}">
+        content="{% block meta_keywords %}Sri Veeranjaneya Swamy Temple, Hanuman Temple, GM Palya, Bengaluru, Bangalore, Online Seva, Temple Donation, Hindu Temple, Anjaneya Swamy, Hanuman Temple, Hanuman Website{% endblock %}">
 
     <!-- Open Graph / Search Support -->
-    <meta property="og:image" content="{{ url_for('static', filename='images/temple_logo.png', _external=True) }}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/favicon-removebg.png', _external=True) }}">
     <meta property="og:title" content="{{ self.title() }}">
     <meta property="og:description" content="{{ self.meta_description() }}">
     <!-- Font Awesome for icons -->
@@ -1187,14 +1187,15 @@
 
             <div class="footer-bottom">
                 <div class="copyright">
-                    <p>&copy; 2025 Sri Veeranjaneya Swamy Educational & Charitable Trust. All Rights Reserved.</p>
+                    <p>&copy; 2025-{{ year }} Sri Veeranjaneya Swamy Educational & Charitable Trust. All Rights
+                        Reserved.</p>
                 </div>
                 <div class="footer-bottom-links">
                     <a href="{{ url_for('general.privacy_policy') }}">Privacy Policy</a> |
                     <a href="{{ url_for('general.terms_of_service') }}">Terms of Service</a>
                 </div>
                 <div class="created-by">
-                    <p>Website created by M S Purushothama, S/O M Suresh Kumar</p>
+                    <p>Website created by Yeshwanth C R & M S Purushothama</p>
                 </div>
             </div>
         </footer>

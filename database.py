@@ -32,6 +32,7 @@ try:
     alankara_types = db["alankara_types"]#contains alankara types
     vadamala_types = db["vadamala_types"]#contains vadamala types
     abhisheka_bookings = db["abhisheka_bookings"]#contains abhisheka bookings
+    gallery_collection = db["gallery_collection"] #contains gallery images
 except Exception as e:
     print(f"MongoDB connection error: {e}")
     raise

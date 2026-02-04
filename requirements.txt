@@ -19,3 +19,4 @@ numpy==1.26.0
 APScheduler==3.10.4
 # For lottie-web animation (JS only, not a Python package)
 # If you use lottie in Python, add: lottie==2.0.0
+Pillow==10.2.0

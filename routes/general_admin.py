@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, Response, send_file
-from database import seva_collection, events_collection, donations_collection, donations_list, seva_list, user_collection
+from database import seva_collection, events_collection, donations_collection, donations_list, seva_list, user_collection, gallery_collection
 from datetime import datetime, timedelta
+from bson import Binary
+from PIL import Image, ImageOps
+import os
 from bson.objectid import ObjectId
 from functools import wraps
 import csv
@@ -13,6 +16,9 @@ from utils import get_current_time
 from flask import make_response
 from cleanup import cleanup_old_records
 
+from flask_mail import Message
+from extensions import mail 
+
 general_admin_bp = Blueprint("general_admin", __name__, url_prefix="/admin/general")  
 
 def admin_required(f):
@@ -23,6 +29,77 @@ def admin_required(f):
             return redirect(url_for("admin.login"))
         return f(*args, **kwargs)
     return decorated_function
+
+@general_admin_bp.route("/announcements", methods=["GET", "POST"])
+@admin_required
+def announcements():
+    """Admin view to send announcements to users"""
+    if request.method == "POST":
+        recipient_group = request.form.get("recipient_group")
+        subject = request.form.get("subject")
+        message_body = request.form.get("message")
+        
+        if not subject or not message_body:
+            flash("Subject and Message are required", "error")
+            return redirect(url_for("general_admin.announcements"))
+            
+        # Determine recipients
+        query = {}
+        if recipient_group == "verified":
+            query["verified"] = True
+        elif recipient_group == "unverified":
+            query["verified"] = False
+        # else 'all' -> empty query matches everyone
+        
+        # Ensure we only get users with valid emails
+        query["email"] = {"$exists": True, "$ne": "", "$type": "string"}
+        
+        users = list(user_collection.find(query, {"email": 1}))
+        
+        # Python-side filtering for robustness (e.g. whitespace only strings)
+        emails = []
+        for user in users:
+            email = user.get("email")
+            if email and isinstance(email, str) and email.strip():
+                emails.append(email.strip())
+        
+        if not emails:
+            flash("No recipients found for the selected group.", "warning")
+            return redirect(url_for("general_admin.announcements"))
+
+        # Send emails (using Bcc to protect privacy and reduce API calls)
+        # Note: Some SMTP servers have limits on Bcc recipients (e.g., 50-100). 
+        # For a production system with many users, batching is recommended.
+        try:
+            # Batching into chunks of 50
+            batch_size = 50
+            for i in range(0, len(emails), batch_size):
+                batch = emails[i:i + batch_size]
+                
+                # Render HTML email
+                html_body = render_template("email/announcement.html", 
+                                          subject=subject, 
+                                          message=message_body,
+                                          year=datetime.now().year)
+
+                msg = Message(
+                    subject=subject,
+                    sender=("Sri Veeranjaneya Swamy Temple", os.getenv("MAIL_DEFAULT_SENDER")),
+                    recipients=[os.getenv("MAIL_DEFAULT_SENDER")], # To field must be present
+                    bcc=batch
+                )
+                msg.body = message_body # Plain text fallback
+                msg.html = html_body    # Designed HTML version
+                mail.send(msg)
+                
+            flash(f"Announcement sent successfully to {len(emails)} users!", "success")
+        except Exception as e:
+            flash(f"Error sending announcements: {str(e)}", "error")
+            print(f"Mail Error: {e}")
+            
+        return redirect(url_for("general_admin.announcements"))
+
+    return render_template("admin/announcements.html")
 
 @general_admin_bp.route("/dashboard")
 @admin_required
@@ -281,7 +358,7 @@ def reports():
             page = 1
         elif total_pages > 0 and page > total_pages:
             page = total_pages
-            
+        
         skip = (page - 1) * per_page
         
         # Get paginated results with sorting
@@ -404,11 +481,11 @@ def reports():
         enhanced_bookings.sort(key=lambda x: x['seva_date_for_sort'] if isinstance(x.get('seva_date_for_sort'), datetime) else datetime(1900, 1, 1), reverse=True)
         
         return render_template("admin/admin_reports.html", 
-                              report_type='seva',
-                              bookings=enhanced_bookings,
-                              page=page,
-                              total_pages=total_pages,
-                              total_bookings=total_bookings)
+                               report_type='seva',
+                               bookings=enhanced_bookings,
+                               page=page,
+                               total_pages=total_pages,
+                               total_bookings=total_bookings)
     else:
         # Get all donations with joined data from related collections
         # Add pagination for donations
@@ -424,7 +501,7 @@ def reports():
             page = 1
         elif total_pages > 0 and page > total_pages:
             page = total_pages
-            
+        
         skip = (page - 1) * per_page
         
         # Get paginated donations
@@ -504,11 +581,11 @@ def reports():
             enhanced_donations.append(donation)
         
         return render_template("admin/admin_reports.html", 
-                              report_type='donation',
-                              donations=enhanced_donations,
-                              page=page,
-                              total_pages=total_pages,
-                              total_donations=total_donations)
+                               report_type='donation',
+                               donations=enhanced_donations,
+                               page=page,
+                               total_pages=total_pages,
+                               total_donations=total_donations)
 
 @general_admin_bp.route("/update_seva_status", methods=["POST"])
 @admin_required
@@ -541,3 +618,122 @@ def update_seva_status():
     
     # Redirect back to the reports page with date filter preserved
     return redirect(url_for('general_admin.reports', type='seva', date_filter=date_filter))
+
+
+@general_admin_bp.route("/manage_gallery", methods=["GET", "POST"])
+@admin_required
+def manage_gallery():
+    """Admin view to manage gallery images (Upload & View)"""
+    if request.method == "POST":
+        if 'images' not in request.files:
+            flash('No file part', 'error')
+            return redirect(request.url)
+        
+        files = request.files.getlist('images')
+        
+        uploaded_count = 0
+        skipped_count = 0
+        
+        for file in files:
+            if file.filename == '':
+                continue
+                
+            if file:
+                try:
+                    # 1. Validation: Check file size (max 5MB initial check)
+                    file.stream.seek(0, os.SEEK_END)
+                    file_size = file.stream.tell()
+                    file.stream.seek(0)
+                    
+                    if file_size > 5 * 1024 * 1024: # 5MB limit
+                         skipped_count += 1
+                         continue
+
+                    # 2. Open with Pillow
+                    image = Image.open(file.stream)
+                    
+                    # Fix orientation based on EXIF data (prevents rotation issues)
+                    image = ImageOps.exif_transpose(image)
+                    
+                    # 3. Resize if needed (Max 1024x1024)
+                    max_size = (1024, 1024)
+                    if image.width > max_size[0] or image.height > max_size[1]:
+                        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+                        
+                    # 4. Format preservation and compression
+                    output = io.BytesIO()
+                    
+                    # Determine format from file extension or original format
+                    format_to_save = image.format if image.format else 'JPEG'
+                    content_type = f"image/{format_to_save.lower()}"
+                    
+                    # Handle specific formats
+                    if format_to_save in ('JPEG', 'JPG'):
+                        if image.mode in ("RGBA", "P"):
+                            image = image.convert("RGB")
+                        image.save(output, format='JPEG', quality=85, optimize=True)
+                        content_type = "image/jpeg"
+                    elif format_to_save == 'PNG':
+                        # Optimize PNG
+                        image.save(output, format='PNG', optimize=True)
+                        content_type = "image/png"
+                    elif format_to_save == 'GIF':
+                        image.save(output, format='GIF', save_all=True, optimize=True)
+                        content_type = "image/gif"
+                    elif format_to_save == 'WEBP':
+                        image.save(output, format='WEBP', quality=85)
+                        content_type = "image/webp"
+                    else:
+                        # Fallback to JPEG
+                        if image.mode in ("RGBA", "P"):
+                            image = image.convert("RGB")
+                        image.save(output, format='JPEG', quality=85, optimize=True)
+                        content_type = "image/jpeg"
+
+                    output.seek(0)
+                    
+                    # 5. Insert into MongoDB
+                    image_data = Binary(output.read())
+                    
+                    gallery_collection.insert_one({
+                        "filename": file.filename,
+                        "content_type": content_type, 
+                        "image_data": image_data,
+                        "upload_date": datetime.now()
+                    })
+                    uploaded_count += 1
+                    
+                except Exception as e:
+                    print(f"Error uploading {file.filename}: {e}")
+                    skipped_count += 1
+                    
+        if uploaded_count > 0:
+            flash(f'{uploaded_count} images uploaded successfully.', 'success')
+        if skipped_count > 0:
+            flash(f'{skipped_count} images skipped (too large or error).', 'warning')
+            
+        return redirect(url_for('general_admin.manage_gallery'))
+
+    # GET: List images
+    gallery_images = list(gallery_collection.find().sort("upload_date", -1))
+    
+    # Convert IDs to string
+    for img in gallery_images:
+        img['_id'] = str(img['_id'])
+        # Don't send binary data to template list view (performance)
+        if 'image_data' in img:
+            del img['image_data']
+            
+    return render_template("admin/manage_gallery.html", gallery_images=gallery_images)
+
+@general_admin_bp.route("/delete_gallery_image/<image_id>")
+@admin_required
+def delete_gallery_image(image_id):
+    """Delete a gallery image"""
+    try:
+        gallery_collection.delete_one({'_id': ObjectId(image_id)})
+        flash("Image deleted successfully!", "success")
+    except Exception as e:
+        flash(f"Error deleting image: {str(e)}", "error")
+        
+    return redirect(url_for('general_admin.manage_gallery'))

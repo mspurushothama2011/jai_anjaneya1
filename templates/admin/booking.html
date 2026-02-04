@@ -116,8 +116,11 @@
         <button type="submit" class="btn-primary">Add Booking</button>
     </form>
 </div>
+<script id="seva-types-data" type="application/json">
+    {{ seva_types| tojson }}
+</script>
 <script>
-    const sevaTypes = {{ seva_types| tojson }}; 
+    const sevaTypes = JSON.parse(document.getElementById('seva-types-data').textContent);
     function updateSevaTypes() {
         const sevaName = document.getElementById('seva_name').value;
         const sevaTypeSelect = document.getElementById('seva_type_id');

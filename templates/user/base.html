@@ -864,12 +864,15 @@
         .dropdown-container {
             position: relative;
             display: inline-block;
+            z-index: 2005;
+            /* Verify Fix: Ensure wrap is above everything */
         }
 
         .dropdown-toggle {
             display: flex;
             align-items: center;
             gap: 5px;
+            cursor: pointer;
         }
 
         .dropdown-toggle i {
@@ -886,7 +889,8 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             min-width: 180px;
-            z-index: 2002;
+            z-index: 2010;
+            /* Fix: Higher than header */
             padding: 8px 0;
             margin-top: 5px;
             text-align: left;
@@ -939,24 +943,83 @@
     </style>
 
     <script>
-        function toggleDropdown() {
-            const dropdown = document.getElementById("profileDropdown");
-            if (dropdown.style.display === "block") {
-                dropdown.style.display = "none";
-            } else {
-                dropdown.style.display = "block";
-            }
-            event.stopPropagation(); // Prevent event from bubbling up
-        }
+        // ROBUST DROPDOWN LOGIC (Fixes Brave/Render issues)
+        document.addEventListener('DOMContentLoaded', function () {
 
-        // Close dropdown when clicking outside
-        document.addEventListener("click", function (event) {
-            const dropdown = document.getElementById("profileDropdown");
+            // 1. Profile Dropdown Logic
             const profilePic = document.getElementById("profilePic");
+            const profileDropdown = document.getElementById("profileDropdown");
 
-            if (dropdown && profilePic && event.target !== profilePic && !dropdown.contains(event.target)) {
-                dropdown.style.display = "none";
+            if (profilePic && profileDropdown) {
+                profilePic.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    profileDropdown.style.display = (profileDropdown.style.display === "block") ? "none" : "block";
+                });
             }
+
+            // 2. Navigation "More" Dropdown Logic (Event Delegation)
+            // Attaching to body ensures we catch clicks even if DOM shifts
+            document.body.addEventListener('click', function (e) {
+                // Check if the clicked element is our toggle button (or inside it)
+                const toggleBtn = e.target.closest('.dropdown-toggle');
+                const navDropdown = document.getElementById('navDropdown');
+
+                // Clicking the Toggle Button
+                if (toggleBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("Navbar toggle clicked!"); // Debugging
+
+                    if (navDropdown) {
+                        navDropdown.classList.toggle('show');
+
+                        // Rotate chevron
+                        const icon = toggleBtn.querySelector('i');
+                        if (icon) {
+                            icon.style.transform = navDropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0)';
+                        }
+                    }
+                    return;
+                }
+
+                // Clicking Outside (Close everything)
+                // If we didn't click the toggle, and didn't click inside the dropdown itself
+                if (navDropdown && navDropdown.classList.contains('show') && !e.target.closest('#navDropdown')) {
+                    navDropdown.classList.remove('show');
+                    const icon = document.querySelector('.dropdown-toggle i');
+                    if (icon) icon.style.transform = 'rotate(0)';
+                }
+
+                // Close profile dropdown too
+                if (profileDropdown && !e.target.closest('#profilePic')) {
+                    profileDropdown.style.display = "none";
+                }
+            });
+
+            // 3. AGGRESSIVE LOADING SCREEN REMOVAL
+            // fix for "works for 5 seconds then stops" - likely ghost overlay
+            const loadingScreen = document.getElementById('loading-screen');
+            const mainContent = document.querySelector('.main-content');
+
+            function removeLoader() {
+                if (loadingScreen && loadingScreen.style.display !== 'none') {
+                    loadingScreen.classList.add('fade-out');
+                    if (mainContent) mainContent.classList.add('loaded');
+
+                    // Force complete removal from DOM after animation
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none'; // Ensure hidden
+                        // Optional: remove from DOM entirely to be 100% sure
+                        if (loadingScreen.parentNode) loadingScreen.parentNode.removeChild(loadingScreen);
+                    }, 500);
+                }
+            }
+
+            // Multiple triggers to ensure it goes away
+            window.addEventListener('load', removeLoader);
+            setTimeout(removeLoader, 1000); // 1 sec backup
+            setTimeout(removeLoader, 3000); // 3 sec fallback
+            setTimeout(removeLoader, 6000); // 6 sec ultimate fallback (fixes "stops after 5s")
         });
 
         // Handle session timeout after 1 hour of inactivity
@@ -993,35 +1056,8 @@
             localStorage.clear();
         }
 
-        // Toggle dropdown menu
-        function toggleNavDropdown(event) {
-            event.preventDefault();
-            const dropdown = document.getElementById('navDropdown');
-            dropdown.classList.toggle('show');
+        // REMOVED LEGACY FUNCTIONS (toggleNavDropdown, etc) as they are now handled by event delegation
 
-            // Toggle chevron direction
-            const icon = event.currentTarget.querySelector('i');
-            if (dropdown.classList.contains('show')) {
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                icon.style.transform = 'rotate(0)';
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (event) {
-            // Close More dropdown
-            const dropdown = document.getElementById('navDropdown');
-            const toggleButton = document.querySelector('.dropdown-toggle');
-
-            if (dropdown && toggleButton &&
-                !dropdown.contains(event.target) &&
-                !toggleButton.contains(event.target)) {
-                dropdown.classList.remove('show');
-                const icon = toggleButton.querySelector('i');
-                if (icon) icon.style.transform = 'rotate(0)';
-            }
-        });
     </script>
     <style>
         /* Prevent FOUC: hide content until styles/fonts are ready */

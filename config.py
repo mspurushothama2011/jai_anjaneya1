@@ -16,8 +16,8 @@ class Config:
     PRODUCTION = os.getenv("FLASK_ENV") == "production"
     
     # Server configuration
-    SERVER_NAME = os.getenv("SERVER_NAME")  # Will be automatically set by Render
-
+    # SERVER_NAME is intentionally left unconfigured to allow Railway to route both www and non-www domains
+    # safely without Host-header rejections.
     # Email Configuration
     MAIL_SERVER = os.getenv("MAIL_SERVER")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))

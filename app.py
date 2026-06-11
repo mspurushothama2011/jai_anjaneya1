@@ -17,8 +17,12 @@ from database import client  # Ensure MongoDB is initialized
 import os
 import datetime
 from utils import get_current_time, format_time_in_timezone  # Import both functions
+from whitenoise import WhiteNoise
 
 app = Flask(__name__)
+
+# Configure WhiteNoise to serve static files in production
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/')
 
 # ✅ Load Configurations
 app.config.from_object(Config)
@@ -44,6 +48,10 @@ app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour token validity
 # ✅ Initialize Flask-Mail and CSRF
 mail.init_app(app)
 csrf.init_app(app)
+
+# ✅ Initialize JWT
+from extensions import jwt
+jwt.init_app(app)
 
 # Add route to set user timezone
 @app.route('/set-timezone', methods=['POST'])
@@ -107,6 +115,32 @@ app.register_blueprint(vadamala_bp, url_prefix="/vadamala") # Register vadamala 
 from routes.alankara import alankara_bp
 app.register_blueprint(alankara_bp, url_prefix="/alankara")
 
+# ✅ Register API Blueprints (For Mobile App)
+from routes.api.auth import api_auth_bp
+from routes.api.sevas import api_sevas_bp
+from routes.api.user import api_user_bp
+from routes.api.payment import api_payment_bp
+from routes.api.events import api_events_bp
+from routes.api.donations import api_donations_bp
+from routes.api.general import api_general_bp
+
+app.register_blueprint(api_auth_bp, url_prefix="/api/v1/auth")
+app.register_blueprint(api_sevas_bp, url_prefix="/api/v1/sevas")
+app.register_blueprint(api_user_bp, url_prefix="/api/v1/user")
+app.register_blueprint(api_payment_bp, url_prefix="/api/v1/payment")
+app.register_blueprint(api_events_bp, url_prefix="/api/v1/events")
+app.register_blueprint(api_donations_bp, url_prefix="/api/v1/donations")
+app.register_blueprint(api_general_bp, url_prefix="/api/v1/general")
+
+# Exempt mobile API routes from CSRF (they use JWT instead)
+csrf.exempt(api_auth_bp)
+csrf.exempt(api_sevas_bp)
+csrf.exempt(api_user_bp)
+csrf.exempt(api_payment_bp)
+csrf.exempt(api_events_bp)
+csrf.exempt(api_donations_bp)
+csrf.exempt(api_general_bp)
+
 # Register error handlers
 @app.errorhandler(404)
 def page_not_found(e):
@@ -126,4 +160,4 @@ def internal_server_error(e):
 
 # ✅ Run the Application
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

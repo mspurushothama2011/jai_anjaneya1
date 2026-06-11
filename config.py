@@ -8,6 +8,10 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
     DEBUG = os.getenv("FLASK_ENV", "development") != "production"
     
+    # JWT Configuration for Mobile API
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "mobile-api-secret-key-change-in-prod")
+    JWT_ACCESS_TOKEN_EXPIRES = 3600 * 24 * 7  # Tokens expire in 7 days
+    
     # Check if we're in production environment (Render)
     PRODUCTION = os.getenv("FLASK_ENV") == "production"
     
@@ -16,7 +20,7 @@ class Config:
 
     # Email Configuration
     MAIL_SERVER = os.getenv("MAIL_SERVER")
-    MAIL_PORT = int(os.getenv("MAIL_PORT"))
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS") == "True"
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")

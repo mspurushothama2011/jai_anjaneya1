@@ -1,0 +1,20 @@
+app = "temple-management-system"
+primary_region = "sin" # You can change this to your preferred region, e.g., 'mad' for Madrid, 'bom' for Mumbai, 'sin' for Singapore
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+  buildpacks = ["gcr.io/paketo-buildpacks/python"]
+
+[env]
+  PORT = "5000"
+  FLASK_APP = "run.py"
+  FLASK_ENV = "production"
+  PYTHON_VERSION = "3.9.7"
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]

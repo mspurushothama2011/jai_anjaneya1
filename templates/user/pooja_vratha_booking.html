@@ -170,7 +170,8 @@
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "X-CSRFToken": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify(payload)
             });
@@ -186,7 +187,8 @@
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "X-CSRFToken": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify(payload)
             });
@@ -280,7 +282,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(verificationData),
                 credentials: 'same-origin'

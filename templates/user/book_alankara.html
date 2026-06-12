@@ -156,7 +156,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // 1. Store details in session
             await fetch('/alankara/store-alankara-details', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({ seva_id: sevaId, seva_date: sevaDate })
             });
 
@@ -164,7 +167,10 @@ document.addEventListener('DOMContentLoaded', function() {
             processingStatus.textContent = "Creating payment order...";
             const orderResponse = await fetch('/alankara/alankara-payment', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({ seva_id: sevaId })
             });
             const order = await orderResponse.json();
@@ -184,7 +190,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     // 4. Verify payment
                     const verifyResponse = await fetch('/alankara/verify-alankara-payment', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
                         body: JSON.stringify(response)
                     });
                     const result = await verifyResponse.json();

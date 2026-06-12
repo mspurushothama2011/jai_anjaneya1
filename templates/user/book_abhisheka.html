@@ -131,7 +131,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const storeResponse = await fetch('/abhisheka/store-abhisheka-details', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({
                     seva_id: selectedTypeId,
                     seva_name: "Abhisheka", // Main category name
@@ -163,7 +166,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // --- Verify payment on the correct abhisheka endpoint ---
                 fetch('/abhisheka/verify-abhisheka-payment', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
                     body: JSON.stringify({
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
@@ -196,7 +202,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const orderResponse = await fetch('/abhisheka/abhisheka-payment', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({
                     seva_id: selectedTypeId,
                     seva_name: "Abhisheka",

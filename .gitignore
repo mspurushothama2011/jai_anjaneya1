@@ -194,3 +194,5 @@ dmypy.json
 .DS_Store
 cython_debug/
 .pypirc
+git cmd.txt
+tests/

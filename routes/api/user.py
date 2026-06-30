@@ -20,6 +20,7 @@ def get_profile():
             "data": {
                 "name": user.get("name", user.get("username", "")),
                 "email": user.get("email", ""),
+                "dob": user.get("dob", ""),
                 "phone": user.get("phone", ""),
                 "address": user.get("address", "")
             }
@@ -37,7 +38,7 @@ def update_profile():
         
         update_data = {}
         if "name" in data: update_data["name"] = data["name"]
-        if "email" in data: update_data["email"] = data["email"]
+        if "dob" in data: update_data["dob"] = data["dob"]
         if "phone" in data: update_data["phone"] = data["phone"]
         if "address" in data: update_data["address"] = data["address"]
         
@@ -101,6 +102,26 @@ def get_user_history():
                 "category": "donation"
             })
             
+        # Sort the combined list by date (newest first)
+        from datetime import datetime
+        def parse_date(date_str):
+            if not date_str:
+                return datetime.min
+            # Try parsing dd-mm-yyyy or yyyy-mm-dd
+            try:
+                date_only = date_str.split(' ')[0]
+                parts = date_only.split('-')
+                if len(parts) == 3:
+                    if len(parts[0]) == 4:
+                        return datetime.strptime(date_only, "%Y-%m-%d")
+                    else:
+                        return datetime.strptime(date_only, "%d-%m-%Y")
+            except Exception:
+                pass
+            return datetime.min
+
+        formatted_history.sort(key=lambda x: parse_date(x["date"]), reverse=True)
+
         # Return the combined list
         return jsonify({
             "success": True,

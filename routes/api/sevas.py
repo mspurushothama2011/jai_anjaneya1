@@ -72,10 +72,11 @@ def get_all_sevas():
                     "id": str(d["_id"]),
                     "category_id": "pooja_vratha",
                     "category_name": "Pooja & Vratha",
-                    "name": d.get("seva_sub_name", d.get("seva_title", "Pooja")),
-                    "price": float(d.get("seva_price", d.get("price", 0))),
-                    "description": d.get("seva_description", d.get("description", "")),
+                    "name": d.get("seva_type", d.get("seva_sub_name", d.get("seva_title", "Pooja"))),
+                    "price": float(d.get("amount", d.get("seva_price", d.get("price", 0)))),
+                    "description": d.get("description", d.get("seva_description", "")),
                     "date_display": seva_date.strftime("%d %b %Y"),
+                    "raw_date": seva_date.strftime("%Y-%m-%d"),
                     "is_active": True,
                 })
 
@@ -131,6 +132,7 @@ def get_available_dates(category):
         today = get_current_time()
         start_date = today.date() + timedelta(days=1) # Always start from tomorrow
         available_dates = []
+        fully_booked_dates_list = []
 
         if category == "abhisheka":
             # Abhisheka is available on any day starting tomorrow (let's provide 60 days)
@@ -171,6 +173,8 @@ def get_available_dates(category):
                     date_str = current_date.strftime("%Y-%m-%d")
                     if date_str not in booked_dates:
                         available_dates.append(date_str)
+                    else:
+                        fully_booked_dates_list.append(date_str)
 
         elif category == "vadamala":
             # Vadamala: Saturdays (5), max 3 slots per day
@@ -208,10 +212,16 @@ def get_available_dates(category):
                     date_str = current_date.strftime("%Y-%m-%d")
                     if date_str not in fully_booked:
                         available_dates.append(date_str)
+                    else:
+                        fully_booked_dates_list.append(date_str)
 
         else:
             return jsonify({"success": False, "message": "Unknown category for dates"}), 400
 
-        return jsonify({"success": True, "dates": available_dates})
+        return jsonify({
+            "success": True, 
+            "dates": available_dates, 
+            "fully_booked_dates": fully_booked_dates_list
+        })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

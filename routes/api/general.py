@@ -28,3 +28,18 @@ def get_gallery():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+@api_general_bp.route("/check-update", methods=["GET"])
+def check_update():
+    """Returns latest mobile version info and download URL from the website."""
+    # To trigger an update prompt in the app, set build_number to a value greater than 1
+    # and update latest_version / release_notes accordingly.
+    return jsonify({
+        "success": True,
+        "latest_version": "1.0.0",
+        "build_number": 1,
+        "apk_url": "https://www.sriveeranjaneyaswamy.org.in/static/downloads/app-release.apk",
+        "release_notes": "First release of Sri Veeranjaneya Swamy Temple mobile app.",
+        "mandatory": False
+    }), 200
+

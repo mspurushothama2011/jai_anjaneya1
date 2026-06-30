@@ -19,11 +19,15 @@ def create_order():
     Mobile API: Create a Razorpay order.
     Requires JWT token.
     """
+    import time
+    start_time = time.time()
     try:
         data = request.json
         amount = data.get("amount", 0)
         currency = data.get("currency", "INR")
         payment_type = data.get("payment_type")  # "seva" or "donation"
+
+        print(f"[BACKEND_PAYMENT] Received create-order: type={payment_type}, amount={amount}")
 
         if not amount or float(amount) <= 0:
             return jsonify({"success": False, "message": "Invalid amount"}), 400
@@ -36,12 +40,19 @@ def create_order():
         receipt = f"{payment_type}_{current_time.strftime('%Y%m%d%H%M%S')}"
 
         # Create Razorpay order
+        print("[BACKEND_PAYMENT] Calling Razorpay API razorpay_client.order.create...")
+        rz_start = time.time()
         order = razorpay_client.order.create({
             "amount": int(float(amount) * 100),  # Convert to paise
             "currency": currency,
             "receipt": receipt,
             "payment_capture": 1
         })
+        rz_elapsed = time.time() - rz_start
+        print(f"[BACKEND_PAYMENT] Razorpay API responded in {rz_elapsed:.3f} seconds. Order ID: {order.get('id')}")
+
+        total_elapsed = time.time() - start_time
+        print(f"[BACKEND_PAYMENT] Total create_order route execution: {total_elapsed:.3f} seconds")
 
         return jsonify({
             "success": True,
@@ -52,6 +63,7 @@ def create_order():
         }), 200
 
     except Exception as e:
+        print(f"[BACKEND_PAYMENT] Error in create-order: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 
 
@@ -93,23 +105,126 @@ def verify_payment():
         if generated_signature != signature:
             return jsonify({"success": False, "message": "Invalid signature"}), 400
 
+        # Check for duplicate payment
+        existing_booking = None
+        if payment_type == "seva":
+            existing_booking = seva_collection.find_one({"payment_id": payment_id})
+        elif payment_type == "donation":
+            existing_booking = donations_collection.find_one({"payment_id": payment_id})
+
+        if existing_booking:
+            return jsonify({
+                "success": True,
+                "message": f"This {payment_type} has already been recorded."
+            }), 200
+
         # Save to DB based on payment_type
         if payment_type == "seva":
+            # Parse date string from mobile client (could be YYYY-MM-DD or DD-MM-YYYY)
+            date_str = data.get("date")
+            seva_date_obj = None
+            from datetime import datetime, timezone
+            if date_str:
+                for fmt in ("%Y-%m-%d", "%d-%m-%Y"):
+                    try:
+                        seva_date_obj = datetime.strptime(date_str, fmt)
+                        break
+                    except ValueError:
+                        pass
+            
+            if not seva_date_obj:
+                current_time = get_current_time("Asia/Kolkata")
+                seva_date_obj = datetime(current_time.year, current_time.month, current_time.day)
+
+            seva_name = data.get("seva_name", "General Seva")
+            seva_type = data.get("seva_type", "General Seva")
+            
+            # --- RACE CONDITION FIX & REFUND LOGIC ---
+            if seva_name == "Vadamala":
+                # Vadamala capacity limit: max 3 bookings per Saturday
+                booking_count = seva_collection.count_documents({
+                    "seva_name": "Vadamala",
+                    "seva_date": seva_date_obj
+                })
+                
+                if booking_count >= 3:
+                    # Slot filled. Automatically refund payment.
+                    try:
+                        amount_to_refund = int(float(data.get("amount", 0)) * 100)
+                        if amount_to_refund > 0:
+                            razorpay_client.payment.refund(payment_id, {
+                                "amount": amount_to_refund,
+                                "speed": "normal",
+                                "notes": {
+                                    "reason": "Booking slot filled during payment (mobile Vadamala race condition)."
+                                }
+                            })
+                        return jsonify({
+                            "success": False,
+                            "message": "We're sorry, but the selected date was fully booked while you were making the payment. Your payment has been automatically refunded."
+                        }), 409
+                    except Exception as refund_err:
+                        print(f"CRITICAL: Refund failed for Vadamala payment {payment_id}. Error: {refund_err}")
+                        return jsonify({
+                            "success": False,
+                            "message": "Booking failed because slots are full. Auto-refund failed. Please contact support with your payment ID."
+                        }), 500
+
+            elif seva_name == "Alankara":
+                # Alankara capacity limit: max 1 booking per day
+                # Check both naive and UTC-aware dates for safety
+                alankara_date_obj = seva_date_obj.replace(tzinfo=timezone.utc)
+                is_slot_booked = seva_collection.find_one({
+                    "seva_name": "Alankara",
+                    "seva_date": {"$in": [seva_date_obj, alankara_date_obj]}
+                })
+                
+                if is_slot_booked:
+                    # Slot filled. Automatically refund payment.
+                    try:
+                        amount_to_refund = int(float(data.get("amount", 0)) * 100)
+                        if amount_to_refund > 0:
+                            razorpay_client.payment.refund(payment_id, {
+                                "amount": amount_to_refund,
+                                "speed": "normal",
+                                "notes": {
+                                    "reason": "Booking slot filled during payment (mobile Alankara race condition)."
+                                }
+                            })
+                        return jsonify({
+                            "success": False,
+                            "message": "We're sorry, but the selected date was fully booked while you were making the payment. Your payment has been automatically refunded."
+                        }), 409
+                    except Exception as refund_err:
+                        print(f"CRITICAL: Refund failed for Alankara payment {payment_id}. Error: {refund_err}")
+                        return jsonify({
+                            "success": False,
+                            "message": "Booking failed because the slot is full. Auto-refund failed. Please contact support with your payment ID."
+                        }), 500
+
+            # Determine appropriate seva_date format for DB insertion
+            if seva_name == "Vadamala":
+                db_seva_date = seva_date_obj
+            elif seva_name in ("Alankara", "Pooja/Vratha"):
+                db_seva_date = seva_date_obj.replace(tzinfo=timezone.utc)
+            else:
+                db_seva_date = seva_date_obj
+
             seva_booking = {
                 "user_id": user_id,
                 "user_name": user.get("username", user.get("name")),
                 "email": user.get("email"),
                 "phone": user.get("phone"),
                 "seva_id": data.get("seva_id"), # Optional if needed
-                "seva_name": data.get("seva_name", "General Seva"),
-                "seva_type": data.get("seva_type", "General Seva"),
+                "seva_name": seva_name,
+                "seva_type": seva_type,
                 "seva_price": float(data.get("amount", 0)),
                 "amount": float(data.get("amount", 0)),
-                "seva_date": data.get("date", get_current_time().strftime("%Y-%m-%d")),
+                "seva_date": db_seva_date,
                 "booking_date": get_current_time().strftime("%d-%m-%Y (%H:%M:%S)"),
                 "payment_id": payment_id,
                 "order_id": order_id,
-                "status": "Paid",
+                "status": "Not Collected",
                 "source": "mobile_app"
             }
             seva_collection.insert_one(seva_booking)

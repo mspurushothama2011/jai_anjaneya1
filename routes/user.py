@@ -220,7 +220,10 @@ def send_verification_email(email, token):
 #  LOGIN
 # ----------------------------------
 
+from extensions import limiter
+
 @user_bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def login():
     """User Login with CSRF and Brute Force Protection"""
     current_time = time.time()

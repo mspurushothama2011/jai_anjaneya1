@@ -50,8 +50,11 @@ mail.init_app(app)
 csrf.init_app(app)
 
 # ✅ Initialize JWT
-from extensions import jwt
+from extensions import jwt, limiter
 jwt.init_app(app)
+
+# ✅ Initialize Limiter
+limiter.init_app(app)
 
 # Add route to set user timezone
 @app.route('/set-timezone', methods=['POST'])

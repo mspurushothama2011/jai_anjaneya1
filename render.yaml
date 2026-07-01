@@ -16,6 +16,8 @@ services:
         sync: false # This will be set in the Render dashboard
       - key: SECRET_KEY
         generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
       - key: RAZORPAY_KEY_ID
         sync: false # Set manually in the Render dashboard
       - key: RAZORPAY_KEY_SECRET

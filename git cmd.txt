@@ -1,3 +1,8 @@
+# Recent Deployment (01 July 2026 - Privacy Compliance)
+git add .
+git commit -m "Update privacy policy for Google Play Console mobile compliance"
+git push origin main
+
 # Recent Deployment (01 July 2026 - Hotfix)
 git add .
 git commit -m "Auto-generate config keys in production to prevent crash"
